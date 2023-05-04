@@ -1,0 +1,29 @@
+{
+  "functions": [
+    "vkGetInstanceProcAddr",
+    "vkGetDeviceProcAddr",
+    "vkEnumerateInstanceLayerProperties",
+    "vkEnumerateDeviceLayerProperties",
+    "vkEnumerateInstanceExtensionProperties",
+    "vkEnumerateDeviceExtensionProperties",
+    "vkEnumerateInstanceVersion",
+    "vkUpdateDescriptorSetWithTemplate",
+    "vkUpdateDescriptorSetWithTemplateKHR",
+    "vkCmdPushDescriptorSetWithTemplateKHR",
+    "vkBuildAccelerationStructuresKHR",
+    "vkCopyAccelerationStructureKHR"
+  ],
+  "functions-decoder": [
+    "vkCreateRayTracingPipelinesKHR",
+    "vkDeferredOperationJoinKHR"
+  ],
+  "structures": [
+    "VkBaseOutStructure",
+    "VkBaseInStructure",
+    "VkDescriptorImageInfo",
+    "VkWriteDescriptorSet",
+    "VkPerformanceValueINTEL",
+    "VkAccelerationStructureGeometryKHR",
+    "VkAccelerationStructureMotionInstanceNV"
+  ]
+}

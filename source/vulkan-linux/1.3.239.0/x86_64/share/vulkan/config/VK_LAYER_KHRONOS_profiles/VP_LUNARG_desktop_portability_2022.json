@@ -1,0 +1,49 @@
+{
+    "$schema": "https://schema.khronos.org/vulkan/profiles-0.8.0-208.json#",
+    "capabilities": {
+        "baseline": {
+            "extensions": {
+                "VK_KHR_portability_enumeration": 1,
+                "VK_KHR_portability_subset": 1
+            },
+            "features": {
+                "VkPhysicalDevicePortabilitySubsetFeaturesKHR": {
+                    "vertexAttributeAccessBeyondStride": true,
+                    "separateStencilMaskRef": true,
+                    "mutableComparisonSamplers": true,
+                    "multisampleArrayImage": true,
+                    "imageViewFormatSwizzle": true,
+                    "imageViewFormatReinterpretation": true,
+                    "events": true,
+                    "constantAlphaColorBlendFactors": true
+                }
+            },
+            "properties": {
+                "VkPhysicalDevicePortabilitySubsetPropertiesKHR": {
+                    "minVertexInputBindingStrideAlignment": 4
+                }
+            }
+        }
+    },
+    "profiles": {
+        "VP_LUNARG_desktop_portability_2022": {
+            "version": 1,
+            "status": "BETA",
+            "api-version": "1.1.208",
+            "label": "LunarG Vulkan Desktop Portability 2022 profile",
+            "description": "A variant of VP_LUNARG_desktop_baseline_2022 that includes portability extensions to work on macOS devices.",
+            "contributors": {},
+            "history": [
+                {
+                    "revision": 1,
+                    "date": "2022-08-26",
+                    "author": "LunarG Profiles Generation",
+                    "comment": "Generated profile"
+                }
+            ],
+            "capabilities": [
+                "baseline"
+            ]
+        }
+    }
+}

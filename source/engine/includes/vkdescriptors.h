@@ -11,9 +11,15 @@ public:
 
 	void builddescriptors();
 
+	void updatesamplerdescriptors();
+
 	size_t paduniformbuffersize(size_t originalsize);
 
 	VkDescriptorSetLayout& getgloballayout() { return globalsetlayout; };
+	VkDescriptorSetLayout& getsamplerlayout() { return singletexturesetlayout; };
+
+	VkDescriptorSet& getsamplerdescriptor() { return textureset;};
+
 
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
 
@@ -21,6 +27,10 @@ public:
 
 private:
 	VkDescriptorSetLayout globalsetlayout;
+
+	VkDescriptorSetLayout singletexturesetlayout;
+	VkDescriptorSet textureset{VK_NULL_HANDLE};
+
 	VkDescriptorPool descriptorpool;
 	std::vector<VkDescriptorSet> descriptorsets;
 

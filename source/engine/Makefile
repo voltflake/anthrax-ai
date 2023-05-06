@@ -10,7 +10,7 @@ ifeq ($(uname), Windows)
 endif
 ifeq ($(uname), Linux)
     NAME := prog
-    LIBS :=  -L/home/svatostop/progs/vulkan-dev/source/vulkan-linux/1.3.239.0/x86_64/lib -lvulkan -lxcb -lxcb-keysyms
+    LIBS :=  -L./source/vulkan-linux/1.3.239.0/x86_64/lib -lvulkan -lxcb -lxcb-keysyms
 endif
 
 INCLUDES := includes/vulkan 

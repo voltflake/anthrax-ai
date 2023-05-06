@@ -37,6 +37,8 @@ public:
 	FrameArray&					getframes() { return renderer.getframedata();};
 	VkPipeline&					getpipeline() { return pipeline.getpipeline();};
 
+	VkDescriptorSet&  			getsamplerset() { return descriptors.getsamplerdescriptor(); };
+
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptors.getdescriptorset();};
 	UboArray& getcamerabuffer() { return descriptors.getcamerabuffer();};			
 

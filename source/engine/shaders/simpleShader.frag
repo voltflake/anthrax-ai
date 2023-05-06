@@ -12,9 +12,9 @@ layout(set = 0, binding = 0) uniform  CameraBuffer{
     vec4 color;
 } cameraData;
 
-layout(binding = 1) uniform sampler2D texSampler;
+layout(set = 1, binding = 0) uniform sampler2D texSampler;
 
 void main()
 {
-	outFragColor =  vec4(inColor, 1.0);//texture(texSampler, inUv);
+	outFragColor =  texture(texSampler, inUv);
 }

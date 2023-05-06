@@ -30,6 +30,7 @@ void Engine::initvulkan() {
 	
 	Builder.initrenderbuilder();
 	Builder.buildcommandpool();
+
 	Builder.buildrenderpass();
 	Builder.builframebuffers();
 	
@@ -46,7 +47,6 @@ void Engine::initvulkan() {
 
 	Builder.initmeshbuilder();
 	Builder.loadmeshes();
-
 
 }
 
@@ -73,6 +73,8 @@ void Engine::initscene() {
 			Builder.pushrenderobject(tri);
 	// 	}
 	// }
+	//Builder.descriptors.updatesamplerdescriptors();
+
 }
 
 void Engine::ui() {
@@ -122,6 +124,10 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 			
 			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameNumber], 1, &uniformoffset);
+		
+			if (Builder.getsamplerset() != VK_NULL_HANDLE) {
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &Builder.getsamplerset(), 0, nullptr);
+			}
 		}
 
 
@@ -135,13 +141,13 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 		if (object.mesh != lastMesh) {
 			VkDeviceSize offset = {0};
 			vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
-            //vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 
 			lastMesh = object.mesh;
 		}
-		//vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 
-		vkCmdDraw(cmd, object.mesh->vertices.size(), 1, 0, 0);
+		//vkCmdDraw(cmd, object.mesh->vertices.size(), 1, 0, 0);
 	}
 }
 

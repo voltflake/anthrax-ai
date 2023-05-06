@@ -11,10 +11,10 @@ struct Mesh {
 	std::vector<Vertex> vertices;
 	BufferHandler vertexbuffer;
 
-	// std::vector<uint16_t> indices = {
-    //  0, 1, 2, 2, 3, 0
-	// };
-	// BufferHandler indexbuffer;
+	std::vector<uint16_t> indices = {
+     0, 1, 2, 2, 3, 0
+	};
+	BufferHandler indexbuffer;
 };
 
 class MeshBuilder {

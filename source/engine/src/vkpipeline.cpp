@@ -81,8 +81,9 @@ void PipelineBuilder::buildpipeline() {
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
 
-	pipelinelayoutinfo.setLayoutCount = 1;
-	pipelinelayoutinfo.pSetLayouts = &descriptors.getgloballayout();
+	VkDescriptorSetLayout setLayouts[] = { descriptors.getgloballayout(), descriptors.getsamplerlayout() };
+	pipelinelayoutinfo.setLayoutCount = 2;
+	pipelinelayoutinfo.pSetLayouts = setLayouts;
 
 	VK_ASSERT(vkCreatePipelineLayout(devicehandler.getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayout), "failed to create pipeline layput!");
 

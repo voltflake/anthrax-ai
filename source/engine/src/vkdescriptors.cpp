@@ -42,41 +42,51 @@ VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSe
 void DescriptorBuilder::builddescriptors() {
 	BufferBuilder buffer;
 
-	// std::vector<VkDescriptorPoolSize> sizes =
-	// {
-	// 	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10 }
-	// };
-	std::array<VkDescriptorPoolSize, 2> sizes{};
+	std::array<VkDescriptorPoolSize, 3> sizes{};
 	sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	sizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 	sizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	sizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolinfo = {};
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolinfo.flags = 0;
-	poolinfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);;
+	poolinfo.maxSets = 10;
 	poolinfo.poolSizeCount = (uint32_t)sizes.size();
 	poolinfo.pPoolSizes = sizes.data();
 
 	vkCreateDescriptorPool(renderer.getdevice().getlogicaldevice(), &poolinfo, nullptr, &descriptorpool);
 
 	VkDescriptorSetLayoutBinding cambufferbinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
-	VkDescriptorSetLayoutBinding samplerbinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,VK_SHADER_STAGE_FRAGMENT_BIT, 1);
+	//VkDescriptorSetLayoutBinding samplerbinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,VK_SHADER_STAGE_FRAGMENT_BIT, 1);
 	
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = { cambufferbinding, samplerbinding };
+	VkDescriptorSetLayoutBinding bindings = { cambufferbinding };
 
 	VkDescriptorSetLayoutCreateInfo setinfo = {};
 	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	setinfo.pNext = nullptr;
 
-	setinfo.bindingCount = static_cast<uint32_t>(bindings.size()); 
+	setinfo.bindingCount = 1; 
 	setinfo.flags = 0;
-	setinfo.pBindings = bindings.data();
+	setinfo.pBindings = &bindings;
 
 	vkCreateDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), &setinfo, nullptr, &globalsetlayout);
 	
+	VkDescriptorSetLayoutBinding texturebind = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+
+	VkDescriptorSetLayoutCreateInfo set3info = {};
+	set3info.bindingCount = 1;
+	set3info.flags = 0;
+	set3info.pNext = nullptr;
+	set3info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	set3info.pBindings = &texturebind;
+
+	vkCreateDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), &set3info, nullptr, &singletexturesetlayout);
+
 	deletorhandler.pushfunction([&]() {
+		vkDestroyDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), singletexturesetlayout, nullptr);
 		vkDestroyDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), globalsetlayout, nullptr);
 		vkDestroyDescriptorPool(renderer.getdevice().getlogicaldevice(), descriptorpool, nullptr);
 	});
@@ -91,6 +101,15 @@ void DescriptorBuilder::builddescriptors() {
 	descriptorsets.resize(MAX_FRAMES_IN_FLIGHT);
 	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo, descriptorsets.data()), "failed to allocate descriptor sets!");
 
+	//std::vector<VkDescriptorSetLayout> samplerlayout(MAX_FRAMES_IN_FLIGHT, singletexturesetlayout);
+	VkDescriptorSetAllocateInfo allocInfo2{};
+	allocInfo2.pNext = nullptr;
+	allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo2.descriptorPool = descriptorpool;
+	allocInfo2.descriptorSetCount  = 1;
+	allocInfo2.pSetLayouts = &singletexturesetlayout;
+
+	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &textureset), "failed to allocate descriptor sets!");
 
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		const size_t cambuffersize = MAX_FRAMES_IN_FLIGHT * paduniformbuffersize(sizeof(CameraData));
@@ -101,24 +120,52 @@ void DescriptorBuilder::builddescriptors() {
 		binfo.offset = 0;//paduniformbuffersize(sizeof(CameraData)) * i;//0;
 		binfo.range = sizeof(CameraData);
 
-		VkDescriptorImageInfo imageInfo{};
-	    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	    imageInfo.imageView = texturehandler.gettexture("first")->imageview;
-	    imageInfo.sampler = texturehandler.gettexture("first")->sampler;
-
-		std::array<VkWriteDescriptorSet, 2> setwrite{};
-		setwrite[0] = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorsets[i], 0);
-		setwrite[0].pBufferInfo = &binfo;
+		VkWriteDescriptorSet setwrite;
+		setwrite = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorsets[i], 0);
+		setwrite.pBufferInfo = &binfo;
 		
-		setwrite[1] = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorsets[i],1);
-		setwrite[1].pImageInfo = &imageInfo;
+	
+		vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &setwrite, 0, nullptr);
 
-		vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), static_cast<uint32_t>(setwrite.size()), setwrite.data(), 0, nullptr);
 	}
+
+	VkDescriptorImageInfo imageBufferInfo;
+	imageBufferInfo.sampler = texturehandler.gettexture("first")->sampler;
+	imageBufferInfo.imageView = texturehandler.gettexture("first")->imageview;
+	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textureset, 0);
+	texture1.pImageInfo = &imageBufferInfo;
+
+	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
+
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		deletorhandler.pushfunction([=]() {
 	        vkDestroyBuffer(renderer.getdevice().getlogicaldevice(), CameraBuffer[i].buffer, nullptr);
 	        vkFreeMemory(renderer.getdevice().getlogicaldevice(), CameraBuffer[i].devicememory, nullptr);
 	    });
 	}
+}
+
+
+void DescriptorBuilder::updatesamplerdescriptors() {
+
+	// VkDescriptorSetAllocateInfo allocInfo = {};
+	// allocInfo.pNext = nullptr;
+	// allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	// allocInfo.descriptorPool = descriptorpool;
+	// allocInfo.descriptorSetCount = 1;
+	// allocInfo.pSetLayouts = &singletexturesetlayout;
+
+	// vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo, &textureset);
+
+	// VkDescriptorImageInfo imageBufferInfo;
+	// imageBufferInfo.sampler = texturehandler.gettexture("first")->sampler;
+	// imageBufferInfo.imageView = texturehandler.gettexture("first")->imageview;
+	// imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	// VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textureset, 0);
+	// texture1.pImageInfo = &imageBufferInfo;
+
+	// vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
 }

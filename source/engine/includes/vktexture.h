@@ -16,9 +16,10 @@ struct Texture {
 class TextureBuilder {
 public:
 	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue& deletor) { renderer = renderb; devicehandler = device; deletorhandler = deletor;};
-	void createtexture(Texture& texture);
-	void createtextureimageview(Texture& texture);
-	void createsampler(Texture& texture);
+	void createtexture();
+	void createtextureimageview();
+	void createsampler();
+
 
 	void buildimagesview();
 	void loadimages();
@@ -38,6 +39,8 @@ private:
 	RenderBuilder 	renderer;
 	DeviceBuilder	devicehandler;
 	DeletionQueue 	deletorhandler;
+
+	Texture texture;
 
 	BufferHandler 	texturebuffer;
 	std::unordered_map<std::string, Texture> loadedtextures;

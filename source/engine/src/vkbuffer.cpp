@@ -40,41 +40,13 @@ void BufferBuilder::allocbuffer(RenderBuilder& renderer, BufferHandler& bufhandl
 
 void BufferBuilder::copybuffer(RenderBuilder& renderer, VkBuffer& srcbuffer, VkBuffer& dstbuffer, VkDeviceSize size) {
 
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {     
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = renderer.getframedata()[i].CommandPool;
-        allocInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandbuffer;
-        VK_ASSERT(vkAllocateCommandBuffers(renderer.getdevice().getlogicaldevice(), &allocInfo, &commandbuffer), "failed to allocate commandbuffer!");
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        VK_ASSERT(vkBeginCommandBuffer(commandbuffer, &beginInfo), "failed to begin command buffer!");
-
-        renderer.immediatesubmit([=](VkCommandBuffer cmd) {
-            VkBufferCopy copyRegion{};
-            copyRegion.srcOffset = 0;
-            copyRegion.dstOffset = 0;
-            copyRegion.size = size;
-            vkCmdCopyBuffer(commandbuffer, srcbuffer, dstbuffer, 1, &copyRegion);
-        });
-        
-        vkEndCommandBuffer(commandbuffer);
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandbuffer;
-
-        VK_ASSERT(vkQueueSubmit(renderer.getdevice().getqueue().graphicsqueue, 1, &submitInfo, VK_NULL_HANDLE), "vkQueueSubmit failed!");
-        vkQueueWaitIdle(renderer.getdevice().getqueue().graphicsqueue);
-        vkFreeCommandBuffers(renderer.getdevice().getlogicaldevice(), renderer.getframedata()[i].CommandPool, 1, &commandbuffer);
-    }
+    renderer.immediatesubmit([=](VkCommandBuffer cmd) {
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = 0;
+        copyRegion.size = size;
+        vkCmdCopyBuffer(cmd, srcbuffer, dstbuffer, 1, &copyRegion);
+    });
 }
 
 void BufferBuilder::createbuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkBufferUsageFlags flags[2], VkDeviceSize buffersize, const void *datasrc) {
@@ -96,6 +68,7 @@ void BufferBuilder::createbuffer(RenderBuilder& renderer, BufferHandler& bufferh
 }
 
 void BufferBuilder::crearetexturebuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkDeviceSize buffersize, void *pixels) {
+   
     allocbuffer(renderer, bufferhandler, buffersize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* datadst;

@@ -100,17 +100,7 @@ void DescriptorBuilder::builddescriptors() {
 	
 	descriptorsets.resize(MAX_FRAMES_IN_FLIGHT);
 	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo, descriptorsets.data()), "failed to allocate descriptor sets!");
-
-	//std::vector<VkDescriptorSetLayout> samplerlayout(MAX_FRAMES_IN_FLIGHT, singletexturesetlayout);
-	VkDescriptorSetAllocateInfo allocInfo2{};
-	allocInfo2.pNext = nullptr;
-	allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo2.descriptorPool = descriptorpool;
-	allocInfo2.descriptorSetCount  = 1;
-	allocInfo2.pSetLayouts = &singletexturesetlayout;
-
-	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &textureset), "failed to allocate descriptor sets!");
-
+	
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		const size_t cambuffersize = MAX_FRAMES_IN_FLIGHT * paduniformbuffersize(sizeof(CameraData));
 		buffer.createuniformbuffer(renderer, CameraBuffer[i], cambuffersize);
@@ -129,16 +119,7 @@ void DescriptorBuilder::builddescriptors() {
 
 	}
 
-	VkDescriptorImageInfo imageBufferInfo;
-	imageBufferInfo.sampler = texturehandler.gettexture("first")->sampler;
-	imageBufferInfo.imageView = texturehandler.gettexture("first")->imageview;
-	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textureset, 0);
-	texture1.pImageInfo = &imageBufferInfo;
-
-	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
-
+	
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		deletorhandler.pushfunction([=]() {
 	        vkDestroyBuffer(renderer.getdevice().getlogicaldevice(), CameraBuffer[i].buffer, nullptr);
@@ -148,8 +129,30 @@ void DescriptorBuilder::builddescriptors() {
 }
 
 
-void DescriptorBuilder::updatesamplerdescriptors() {
+void DescriptorBuilder::updatesamplerdescriptors(std::string texture) {
 
+	VkDescriptorSet dsset;
+
+	VkDescriptorSetAllocateInfo allocInfo2{};
+	allocInfo2.pNext = nullptr;
+	allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo2.descriptorPool = descriptorpool;
+	allocInfo2.descriptorSetCount  = 1;
+	allocInfo2.pSetLayouts = &singletexturesetlayout;
+
+	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &dsset), "failed to allocate descriptor sets!");
+
+	VkDescriptorImageInfo imageBufferInfo;
+	imageBufferInfo.sampler = texturehandler.gettexture(texture)->sampler;
+	imageBufferInfo.imageView = texturehandler.gettexture(texture)->imageview;
+	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0);
+	texture1.pImageInfo = &imageBufferInfo;
+
+	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
+
+	textureset.insert(textureset.begin(), dsset);
 	// VkDescriptorSetAllocateInfo allocInfo = {};
 	// allocInfo.pNext = nullptr;
 	// allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;

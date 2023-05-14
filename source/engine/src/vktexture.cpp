@@ -4,7 +4,7 @@
 
 void TextureBuilder::loadimages() {
 	
-	createtexture();
+	createtexture("./textures/texture.jpg");
 	createtextureimageview();
 	createsampler();
 
@@ -12,20 +12,26 @@ void TextureBuilder::loadimages() {
 
 	std::cout << "Texture loaded successfully "<< std::endl;
 
+	createtexture("./textures/drawcube.png");
+	createtextureimageview();
+	createsampler();
+
+	loadedtextures["sec"] = texture;
+
 }
 
-void TextureBuilder::createtexture() {
+void TextureBuilder::createtexture(const std::string& texturepath) {
 
 	BufferBuilder buffer;
 
 	int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load("./textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(texturepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imagesize = texWidth * texHeight * 4;
 
     ASSERT(!pixels, "failed to load texture image!");
 
-     BufferHandler stagingbuffer;
-        buffer.allocbuffer(renderer, stagingbuffer, imagesize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    BufferHandler stagingbuffer;
+    buffer.allocbuffer(renderer, stagingbuffer, imagesize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* datadst;
     vkMapMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory, 0, imagesize, 0, &datadst);

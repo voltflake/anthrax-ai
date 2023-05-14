@@ -11,12 +11,13 @@ struct Texture {
 	VkDeviceMemory memory;
 
 	VkSampler sampler;
+
 };
 
 class TextureBuilder {
 public:
 	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue& deletor) { renderer = renderb; devicehandler = device; deletorhandler = deletor;};
-	void createtexture();
+	void createtexture(const std::string& texturepath);
 	void createtextureimageview();
 	void createsampler();
 

@@ -70,9 +70,7 @@ do                                                              \
 #define VK_USE_PLATFORM_XCB_KHR
 #endif
 
-#define _USE_MATH_DEFINES
-
-// #include "..\lib\imgui\imgui.h"
+#define _USE_MATH_DEFINE
 
 #define FRAG_SHADER "./shaders/simpleShader.frag.spv"
 #define VERTEX_SHADER "./shaders/simpleShader.vert.spv"

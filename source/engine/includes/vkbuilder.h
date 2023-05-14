@@ -13,6 +13,9 @@
 struct RenderObject {
 	Mesh* mesh;
 	Material* material;
+	//Texture* texture;
+	VkDescriptorSet* textureset;
+	
 	glm::mat4 transformmatrix;
 };
 
@@ -37,7 +40,7 @@ public:
 	FrameArray&					getframes() { return renderer.getframedata();};
 	VkPipeline&					getpipeline() { return pipeline.getpipeline();};
 
-	VkDescriptorSet&  			getsamplerset() { return descriptors.getsamplerdescriptor(); };
+	std::vector<VkDescriptorSet>&  			getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
 
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptors.getdescriptorset();};
 	UboArray& getcamerabuffer() { return descriptors.getcamerabuffer();};			
@@ -98,6 +101,8 @@ public:
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(const std::string& name) { return meshhandler.getmesh(name);};
+	Texture* 		gettexture(const std::string& name) { return texturehandler.gettexture(name);};
+
 
 	
 	bool instanceextensionssupport();

@@ -63,17 +63,33 @@ void Engine::initscene() {
 	// for (int x = -20; x <= 20; x++) {
 	// 	for (int y = -20; y <= 20; y++) {
 
+			Builder.descriptors.updatesamplerdescriptors("first");
+			Builder.descriptors.updatesamplerdescriptors("sec");
+
 			RenderObject tri;
 			tri.mesh = Builder.getmesh("triangle");
 			tri.material = Builder.getmaterial("defaultmesh");
-			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(10, 0, 10));
-			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(0.2, 0.2, 0.2));
+
+			tri.textureset = &Builder.getsamplerset()[0];
+
+			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(1, 1, 1));
+			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1.5, -1.0, 1.5));
 			tri.transformmatrix = translation * scale;
 
 			Builder.pushrenderobject(tri);
+
+
+			tri.textureset = &Builder.getsamplerset()[1];
+
+			translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(5, 1, 1));
+		 	scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1.5, -1.0, 1.5));
+			tri.transformmatrix = translation * scale;
+			Builder.pushrenderobject(tri);
+
 	// 	}
 	// }
-	//Builder.descriptors.updatesamplerdescriptors();
+	
+
 
 }
 
@@ -124,13 +140,12 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 			
 			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameNumber], 1, &uniformoffset);
-		
-			if (Builder.getsamplerset() != VK_NULL_HANDLE) {
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &Builder.getsamplerset(), 0, nullptr);
-			}
+	
 		}
+		//if (Builder.getsamplerset() != VK_NULL_HANDLE) {
+			//}
 
-
+		
 		glm::mat4 model = object.transformmatrix;
 		
 		MeshPushConstants constants;
@@ -145,6 +160,8 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 
 			lastMesh = object.mesh;
 		}
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+
 		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 
 		//vkCmdDraw(cmd, object.mesh->vertices.size(), 1, 0, 0);

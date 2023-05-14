@@ -23,8 +23,8 @@ layout( push_constant ) uniform constants
 
 void main()
 {
-    //mat4 transformMatrix = (cameraData.viewproj * PushConstants.render_matrix);
-    gl_Position = vec4(vPosition, 1.0f);
+    mat4 transformMatrix = (cameraData.viewproj * PushConstants.render_matrix);
+    gl_Position = transformMatrix * vec4(vPosition , 1.0f);
     outColor = vColor;
     outCoord = vUv;
 }

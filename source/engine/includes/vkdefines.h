@@ -148,7 +148,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
 
-const VkExtent2D WindowExtend = {800, 600};
+const VkExtent2D WindowExtend = {1920, 1080};
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

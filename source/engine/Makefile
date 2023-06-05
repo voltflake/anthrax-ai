@@ -14,7 +14,7 @@ ifeq ($(uname), Linux)
 endif
 
 INCLUDES := includes/vulkan 
-SRC  := vkmain.cpp window.cpp vkengine.cpp vkbuilder.cpp vkdebug.cpp vkdevices.cpp vkrenderer.cpp vkdescriptors.cpp vkpipeline.cpp vkmesh.cpp vkbuffer.cpp vktexture.cpp
+SRC  := vkmain.cpp window.cpp vkengine.cpp vkbuilder.cpp vkdebug.cpp vkdevices.cpp vkrenderer.cpp vkdescriptors.cpp vkpipeline.cpp vkmesh.cpp vkbuffer.cpp vktexture.cpp levelmanager.cpp
 SRC := $(addprefix src/, $(SRC))
 
 IMGUI_INCLUDES := includes/imgui

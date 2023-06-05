@@ -1,0 +1,19 @@
+Player:
+	path: random
+	collision: 1
+	x: 5
+	y: 25
+Camera:
+	follow: 0
+Background:
+	path: hhhhh
+NPC:
+	path: check
+	x: 6
+	y: 8
+Trigger:
+	path: llaslslslsl
+	collision: 1
+	visible: 1
+	x: 100
+	y: 2333

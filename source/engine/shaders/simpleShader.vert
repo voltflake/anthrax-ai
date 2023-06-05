@@ -21,10 +21,18 @@ layout( push_constant ) uniform constants
  mat4 render_matrix;
 } PushConstants;
 
+
+out gl_PerVertex {
+    vec4 gl_Position;
+};
+
 void main()
 {
-    mat4 transformMatrix = (cameraData.viewproj * PushConstants.render_matrix);
-    gl_Position = transformMatrix * vec4(vPosition , 1.0f);
+    float halfWidth = 1920 / 2.0f;
+    float halfHeight = 1080 / 2.0f;
+ 
+    mat4 transformMatrix = (PushConstants.render_matrix);
+    gl_Position = vec4(vPosition.x / halfWidth - 1.0f, vPosition.y / halfHeight - 1.0f, 0.0, 1.0);
     outColor = vColor;
     outCoord = vUv;
 }

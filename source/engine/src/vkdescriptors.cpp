@@ -152,23 +152,9 @@ void DescriptorBuilder::updatesamplerdescriptors(std::string texture) {
 
 	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
 
-	textureset.insert(textureset.begin(), dsset);
-	// VkDescriptorSetAllocateInfo allocInfo = {};
-	// allocInfo.pNext = nullptr;
-	// allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	// allocInfo.descriptorPool = descriptorpool;
-	// allocInfo.descriptorSetCount = 1;
-	// allocInfo.pSetLayouts = &singletexturesetlayout;
-
-	// vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo, &textureset);
-
-	// VkDescriptorImageInfo imageBufferInfo;
-	// imageBufferInfo.sampler = texturehandler.gettexture("first")->sampler;
-	// imageBufferInfo.imageView = texturehandler.gettexture("first")->imageview;
-	// imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-
-	// VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, textureset, 0);
-	// texture1.pImageInfo = &imageBufferInfo;
-
-	// vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
+	//textureset.insert(textureset.begin(), dsset);
+	if (textureset.empty()){
+		textureset.reserve(2);
+	}
+	textureset.push_back(dsset);
 }

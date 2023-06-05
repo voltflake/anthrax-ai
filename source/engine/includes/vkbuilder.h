@@ -96,7 +96,7 @@ public:
 	void buildpipeline()		{ pipeline.buildpipeline();			};
 
 	MeshBuilder meshhandler;
-	void initmeshbuilder()		{ meshhandler.init(pipeline, deletorhandler);		};
+	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, deletorhandler);		};
 	void loadmeshes()			{ meshhandler.loadmeshes();			};
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};

@@ -11,7 +11,8 @@ struct Texture {
 	VkDeviceMemory memory;
 
 	VkSampler sampler;
-
+	float w;
+	float h;
 };
 
 class TextureBuilder {

@@ -55,9 +55,12 @@ Material* PipelineBuilder::creatematerial(VkPipeline pipeline, VkPipelineLayout 
 void PipelineBuilder::buildpipeline() {
 
 	VkShaderModule fragshader;
-	if (!loadshader("./shaders/simpleShader.frag.spv", &fragshader)) {
+	if (!loadshader("./shaders/test.frag.spv", &fragshader)) {
 		std::cout << "Error: fragment shader module" << std::endl;
 	}
+	// if (!loadshader("./shaders/simpleShader.frag.spv", &fragshader)) {
+	// 	std::cout << "Error: fragment shader module" << std::endl;
+	// }
 	else {
 		std::cout << "Fragment shader successfully loaded" << std::endl;
 	}
@@ -141,6 +144,10 @@ void PipelineBuilder::setuppipeline() {
 	colorblending.logicOp = VK_LOGIC_OP_COPY;
 	colorblending.attachmentCount = 1;
 	colorblending.pAttachments = &colorblendattachment;
+	colorblending.blendConstants[0] = 1.f;
+	colorblending.blendConstants[1] = 1.f;
+	colorblending.blendConstants[2] = 1.f;
+	colorblending.blendConstants[3] = 1.f;
 
 	VkGraphicsPipelineCreateInfo pipelineinfo = {};
 	pipelineinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -299,6 +306,12 @@ VkPipelineColorBlendAttachmentState PipelineBuilder::colorblendattachmentcreatei
 	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
 	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
 		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_FALSE;
+	colorBlendAttachment.blendEnable = VK_TRUE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 	return colorBlendAttachment;
 }

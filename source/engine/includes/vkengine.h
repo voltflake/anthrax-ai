@@ -6,6 +6,8 @@
 #include "vkrenderer.h"
 #include "vkpipeline.h"
 
+#include "levelmanager.h"
+
 #include "vkdebug.h"
 
 #ifdef OS_WINDOWS
@@ -29,6 +31,7 @@ public:
 #endif
 
 	VkBuilder 					Builder;
+	LevelManager				Levels;
 
 #ifdef OS_WINDOWS
 	void 						wininitwindow();
@@ -42,7 +45,7 @@ public:
 
 	void 						linuxinitwindow();
 	void  						runlinux();
-	void 						handleEvent(const xcb_generic_event_t *event);
+	bool 						handleEvent(const xcb_generic_event_t *event);
 #endif
 	void 						init();
 	void 						cleanup();

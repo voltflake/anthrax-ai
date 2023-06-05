@@ -114,8 +114,8 @@ void Engine::linuxinitwindow() {
 	screen->root,
 	0,
 	0,
-	WindowExtend.width,
-	WindowExtend.height,
+	screen->width_in_pixels,
+	screen->height_in_pixels,
 	0,
 	XCB_WINDOW_CLASS_INPUT_OUTPUT,
 	screen->root_visual,
@@ -138,7 +138,7 @@ void Engine::linuxinitwindow() {
 	xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(
     connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
 	xcb_intern_atom_cookie_t wmProtocolsCookie =
-	    xcb_intern_atom(connection, 0, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
+	    xcb_intern_atom(connection, 1, strlen("WM_PROTOCOLS"), "WM_PROTOCOLS");
 	xcb_intern_atom_reply_t *wmDeleteReply =
 	    xcb_intern_atom_reply(connection, wmDeleteCookie, NULL);
 	xcb_intern_atom_reply_t *wmProtocolsReply =
@@ -160,22 +160,28 @@ uint32_t getTick() {
     return theTick;
 }
 
-void Engine::handleEvent(const xcb_generic_event_t *event)
+bool Engine::handleEvent(const xcb_generic_event_t *event)
 {
-
-    
 	switch (event->response_type & ~0x80) {
+	  	case XCB_BUTTON_PRESS: {
+            xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
+           	return true;
+        }
+        case XCB_BUTTON_RELEASE: {
+            xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
+           	return true;
+        }
 		case XCB_EXPOSE: {
 		    xcb_flush(connection);
-		    break;
+		    return true;
 		}
 		case XCB_CLIENT_MESSAGE: {
 		    if(((xcb_client_message_event_t*)event)->data.data32[0] == wmDeleteWin)
 		       running = false;
-		    break;
+		    return true;
 		}
-		 default:
-                    break;
+		default:
+            return false;
 	}
 	
 }
@@ -195,73 +201,44 @@ void Engine::runlinux() {
 		event = xcb_poll_for_event(connection);
 		if (event)
 		{
-			if(!ImGui_ImplX11_Event(event)) {
-				handleEvent(event);
-				free(event);
+			ImGui_ImplX11_Event(event);
+		 	handleEvent(event);
+			free(event);
+		}
+		else{
+				auto tEnd = std::chrono::high_resolution_clock::now();
+				auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
+				//ameTimer = tDiff / 1000.0f;
+				//fpsTimer += (float)tDiff;
+
+			    ImGui_ImplVulkan_NewFrame();
+		        ImGui_ImplX11_NewFrame();
+		        ImGui::NewFrame();
+
+		        ui();
+		       	draw();
+				//draw();
+				//frameCounter++;
+				//auto tEnd = std::chrono::high_resolution_clock::now();
+				//auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
+				frameTimer = tDiff / 1000.0f;
+				fpsTimer += (float)tDiff;
+				if (fpsTimer > 1000.0f)
+				{
+					xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
+						window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+						strlen("35"), "35");
+					lastFPS = (float)frameCounter * (1000.0f / fpsTimer);
+					fpsTimer = 0.0f;
+					frameCounter = 0;
+				}
 			}
-		}
-		auto tEnd = std::chrono::high_resolution_clock::now();
-		auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
-		//ameTimer = tDiff / 1000.0f;
-		//fpsTimer += (float)tDiff;
-
-	    ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplX11_NewFrame();
-        ImGui::NewFrame();
-
-        ui();
-       	draw();
-		//draw();
-		//frameCounter++;
-		//auto tEnd = std::chrono::high_resolution_clock::now();
-		//auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
-		frameTimer = tDiff / 1000.0f;
-		fpsTimer += (float)tDiff;
-		if (fpsTimer > 1000.0f)
-		{
-			xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
-				window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
-				strlen("35"), "35");
-			lastFPS = (float)frameCounter * (1000.0f / fpsTimer);
-			fpsTimer = 0.0f;
-			frameCounter = 0;
-		}
+		
 	}
 
-// 	bool running = true;
-//   	xcb_generic_event_t *event;
-//   	xcb_client_message_event_t *cm;
-
-//   	static int ticktrigger = 0;
-// 	uint32_t tickcount;
-
-//   	while (running) {
-//     	event = xcb_wait_for_event(connection);
-
-// 	    switch (event->response_type & ~0x80) {
-// 	    	case XCB_CLIENT_MESSAGE:
-// 		        cm = (xcb_client_message_event_t *)event;
-
-// 		        if (cm->data.data32[0] == wmDeleteWin) {
-// 		          running = false;
-// 		        }
-
-// 		        break;
-// 	    }
-
-// 	    tickcount = getTick();
-// 		//if (tickcount > ticktrigger) {
-// 			ticktrigger = tickcount + 10;
-// std::cout << "ehm\n\n\n";
-
-// 			draw();
-// 		//}
-// 	    free(event);
-//   	}
-
-//   xcb_destroy_window(connection, window);
-
-  // Flush device to make sure all resources can be freed 
 	vkDeviceWaitIdle(Builder.getdevice());
+	ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplX11_Shutdown();
+    ImGui::DestroyContext();
 }
 #endif

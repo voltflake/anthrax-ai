@@ -60,42 +60,69 @@ void Engine::cleanup() {
 
 void Engine::initscene() {
 
-	// for (int x = -20; x <= 20; x++) {
-	// 	for (int y = -20; y <= 20; y++) {
+	Builder.descriptors.updatesamplerdescriptors("first");
+	Builder.descriptors.updatesamplerdescriptors("sec");
 
-			Builder.descriptors.updatesamplerdescriptors("first");
-			Builder.descriptors.updatesamplerdescriptors("sec");
+	RenderObject tri;
+	tri.mesh = Builder.getmesh("triangle");
+	tri.material = Builder.getmaterial("defaultmesh");
 
-			RenderObject tri;
-			tri.mesh = Builder.getmesh("triangle");
-			tri.material = Builder.getmaterial("defaultmesh");
+	tri.textureset = &Builder.getsamplerset()[0];
 
-			tri.textureset = &Builder.getsamplerset()[0];
+	// glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(-1, -1, 0)); // x - x(scale) ; y - y(scale)
+	// glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1, 1, 0.0));
+	// tri.transformmatrix = translation * scale;
 
-			glm::mat4 translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(1, 1, 1));
-			glm::mat4 scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1.5, -1.0, 1.5));
-			tri.transformmatrix = translation * scale;
+	Builder.pushrenderobject(tri);
 
-			Builder.pushrenderobject(tri);
-
-
-			tri.textureset = &Builder.getsamplerset()[1];
-
-			translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(5, 1, 1));
-		 	scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1.5, -1.0, 1.5));
-			tri.transformmatrix = translation * scale;
-			Builder.pushrenderobject(tri);
-
-	// 	}
-	// }
+	tri.mesh = Builder.getmesh("triangle_sec");
+	tri.material = Builder.getmaterial("defaultmesh");
+	tri.textureset = &Builder.getsamplerset()[1];
 	
-
-
+	//translation = glm::translate(glm::mat4{ 1.0 }, glm::vec3(5, 1, 1));
+ 	//scale = glm::scale(glm::mat4{ 1.0 }, glm::vec3(1.5, -1.0, 1.5));
+	//tri.transformmatrix = translation ;
+	Builder.pushrenderobject(tri);
 }
 
 void Engine::ui() {
-       
-    ImGui::ShowDemoWindow();
+    
+    static bool active = true;
+    static bool loadlvl = false;
+    static bool newlvl = false;
+
+    // ImGui::ShowDemoWindow();
+	
+	ImGui::Begin("Engine ;p", &active, ImGuiWindowFlags_MenuBar);
+    
+    if (ImGui::BeginMenuBar())
+	{
+	    if (ImGui::BeginMenu("Engine ;p"))
+	    {
+	        if (ImGui::MenuItem("New Level", "")) {
+	        	newlvl = true;
+	        	loadlvl = false;
+	        }
+	        if (ImGui::MenuItem("Load Level", "")) {
+	        	loadlvl = true;
+	        	newlvl = false;
+	        }
+	        if (ImGui::MenuItem("Close")) { 
+	        	active = false; 
+	        }
+	        ImGui::EndMenu();
+	    }
+	    ImGui::EndMenuBar();
+	}
+
+	if (newlvl) {
+		Levels.newlevel();
+	}
+	if (loadlvl) {
+		Levels.loadlevel();
+	}
+
+    ImGui::End();
 }
 
 
@@ -142,10 +169,6 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameNumber], 1, &uniformoffset);
 	
 		}
-		//if (Builder.getsamplerset() != VK_NULL_HANDLE) {
-			//}
-
-		
 		glm::mat4 model = object.transformmatrix;
 		
 		MeshPushConstants constants;
@@ -160,7 +183,7 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 
 			lastMesh = object.mesh;
 		}
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
 
 		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 

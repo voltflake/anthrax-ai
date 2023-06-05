@@ -4,7 +4,7 @@
 
 void TextureBuilder::loadimages() {
 	
-	createtexture("./textures/texture.jpg");
+	createtexture("./textures/bg.jpg");
 	createtextureimageview();
 	createsampler();
 
@@ -12,7 +12,7 @@ void TextureBuilder::loadimages() {
 
 	std::cout << "Texture loaded successfully "<< std::endl;
 
-	createtexture("./textures/drawcube.png");
+	createtexture("./textures/cube.png");
 	createtextureimageview();
 	createsampler();
 
@@ -27,6 +27,9 @@ void TextureBuilder::createtexture(const std::string& texturepath) {
 	int texWidth, texHeight, texChannels;
     stbi_uc* pixels = stbi_load(texturepath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imagesize = texWidth * texHeight * 4;
+
+    texture.w =(float)texWidth;
+    texture.h = (float)texHeight;
 
     ASSERT(!pixels, "failed to load texture image!");
 

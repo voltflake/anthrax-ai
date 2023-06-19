@@ -98,6 +98,7 @@ public:
 	MeshBuilder meshhandler;
 	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, deletorhandler);		};
 	void loadmeshes()			{ meshhandler.loadmeshes();			};
+	void updateplayer(Mesh* mesh, int x, int y) 		{ meshhandler.updateplayermesh(mesh, x, y);	};
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(const std::string& name) { return meshhandler.getmesh(name);};

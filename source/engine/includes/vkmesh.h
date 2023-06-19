@@ -13,7 +13,10 @@ struct Mesh {
 	std::vector<Vertex> vertices;
 	BufferHandler vertexbuffer;
 
-	std::vector<uint16_t> indices;
+	std::vector<uint16_t> indices = {
+     0, 1, 3,  3, 1, 2,
+     4, 5, 6, 6, 7, 4
+	};
 	BufferHandler indexbuffer;
 };
 
@@ -22,6 +25,7 @@ public:
 	void init(PipelineBuilder& pipeline,TextureBuilder& textb, DeletionQueue& deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
 	void loadmeshes();
 	void updatemesh(Mesh& mesh);
+	void updateplayermesh(Mesh* mesh,int newx, int newy);
 
 	Mesh* 		getmesh(const std::string& name);
 

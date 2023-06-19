@@ -84,6 +84,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 #endif
 
 #ifdef OS_LINUX
+// xcb_key_symbols_t   *KeySyms; // move to engine.h
+
 void Engine::linuxinitwindow() {
 	int screenp = 0;
 
@@ -134,6 +136,7 @@ void Engine::linuxinitwindow() {
 
 	xcb_map_window(connection, window);
 	xcb_flush(connection);
+	KeySyms = xcb_key_symbols_alloc(connection);
 
 	xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(
     connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
@@ -163,6 +166,25 @@ uint32_t getTick() {
 bool Engine::handleEvent(const xcb_generic_event_t *event)
 {
 	switch (event->response_type & ~0x80) {
+		case XCB_KEY_PRESS: {
+			 xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
+        	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
+        	if(k == D_KEY) {
+        		Levels.level.player.x += 5;
+
+        	}
+        	if(k == W_KEY) {
+        		Levels.level.player.y -= 5;
+        	}
+        	if(k == A_KEY) {
+        		Levels.level.player.x -= 5;
+
+        	}
+        	if(k == S_KEY) {
+        		Levels.level.player.y += 5;
+        	}
+			return true;
+		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
            	return true;
@@ -205,7 +227,7 @@ void Engine::runlinux() {
 		 	handleEvent(event);
 			free(event);
 		}
-		else{
+		else {
 				auto tEnd = std::chrono::high_resolution_clock::now();
 				auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
 				//ameTimer = tDiff / 1000.0f;

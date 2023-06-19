@@ -139,6 +139,9 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 	camdata.view = view;
 	camdata.viewproj = projection * view;
 
+	Builder.updateplayer(first[1].mesh, Levels.level.player.x, Levels.level.player.y);
+
+
 	float framed = (BgNumber/ 60.f);
 
 	camdata.color = { sin(framed),0,cos(framed),1 };

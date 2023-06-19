@@ -7,6 +7,9 @@
 
 #ifdef OS_LINUX
 #include <xcb/xcb.h>
+#include <X11/keysym.h>
+#include <xcb/xfixes.h>
+#include <xcb/xcb_keysyms.h>
 #include "vulkan/vulkan_xcb.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
@@ -68,21 +71,29 @@ do                                                              \
 #endif
 #ifdef OS_LINUX
 #define VK_USE_PLATFORM_XCB_KHR
+
+
+#define W_KEY 119
+#define D_KEY 100
+#define A_KEY 97
+#define S_KEY 115
+
 #endif
+
 
 #define _USE_MATH_DEFINE
 
 #define FRAG_SHADER "./shaders/simpleShader.frag.spv"
 #define VERTEX_SHADER "./shaders/simpleShader.vert.spv"
 
-#define A_KEY 0x41
-#define D_KEY 0x44
-#define S_KEY 0x53
-#define W_KEY 0x57
-#define E_KEY 0x45
-#define F_KEY 0x46
-#define P_KEY 0x50
-#define Q_KEY 0x51
+// #define A_KEY 0x41
+// #define D_KEY 0x44
+// #define S_KEY 0x53
+// #define W_KEY 0x57
+// #define E_KEY 0x45
+// #define F_KEY 0x46
+// #define P_KEY 0x50
+// #define Q_KEY 0x51
 
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;

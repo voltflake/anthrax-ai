@@ -28,6 +28,7 @@ public:
 	xcb_screen_t* 				screen;
 	xcb_atom_t 					wmProtocols;
 	xcb_atom_t 					wmDeleteWin;
+	xcb_key_symbols_t   *KeySyms;
 #endif
 
 	VkBuilder 					Builder;

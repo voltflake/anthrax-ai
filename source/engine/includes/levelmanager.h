@@ -36,6 +36,8 @@ struct NewLevel {
 	Resources background;
 	Resources npc;
 	Resources trigger;
+
+	bool loaded = false;
 };
 
 class LevelManager {
@@ -46,4 +48,8 @@ public:
 	void savelevel();
 
 	NewLevel level;
+
+	bool check = false;
+	bool check2 = false;
+
 };

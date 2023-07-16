@@ -135,4 +135,3 @@ bool VkBuilder::validationlayerssupport() {
 	}
 	return true;
 }
-

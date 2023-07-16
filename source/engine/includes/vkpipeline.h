@@ -24,7 +24,7 @@ public:
 	bool 									loadshader(const char* filepath, VkShaderModule* outshadermodule);
 
 	void 									setuppipeline();
-	void 									buildpipeline();
+	void 									buildpipeline(bool check);
 
 	VkPipeline& 							getpipeline() 	{ return pipeline; };
 	DeviceBuilder&							getdevice()		{ return devicehandler; };
@@ -41,6 +41,7 @@ public:
 	Material* 								creatematerial(VkPipeline pipeline, VkPipelineLayout layout,const std::string& name);
 	Material* 	getmaterial(const std::string& name);
 
+	void        cleanmaterials() {materials.clear();};
 void getvertexdescription();
 
 private:

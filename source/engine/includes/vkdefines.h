@@ -137,7 +137,7 @@ struct CameraData {
 	glm::mat4 view;
 	glm::mat4 proj;
 	glm::mat4 viewproj;
-	glm::vec4 color;
+	glm::vec2 pos;
 };
 
 struct FrameData {
@@ -154,6 +154,11 @@ struct UploadContext {
 	VkCommandBuffer CommandBuffer;
 };
 
+
+struct Positions {
+	int x;
+	int y;
+};
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;

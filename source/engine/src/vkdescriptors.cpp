@@ -49,6 +49,8 @@ void DescriptorBuilder::builddescriptors() {
 	sizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	sizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	//sizes[3].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	//sizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolinfo = {};
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -74,14 +76,14 @@ void DescriptorBuilder::builddescriptors() {
 
 	vkCreateDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), &setinfo, nullptr, &globalsetlayout);
 	
-	VkDescriptorSetLayoutBinding texturebind = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	std::array<VkDescriptorSetLayoutBinding,1> texturebind = {descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0)};//, descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)};
 
 	VkDescriptorSetLayoutCreateInfo set3info = {};
 	set3info.bindingCount = 1;
 	set3info.flags = 0;
 	set3info.pNext = nullptr;
 	set3info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	set3info.pBindings = &texturebind;
+	set3info.pBindings = texturebind.data();
 
 	vkCreateDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), &set3info, nullptr, &singletexturesetlayout);
 
@@ -118,7 +120,6 @@ void DescriptorBuilder::builddescriptors() {
 		vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &setwrite, 0, nullptr);
 
 	}
-
 	
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 		deletorhandler.pushfunction([=]() {
@@ -152,9 +153,55 @@ void DescriptorBuilder::updatesamplerdescriptors(std::string texture) {
 
 	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
 
-	//textureset.insert(textureset.begin(), dsset);
 	if (textureset.empty()){
-		textureset.reserve(2);
+		textureset.reserve(texturehandler.resources.size());
 	}
 	textureset.push_back(dsset);
+}
+
+void DescriptorBuilder::updatesamplerdescriptors2(std::string texture,std::string texture2) {
+
+	VkDescriptorSet dsset;
+std::vector<VkWriteDescriptorSet> writeDescriptorSets(2);
+	VkDescriptorSetAllocateInfo allocInfo2{};
+	allocInfo2.pNext = nullptr;
+	allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo2.descriptorPool = descriptorpool;
+	allocInfo2.descriptorSetCount  = 1;
+	allocInfo2.pSetLayouts = &singletexturesetlayout;
+
+	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &dsset), "failed to allocate descriptor sets!");
+
+
+
+	VkDescriptorImageInfo imageBufferInfo;
+	imageBufferInfo.sampler = texturehandler.gettexture(texture)->sampler;
+	imageBufferInfo.imageView = texturehandler.gettexture(texture)->imageview;
+	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0);
+	texture1.pImageInfo = &imageBufferInfo;
+
+	//vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
+	textureset.push_back(dsset);
+	writeDescriptorSets.push_back(texture1);
+
+	VkDescriptorSet dsset2;
+
+VkDescriptorImageInfo imageBufferInfo2;
+	imageBufferInfo2.sampler = texturehandler.gettexture(texture2)->sampler;
+	imageBufferInfo2.imageView = texturehandler.gettexture(texture2)->imageview;
+	imageBufferInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet texture22 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset2), 1);
+	texture22.pImageInfo = &imageBufferInfo2;
+	writeDescriptorSets.push_back(texture22);
+
+
+	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+
+	if (textureset.empty()){
+		textureset.reserve(texturehandler.resources.size());
+	}
+	textureset.push_back(dsset2);
 }

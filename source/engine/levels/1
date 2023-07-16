@@ -1,19 +1,19 @@
 Player:
-	path: random
-	collision: 1
-	x: 5
-	y: 25
+	path: cube.png
+	collision: 0
+	x: 0
+	y: 0
 Camera:
 	follow: 0
 Background:
-	path: hhhhh
+	path: bg.jpg
 NPC:
-	path: check
-	x: 6
-	y: 8
+	path: 
+	x: 0
+	y: 0
 Trigger:
-	path: llaslslslsl
-	collision: 1
-	visible: 1
-	x: 100
-	y: 2333
+	path: 
+	collision: 0
+	visible: 0
+	x: 0
+	y: 0

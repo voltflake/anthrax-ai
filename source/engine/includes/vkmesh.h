@@ -23,9 +23,11 @@ struct Mesh {
 class MeshBuilder {
 public:
 	void init(PipelineBuilder& pipeline,TextureBuilder& textb, DeletionQueue& deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
-	void loadmeshes();
+	void loadmeshes(std::unordered_map<std::string, Positions>& resources);
 	void updatemesh(Mesh& mesh);
-	void updateplayermesh(Mesh* mesh,int newx, int newy);
+	void updateplayermesh(Mesh* mesh, std::string texture, int newx, int newy);
+
+	void clearmeshes() { meshes.clear();};
 
 	Mesh* 		getmesh(const std::string& name);
 

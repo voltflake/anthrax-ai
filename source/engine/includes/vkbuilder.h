@@ -13,7 +13,6 @@
 struct RenderObject {
 	Mesh* mesh;
 	Material* material;
-	//Texture* texture;
 	VkDescriptorSet* textureset;
 	
 	glm::mat4 transformmatrix;
@@ -42,13 +41,14 @@ public:
 
 	std::vector<VkDescriptorSet>&  			getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
 
-	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptors.getdescriptorset();};
-	UboArray& getcamerabuffer() { return descriptors.getcamerabuffer();};			
+	std::vector<VkDescriptorSet>& 			getdescriptorset() { return descriptors.getdescriptorset();};
+	UboArray& 								getcamerabuffer() { return descriptors.getcamerabuffer();};			
 
-	std::vector<RenderObject> 	renderqueue;
-	std::vector<RenderObject>& getrenderqueue() {return renderqueue;};
+	std::vector<RenderObject> 				renderqueue;
+	std::vector<RenderObject>& 				getrenderqueue() {return renderqueue;};
 
-	void pushrenderobject(RenderObject& object) { renderqueue.push_back(object); };
+
+	void 									pushrenderobject(RenderObject& object) { renderqueue.push_back(object); };
 
 //------------------------------------------------------------------------------------------
 
@@ -84,21 +84,26 @@ public:
 	void startsync() 			{ renderer.sync();					};
 
 	TextureBuilder texturehandler;
-	void inittexture() 			{ texturehandler.init(renderer, devicehandler, deletorhandler);};
+	void inittexture(std::unordered_map<std::string, Positions>& resources) 			{ texturehandler.init(renderer, devicehandler, deletorhandler, resources);};
 	void loadimages() 		{ texturehandler.loadimages();	};
+	void clearimages() 		{ texturehandler.clearimages();	};
+
 
 	DescriptorBuilder descriptors;
 	void initdescriptors() 		{ descriptors.init(renderer, deletorhandler, texturehandler); };
 	void builddescriptors()		{ descriptors.builddescriptors();				};
+	void cleartextureset() 		{ descriptors.cleartextureset();};
 
 	PipelineBuilder pipeline;
 	void initpipelinebuilder()	{ pipeline.init(devicehandler, renderer, descriptors, deletorhandler);};
-	void buildpipeline()		{ pipeline.buildpipeline();			};
+	void buildpipeline(bool check)		{ pipeline.buildpipeline(check);			};
 
 	MeshBuilder meshhandler;
 	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, deletorhandler);		};
-	void loadmeshes()			{ meshhandler.loadmeshes();			};
-	void updateplayer(Mesh* mesh, int x, int y) 		{ meshhandler.updateplayermesh(mesh, x, y);	};
+	void loadmeshes(std::unordered_map<std::string, Positions>& resources)			{ meshhandler.loadmeshes(resources);			};
+	void clearmeshes()			{ meshhandler.clearmeshes();			};
+
+	void updateplayer(Mesh* mesh, std::string texture, int x, int y) 		{ meshhandler.updateplayermesh(mesh, texture, x, y);	};
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(const std::string& name) { return meshhandler.getmesh(name);};

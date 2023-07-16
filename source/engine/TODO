@@ -1,0 +1,6 @@
+1. generalize textures:
+	- in gui --> name as xxx.*jpg --> put name to an array
+	- in texture procedure --> make array with textures name giving the name as a KEY + add "./textures/"
+	- in updatesamplerdescriptors --> reserve the amount of textureset as array size
+	- in mesh.cpp --> while array of textures create meshes, also putting default x & y what taken from gui
+	- 

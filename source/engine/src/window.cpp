@@ -170,27 +170,38 @@ bool Engine::handleEvent(const xcb_generic_event_t *event)
 			 xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
         	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
         	if(k == D_KEY) {
-        		Levels.level.player.x += 5;
+        		playerpos.x += 5;
 
         	}
         	if(k == W_KEY) {
-        		Levels.level.player.y -= 5;
+        		playerpos.y -= 5;
         	}
         	if(k == A_KEY) {
-        		Levels.level.player.x -= 5;
+        		playerpos.x -= 5;
 
         	}
         	if(k == S_KEY) {
-        		Levels.level.player.y += 5;
+        		playerpos.y += 5;
         	}
 			return true;
 		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
+            if (e->detail == 1) {
+            	mousepos.x = e->event_x ;
+            	mousepos.y= e->event_y ;
+
+            	std::cout <<  e->event_x << "||"<< e->event_y << '\n';
+            }
            	return true;
         }
         case XCB_BUTTON_RELEASE: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
+                      if (e->detail == 1) {
+                      	            	mousepos.x = e->event_x ;
+            	mousepos.y= e->event_y ;
+            	std::cout <<  e->event_x << "||"<< e->event_y << '\n';
+            }
            	return true;
         }
 		case XCB_EXPOSE: {

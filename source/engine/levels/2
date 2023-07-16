@@ -1,19 +1,19 @@
 Player:
-	path: random2222
-	collision: 1
-	x: 5
-	y: 25
+	path: popo.png
+	collision: 0
+	x: 500
+	y: 500
 Camera:
 	follow: 0
 Background:
-	path: hhhhh22
+	path: bg2.png
 NPC:
-	path: check
-	x: 5555
-	y: 8
+	path: 
+	x: 0
+	y: 0
 Trigger:
-	path: hnnnnnnn
-	collision: 1
-	visible: 1
-	x: 100
-	y: 2333
+	path: 
+	collision: 0
+	visible: 0
+	x: 0
+	y: 0

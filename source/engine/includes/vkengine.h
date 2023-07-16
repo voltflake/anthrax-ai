@@ -28,11 +28,18 @@ public:
 	xcb_screen_t* 				screen;
 	xcb_atom_t 					wmProtocols;
 	xcb_atom_t 					wmDeleteWin;
-	xcb_key_symbols_t   *KeySyms;
+	xcb_key_symbols_t   		*KeySyms;
 #endif
 
 	VkBuilder 					Builder;
 	LevelManager				Levels;
+
+	std::unordered_map<std::string, Positions> resources;
+	void initresources(LevelManager &levels);
+	
+	Positions playerpos = {0, 0};
+	Positions mousepos = {0, 0};
+	std::string namepath;
 
 #ifdef OS_WINDOWS
 	void 						wininitwindow();
@@ -66,4 +73,7 @@ private:
 	void 						initvulkan();
 	void 						initimgui();
 
+	void 						reloadresources();
+
+	void 						loadmylevel();
 };

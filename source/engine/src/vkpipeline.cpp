@@ -52,17 +52,24 @@ Material* PipelineBuilder::creatematerial(VkPipeline pipeline, VkPipelineLayout 
 	return &materials[name];
 }
 
-void PipelineBuilder::buildpipeline() {
+void PipelineBuilder::buildpipeline(bool check) {
 
 	VkShaderModule fragshader;
-	if (!loadshader("./shaders/test.frag.spv", &fragshader)) {
+
+	std::string fragshaderstr;
+	if (check) {
+		fragshaderstr = "./shaders/test.frag.spv";
+		shaderstages.clear();
+	}
+	else {
+		fragshaderstr = "./shaders/simpleShader.frag.spv";
+	}
+
+	if (!loadshader(fragshaderstr.c_str(), &fragshader)) {
 		std::cout << "Error: fragment shader module" << std::endl;
 	}
-	// if (!loadshader("./shaders/simpleShader.frag.spv", &fragshader)) {
-	// 	std::cout << "Error: fragment shader module" << std::endl;
-	// }
 	else {
-		std::cout << "Fragment shader successfully loaded" << std::endl;
+		std::cout << "Fragment shader successfully loaded --> " << fragshaderstr << std::endl;
 	}
 
 	VkShaderModule vertexshader;
@@ -93,8 +100,9 @@ void PipelineBuilder::buildpipeline() {
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
 
-	vertexinputinfo = vertexinputstagecreateinfo();
-	
+	if (!check) {
+		vertexinputinfo = vertexinputstagecreateinfo();
+	}
 	inputassembly = inputassemblycreateinput(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 
 	viewport.x = 0.0f;

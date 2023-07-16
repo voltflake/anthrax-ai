@@ -1,12 +1,12 @@
 Player:
-	path: 
+	path: cube.png
 	collision: 0
-	x: 0
-	y: 0
+	x: 10
+	y: 10
 Camera:
 	follow: 0
 Background:
-	path: 
+	path: bg.jpg
 NPC:
 	path: 
 	x: 0

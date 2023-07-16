@@ -16,5 +16,5 @@ layout(set = 1, binding = 0) uniform sampler2D texSampler;
 
 void main()
 {
-	outFragColor =  texture(texSampler, inUv);
+    outFragColor =  texture(texSampler, inUv).xyzw;
 }

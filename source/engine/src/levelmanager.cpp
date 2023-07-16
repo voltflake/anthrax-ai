@@ -189,7 +189,17 @@ void LevelManager::loadlevel() {
     	}
 	}
 	
-	newlevel();
+	if (ImGui::Button("Load")){
+		 std::cout << filename << "\n";
+		 std::string sss = "check";
+	    if (filename == sss) {
+	    	check = true;
+	    	std::cout << "check passed\n";
+	    	return ;
+	    }
+
+    	level.loaded = true;
+    }
 }
 
 void LevelManager::savelevel() {

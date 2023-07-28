@@ -193,6 +193,11 @@ void LevelManager::loadlevel() {
 		 std::cout << filename << "\n";
 		 std::string sss = "check";
 	    if (filename == sss) {
+	    	for (const auto & entry : std::filesystem::directory_iterator("./textures/check/")) {
+		    	if (entry.path() == ""){
+		    		return ;
+		    	}
+		    }
 	    	check = true;
 	    	std::cout << "check passed\n";
 	    	return ;

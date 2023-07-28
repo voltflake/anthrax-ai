@@ -90,6 +90,7 @@ void Engine::loadmylevel() {
 
 	playerpos.x = 0;
 	playerpos.y = 0;
+	Levels.check = true;
 
 	Builder.clearimages();
 	Builder.cleartextureset();
@@ -99,14 +100,10 @@ void Engine::loadmylevel() {
 
 	Builder.renderqueue.clear();
 
-	//namepath = Levels.level.player.path;
-
-	resources["bg2.png"] = {0,0};
-	//resources["bg.jpg"] = {0,0};
-
-	//resources[Levels.level.background.path] = {Levels.level.background.x, Levels.level.background.y};
-
-	//std::cout << resources[Levels.level.player.path].x << "|||" << resources[Levels.level.player.path].y << '\n';
+	resources["check/back.jpg"] = {0,0};
+	std::string checkstr = "check/" + checkimgs[checkimg];
+	std::cout << checkstr << '\n';
+	resources[checkstr] = {0,0};
 
 	Builder.inittexture(resources);
 	Builder.loadimages();
@@ -119,8 +116,8 @@ void Engine::loadmylevel() {
 	Builder.initmeshbuilder();
 	Builder.loadmeshes(resources);
 
-		int i = 0;
-		Builder.descriptors.updatesamplerdescriptors("bg2.png");
+	int i = 0;
+	Builder.descriptors.updatesamplerdescriptors2("check/back.jpg", checkstr);
 
 	for (auto& list : resources) {
 
@@ -132,10 +129,11 @@ void Engine::loadmylevel() {
 		Builder.pushrenderobject(tri);
 
 		i++;
+		break ;
 	}
-	Levels.check = false;
-	Levels.check2 = false;
 
+	Levels.check = false;
+	Levels.check2 = true;
 
 }
 
@@ -176,6 +174,9 @@ void Engine::reloadresources() {
 
 void Engine::ui() {
     
+    if (Levels.check2 || Levels.check) {
+    	return;
+    }
     static bool active = true;
     static bool loadlvl = false;
     static bool newlvl = false;
@@ -221,11 +222,6 @@ void Engine::ui() {
 			  
 	}
 
-	if (ImGui::Button("hehe")) {
-			//loadmylevel();
-
-		Levels.check2 = true;
-	}
     ImGui::End();
 }
 
@@ -244,13 +240,10 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 	camdata.viewproj = projection * view;
 	camdata.pos = {mousepos.x, mousepos.y};
 
-	if (count > 1 && !Levels.check) {
-		Builder.updateplayer(first[1].mesh, namepath, playerpos.x, playerpos.y);
+	if (count > 1 && !Levels.check2) {
+	 	Builder.updateplayer(first[1].mesh, namepath, playerpos.x, playerpos.y);
 	}
 
-	//float framed = (BgNumber/ 60.f);
-
-	//camdata.color = { sin(framed),0,cos(framed),1 };
 	char* datadst;
    	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
 
@@ -292,10 +285,7 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int count) {
 
 			lastMesh = object.mesh;
 		}
-		// if (Levels.check2){
-		// vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 2, &(*object.textureset), 1, nullptr);
-
-		// }
+	
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
 
 		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
@@ -352,185 +342,11 @@ void Engine::draw() {
 	vkCmdBeginRenderPass(cmd, &rpinfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	drawobjects(cmd, Builder.getrenderqueue().data(), Builder.getrenderqueue().size());
-	if (BgNumber > 100) {
-		Levels.check = false;
-	}
+
  	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
 	vkCmdEndRenderPass(cmd);
-	
-if (Levels.check2 && !Levels.check) {
-		std::cout << "lol\n\n";
-		
-		Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd) {
-		 VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = Builder.texturehandler.gettexture("bg2.png")->image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
 
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-  		 barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-       
-
-        vkCmdPipelineBarrier(
-            cmd,
-             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-
-	});
-		Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd) {
-		 VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image =Builder.getswapchainimage()[swapchainimageindex];
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-       
-
-        vkCmdPipelineBarrier(
-            cmd,
-             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-
-	});
-		
-
-		
-	Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd){
-
-	// VkImageCopy copyRegion{};
-	// copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	// copyRegion.srcSubresource.layerCount = 1;
-	// copyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	// copyRegion.dstSubresource.layerCount = 1;
-	// copyRegion.extent = { Builder.texturehandler.gettexture("bg2.png")->w, Builder.texturehandler.gettexture("bg2.png")->h, 1 };
-
-	// vkCmdCopyImage(cmd, Builder.getswapchainimage()[swapchainimageindex] , VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, Builder.texturehandler.gettexture("bg2.png")->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
-VkOffset3D blitSize;
-			blitSize.x = Builder.getswapchainextent().width;
-			blitSize.y = Builder.getswapchainextent().height;
-			blitSize.z = 1;
-			VkImageBlit imageBlitRegion{};
-			imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			imageBlitRegion.srcSubresource.layerCount = 1;
-			imageBlitRegion.srcOffsets[1] = blitSize;
-			imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			imageBlitRegion.dstSubresource.layerCount = 1;
-			imageBlitRegion.dstOffsets[1] = blitSize;
-
-			// Issue the blit command
-			vkCmdBlitImage(
-				cmd,
-				Builder.getswapchainimage()[swapchainimageindex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-				Builder.texturehandler.gettexture("bg2.png")->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				1,
-				&imageBlitRegion,
-				VK_FILTER_NEAREST);
-	});
-
-	Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd) {
-			 VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.newLayout =  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = Builder.texturehandler.gettexture("bg2.png")->image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        barrier.subresourceRange.baseMipLevel = 0;
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.baseArrayLayer = 0;
-        barrier.subresourceRange.layerCount = 1;
-
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;//VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-
-        vkCmdPipelineBarrier(
-            cmd,
-            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-	});
-
-	Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd) {
-		 VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image =Builder.getswapchainimage()[swapchainimageindex];
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-    barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-       
-
-        vkCmdPipelineBarrier(
-            cmd,
-             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-
-	});
-
-	}
 	VK_ASSERT(vkEndCommandBuffer(cmd), "failder to end command buffer");
 
 	VkSubmitInfo submit = {};
@@ -560,6 +376,14 @@ barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 	VK_ASSERT(vkQueuePresentKHR(Builder.getqueue().graphicsqueue, &presentinfo), "vkQueuePresentKHR failed!");
 
 	FrameNumber = (FrameNumber + 1) % MAX_FRAMES_IN_FLIGHT;
+	static int countt = 0;
+	if (Levels.check2 && !Levels.check) {
+countt++;
+if (countt > 5){
+		Builder.copycheck(swapchainimageindex);
+	
+}
+	}
 }
 
 void Engine::initimgui() {

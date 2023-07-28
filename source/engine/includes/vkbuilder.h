@@ -110,7 +110,7 @@ public:
 	Texture* 		gettexture(const std::string& name) { return texturehandler.gettexture(name);};
 
 
-	
+	void copycheck(uint32_t swapchainimageindex);
 	bool instanceextensionssupport();
 	bool validationlayerssupport();
 };

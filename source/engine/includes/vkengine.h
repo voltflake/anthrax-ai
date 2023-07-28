@@ -41,6 +41,10 @@ public:
 	Positions mousepos = {0, 0};
 	std::string namepath;
 
+	std::vector<std::string> checkimgs= {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
+	int checkimg = 0;
+	bool checkupdate = false;
+
 #ifdef OS_WINDOWS
 	void 						wininitwindow();
 	void 						runwindows();

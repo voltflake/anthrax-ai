@@ -77,6 +77,7 @@ do                                                              \
 #define D_KEY 100
 #define A_KEY 97
 #define S_KEY 115
+#define ENTER_KEY 65293
 
 #endif
 

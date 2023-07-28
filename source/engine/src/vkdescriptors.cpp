@@ -24,7 +24,7 @@ VkDescriptorSetLayoutBinding descriptorsetlayoutbinding(VkDescriptorType type, V
 	return setbind;
 }
 
-VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSet dstSet,  uint32_t binding)
+VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSet dstSet,  uint32_t binding, uint32_t count)
 {
 	VkWriteDescriptorSet write = {};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -32,7 +32,7 @@ VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSe
 
 	write.dstBinding = binding;
 	write.dstSet = dstSet;
-	write.descriptorCount = 1;
+	write.descriptorCount = count;
 	write.descriptorType = type;
 
 	return write;
@@ -42,15 +42,15 @@ VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSe
 void DescriptorBuilder::builddescriptors() {
 	BufferBuilder buffer;
 
-	std::array<VkDescriptorPoolSize, 3> sizes{};
+	std::array<VkDescriptorPoolSize, 4> sizes{};
 	sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	sizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 	sizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	sizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	//sizes[3].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	//sizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	sizes[3].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	sizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolinfo = {};
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -76,10 +76,10 @@ void DescriptorBuilder::builddescriptors() {
 
 	vkCreateDescriptorSetLayout(renderer.getdevice().getlogicaldevice(), &setinfo, nullptr, &globalsetlayout);
 	
-	std::array<VkDescriptorSetLayoutBinding,1> texturebind = {descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0)};//, descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)};
+	std::array<VkDescriptorSetLayoutBinding,2> texturebind = {descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0) , descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)};//, descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 1)};
 
 	VkDescriptorSetLayoutCreateInfo set3info = {};
-	set3info.bindingCount = 1;
+	set3info.bindingCount = 2; //size of VkDescriptorSetLayoutBinding
 	set3info.flags = 0;
 	set3info.pNext = nullptr;
 	set3info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -113,7 +113,7 @@ void DescriptorBuilder::builddescriptors() {
 		binfo.range = sizeof(CameraData);
 
 		VkWriteDescriptorSet setwrite;
-		setwrite = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorsets[i], 0);
+		setwrite = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorsets[i], 0, 1);
 		setwrite.pBufferInfo = &binfo;
 		
 	
@@ -148,7 +148,7 @@ void DescriptorBuilder::updatesamplerdescriptors(std::string texture) {
 	imageBufferInfo.imageView = texturehandler.gettexture(texture)->imageview;
 	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0);
+	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0, 1);
 	texture1.pImageInfo = &imageBufferInfo;
 
 	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
@@ -161,8 +161,10 @@ void DescriptorBuilder::updatesamplerdescriptors(std::string texture) {
 
 void DescriptorBuilder::updatesamplerdescriptors2(std::string texture,std::string texture2) {
 
+
+
 	VkDescriptorSet dsset;
-std::vector<VkWriteDescriptorSet> writeDescriptorSets(2);
+
 	VkDescriptorSetAllocateInfo allocInfo2{};
 	allocInfo2.pNext = nullptr;
 	allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -172,36 +174,88 @@ std::vector<VkWriteDescriptorSet> writeDescriptorSets(2);
 
 	VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &dsset), "failed to allocate descriptor sets!");
 
-
-
 	VkDescriptorImageInfo imageBufferInfo;
 	imageBufferInfo.sampler = texturehandler.gettexture(texture)->sampler;
 	imageBufferInfo.imageView = texturehandler.gettexture(texture)->imageview;
 	imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0);
-	texture1.pImageInfo = &imageBufferInfo;
-
-	//vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
-	textureset.push_back(dsset);
-	writeDescriptorSets.push_back(texture1);
-
-	VkDescriptorSet dsset2;
-
-VkDescriptorImageInfo imageBufferInfo2;
+	VkDescriptorImageInfo imageBufferInfo2;
 	imageBufferInfo2.sampler = texturehandler.gettexture(texture2)->sampler;
 	imageBufferInfo2.imageView = texturehandler.gettexture(texture2)->imageview;
 	imageBufferInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-	VkWriteDescriptorSet texture22 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset2), 1);
+	//VkDescriptorImageInfo imgs[] {imageBufferInfo, imageBufferInfo2};
+
+	VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0, 1);
+	texture1.pImageInfo = &imageBufferInfo;
+
+	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture1, 0, nullptr);
+
+	VkWriteDescriptorSet texture22 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 1, 1);
 	texture22.pImageInfo = &imageBufferInfo2;
-	writeDescriptorSets.push_back(texture22);
 
+	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), 1, &texture22, 0, nullptr);
 
-	vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
 
 	if (textureset.empty()){
 		textureset.reserve(texturehandler.resources.size());
 	}
-	textureset.push_back(dsset2);
+	textureset.push_back(dsset);
+
+	// VkDescriptorSet dsset;
+	// std::vector<VkWriteDescriptorSet> writeDescriptorSets(2);
+
+	// VkDescriptorSetAllocateInfo allocInfo2{};
+	// allocInfo2.pNext = nullptr;
+	// allocInfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	// allocInfo2.descriptorPool = descriptorpool;
+	// allocInfo2.descriptorSetCount  = 1;
+	// allocInfo2.pSetLayouts = &singletexturesetlayout;
+
+	// VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo2, &dsset), "failed to allocate descriptor sets!");
+
+
+	// if (textureset.empty()){
+	// 	textureset.reserve(texturehandler.resources.size());
+	// }
+
+	// VkDescriptorImageInfo imageBufferInfo;
+	// imageBufferInfo.sampler = texturehandler.gettexture(texture)->sampler;
+	// imageBufferInfo.imageView = texturehandler.gettexture(texture)->imageview;
+	// imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	// VkWriteDescriptorSet texture1 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset), 0, 1);
+	
+	// texture1.pImageInfo = &imageBufferInfo;
+
+	// vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+
+	// writeDescriptorSets.push_back(texture1);
+
+	// 	VkDescriptorSet dsset2;
+	// VkDescriptorSetAllocateInfo allocInfo3{};
+	// allocInfo3.pNext = nullptr;
+	// allocInfo3.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	// allocInfo3.descriptorPool = descriptorpool;
+	// allocInfo3.descriptorSetCount  = 1;
+	// allocInfo3.pSetLayouts = &singletexturesetlayout;
+
+	// VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice().getlogicaldevice(), &allocInfo3, &dsset2), "failed to allocate descriptor sets!");
+
+
+	// VkDescriptorImageInfo imageBufferInfo2;
+	// imageBufferInfo2.sampler = texturehandler.gettexture(texture2)->sampler;
+	// imageBufferInfo2.imageView = texturehandler.gettexture(texture2)->imageview;
+	// imageBufferInfo2.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	// VkWriteDescriptorSet texture22 = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, (dsset2), 1, 1);
+	// texture22.pImageInfo = &imageBufferInfo2;
+	
+	// writeDescriptorSets.push_back(texture22);
+
+
+	// vkUpdateDescriptorSets(renderer.getdevice().getlogicaldevice(), writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+
+
+	// textureset.push_back(dsset2);
 }

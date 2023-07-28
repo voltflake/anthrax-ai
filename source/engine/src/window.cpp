@@ -169,16 +169,19 @@ bool Engine::handleEvent(const xcb_generic_event_t *event)
 		case XCB_KEY_PRESS: {
 			 xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
         	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
+        	if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
+				std::cout << "lol\n\n";
+
+        		checkupdate = true;
+        	}
         	if(k == D_KEY) {
         		playerpos.x += 5;
-
         	}
         	if(k == W_KEY) {
         		playerpos.y -= 5;
         	}
         	if(k == A_KEY) {
         		playerpos.x -= 5;
-
         	}
         	if(k == S_KEY) {
         		playerpos.y += 5;
@@ -197,10 +200,10 @@ bool Engine::handleEvent(const xcb_generic_event_t *event)
         }
         case XCB_BUTTON_RELEASE: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
-                      if (e->detail == 1) {
-                      	            	mousepos.x = e->event_x ;
-            	mousepos.y= e->event_y ;
-            	std::cout <<  e->event_x << "||"<< e->event_y << '\n';
+            if (e->detail == 1) {
+                mousepos.x = 0;//e->event_x ;
+            	mousepos.y= 0;;
+            	std::cout <<  "|release|" << '\n';
             }
            	return true;
         }
@@ -249,6 +252,12 @@ void Engine::runlinux() {
 		        ImGui::NewFrame();
 
 		        ui();
+
+		        if (checkupdate) {
+		        	checkupdate = false;
+		        	checkimg++;
+		        	loadmylevel();
+		        }
 		       	draw();
 				//draw();
 				//frameCounter++;
@@ -259,8 +268,8 @@ void Engine::runlinux() {
 				if (fpsTimer > 1000.0f)
 				{
 					xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
-						window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
-						strlen("35"), "35");
+					window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+					strlen("35"), "35");
 					lastFPS = (float)frameCounter * (1000.0f / fpsTimer);
 					fpsTimer = 0.0f;
 					frameCounter = 0;

@@ -103,7 +103,6 @@ void LevelManager::loadlevel() {
 	if (std::ifstream in{ff}) {
     	while (std::getline(in, modify)) {
     		if (modify == "Player:") {
-    			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
     			modify.erase(0, found);
@@ -113,48 +112,44 @@ void LevelManager::loadlevel() {
 				found = modify.find_first_of(":") + 2;
     			modify.erase(0, found);
 
-    			//std::cout << modify << '\n';
-    			level.player.collision = (modify)  != "0";
+    			level.player.collision = (modify) != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
+    			modify.erase(0, found);
     			level.player.x = stoi(modify);
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
+    			modify.erase(0, found);
     			level.player.y = stoi(modify);
     		}
     		if (modify == "Camera:") {    			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.camera.follow = stoi(modify);
     		}
     		if (modify == "Background:") {
-    			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			strcpy(level.background.path,modify.c_str());
-
     		}
     		if (modify == "NPC:") {
-    			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			strcpy(level.npc.path,modify.c_str());
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.npc.x = stoi(modify);
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.npc.y = stoi(modify);
     		}
@@ -162,27 +157,27 @@ void LevelManager::loadlevel() {
     			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			strcpy(level.trigger.path,modify.c_str());
 				std::getline(in, modify);
 				found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.trigger.collision = (modify)  != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.trigger.visible = (modify)  != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.trigger.x = stoi(modify);
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
-    			    			modify.erase(0,found);
+    			modify.erase(0,found);
 
     			level.trigger.y = stoi(modify);
     		}
@@ -305,8 +300,4 @@ void LevelManager::savelevel() {
 			out << s << std::endl;
 		}
 	}
-		//out.close();
-	// std::ifstream file(ff);
-	// std::getline(file, str);
- 
 }

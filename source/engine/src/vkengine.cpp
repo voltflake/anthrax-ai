@@ -153,8 +153,9 @@ void Engine::reloadresources() {
 
 	namepath = Levels.level.player.path;
 
+	resources[Levels.level.trigger.path] = {Levels.level.trigger.x, Levels.level.trigger.y};
 	resources[Levels.level.player.path] = {Levels.level.player.x, Levels.level.player.y};
-	resources[Levels.level.background.path] = {Levels.level.background.x, Levels.level.background.y};
+	resources[Levels.level.background.path] = {Levels.level.background.x, Levels.level.background.y}; // background for some reason should be always top, looks kinda broken
 
 	std::cout << resources[Levels.level.player.path].x << "|||" << resources[Levels.level.player.path].y << '\n';
 
@@ -168,7 +169,6 @@ void Engine::reloadresources() {
 	Builder.loadmeshes(resources);
 
 	initscene();
-
 }
 
 
@@ -413,10 +413,6 @@ void Engine::initimgui() {
 	VkDescriptorPool imguiPool;
 	VK_ASSERT(vkCreateDescriptorPool(Builder.getdevice(), &pool_info, nullptr, &imguiPool), "failed to creat imgui descriptor set!");
 
-
-	// 2: initialize imgui library
-
-	//this initializes the core structures of imgui
 	ImGui::CreateContext();
     ImGui_ImplX11_Init(connection, &window);
 
@@ -425,7 +421,6 @@ void Engine::initimgui() {
 
 	ImGui::StyleColorsDark();
     io.Fonts->AddFontDefault();
-	//this initializes imgui for Vulkan
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = Builder.getinstance();
 	init_info.PhysicalDevice = Builder.getphysicaldevice();
@@ -442,7 +437,6 @@ void Engine::initimgui() {
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
 	});
 
-	//clear font textures from cpu data
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 
 	Builder.deletorhandler.pushfunction([=]() {

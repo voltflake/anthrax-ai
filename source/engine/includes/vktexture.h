@@ -17,18 +17,17 @@ struct Texture {
 
 class TextureBuilder {
 public:
-	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue& deletor, std::unordered_map<std::string, Positions>& res) { renderer = renderb; devicehandler = device; deletorhandler = deletor; resources = res;};
+	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue* deletor, std::unordered_map<std::string, Positions>& res) { renderer = renderb; devicehandler = device; deletorhandler = deletor; resources = res;};
 	void createtexture(const std::string& texturepath);
 	void createtextureimageview();
 	void createsampler();
-void createtexture2(const std::string& texturepath);
-
 
 	void buildimagesview();
 	void loadimages();
 
-	void clearimages() {loadedtextures.clear(); resources.clear();};
+	void clearimages() { cleartextures(); resources.clear();};
 
+	void cleartextures();
 
 	Texture* gettexture(std::string name) { auto it = loadedtextures.find(name);
 												if (it == loadedtextures.end()) {
@@ -44,7 +43,7 @@ void createtexture2(const std::string& texturepath);
 private:
 	RenderBuilder 	renderer;
 	DeviceBuilder	devicehandler;
-	DeletionQueue 	deletorhandler;
+	DeletionQueue* 	deletorhandler;
 
 	Texture texture;
 

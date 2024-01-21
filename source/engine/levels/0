@@ -12,8 +12,13 @@ NPC:
 	x: 0
 	y: 0
 Trigger:
-	path: floor.jpg
+	path: 
 	collision: 0
 	visible: 0
+	x: 0
+	y: 0
+Object:
+	path: floor.jpg
+	collision: 0
 	x: 0
 	y: 800

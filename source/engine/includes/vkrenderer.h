@@ -5,7 +5,7 @@
 
 class RenderBuilder {
 public:
-	void 							init(DeviceBuilder& device, DeletionQueue& deletor) 
+	void 							init(DeviceBuilder* device, DeletionQueue* deletor) 
 									{ devicehandler = device; deletorhandler = deletor; };
 
 	void 							buildcommandpool();
@@ -18,17 +18,19 @@ public:
 	VkFence& 						getrenderfence()		{ return renderfence; };
 
 	FrameArray& 					getframedata()			{ return frames; };
-	DeviceBuilder&					getdevice() 			{ return devicehandler ;};
+	DeviceBuilder*					getdevice() 			{ return devicehandler ;};
 	
 	void 							buildrenderpass();
 	void 							builframebuffers();
+	void							clearframebuffers();
+	void 							recreateframebuffer();
 	void 							sync();
 
 	void 							immediatesubmit(std::function<void(VkCommandBuffer cmd)>&& function);
 
 private:
-	DeletionQueue					deletorhandler;
-	DeviceBuilder					devicehandler;
+	DeletionQueue*					deletorhandler;
+	DeviceBuilder*					devicehandler;
 
 	VkCommandPool					commandpool;
 	VkCommandBuffer					commandbuffers;

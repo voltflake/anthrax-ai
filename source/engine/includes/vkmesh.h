@@ -22,7 +22,7 @@ struct Mesh {
 
 class MeshBuilder {
 public:
-	void init(PipelineBuilder& pipeline,TextureBuilder& textb, DeletionQueue& deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
+	void init(PipelineBuilder& pipeline,TextureBuilder& textb, DeletionQueue* deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
 	void loadmeshes(std::unordered_map<std::string, Positions>& resources);
 	void updatemesh(Mesh& mesh);
 	void updateplayermesh(Mesh* mesh, std::string texture, int newx, int newy);
@@ -34,7 +34,7 @@ public:
 private:
 	PipelineBuilder pipelinehandler;
 	TextureBuilder  texturehandler;
-	DeletionQueue	deletorhandler;
+	DeletionQueue*	deletorhandler;
 	
 	//Mesh 			triangle;
 	std::unordered_map

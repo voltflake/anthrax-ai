@@ -5,6 +5,9 @@
 void TextureBuilder::loadimages() {
 	
 	for (auto& list : resources) {
+        if (list.first == "") {
+            continue;
+        }
 		std::string path = "./textures/";
 		path += list.first;
 
@@ -17,6 +20,16 @@ void TextureBuilder::loadimages() {
 		loadedtextures[list.first] = texture;
 	}
 
+}
+
+void TextureBuilder::cleartextures() {
+    for (auto& list : loadedtextures) {
+        vkDestroySampler(devicehandler.getlogicaldevice(), list.second.sampler, nullptr);
+		vkDestroyImageView(devicehandler.getlogicaldevice(), list.second.imageview, nullptr);
+        vkDestroyImage(devicehandler.getlogicaldevice(), list.second.image, nullptr);
+	    vkFreeMemory(devicehandler.getlogicaldevice(), list.second.memory, nullptr);
+    }
+    loadedtextures.clear();
 }
 
 void TextureBuilder::createtexture(const std::string& texturepath) {
@@ -38,9 +51,9 @@ void TextureBuilder::createtexture(const std::string& texturepath) {
     buffer.allocbuffer(renderer, stagingbuffer, imagesize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* datadst;
-    vkMapMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory, 0, imagesize, 0, &datadst);
+    vkMapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, 0, imagesize, 0, &datadst);
         memcpy(datadst, pixels, (size_t)imagesize);
-    vkUnmapMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory);
+    vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory);
    
     stbi_image_free(pixels);
 
@@ -59,19 +72,19 @@ void TextureBuilder::createtexture(const std::string& texturepath) {
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 
-	VK_ASSERT(vkCreateImage(devicehandler.getlogicaldevice(), &imageInfo, nullptr, &texture.image), "failed to create image");
+	VK_ASSERT(vkCreateImage(renderer.getdevice()->getlogicaldevice(), &imageInfo, nullptr, &texture.image), "failed to create image");
 
 	VkMemoryRequirements memrequirements;
-	vkGetImageMemoryRequirements(devicehandler.getlogicaldevice(), texture.image, &memrequirements);
+	vkGetImageMemoryRequirements(renderer.getdevice()->getlogicaldevice(), texture.image, &memrequirements);
 
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memrequirements.size;
 	allocInfo.memoryTypeIndex = buffer.findmemorytype(devicehandler.getphysicaldevice(), memrequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	VK_ASSERT(vkAllocateMemory(devicehandler.getlogicaldevice(), &allocInfo, nullptr, &texture.memory),"failed to allocate image memory!");
+	VK_ASSERT(vkAllocateMemory(renderer.getdevice()->getlogicaldevice(), &allocInfo, nullptr, &texture.memory),"failed to allocate image memory!");
 
-	vkBindImageMemory(devicehandler.getlogicaldevice(), texture.image, texture.memory, 0);
+	vkBindImageMemory(renderer.getdevice()->getlogicaldevice(), texture.image, texture.memory, 0);
 
 	renderer.immediatesubmit([&](VkCommandBuffer cmd) {
 		 VkImageMemoryBarrier barrier{};
@@ -160,13 +173,13 @@ void TextureBuilder::createtexture(const std::string& texturepath) {
         );
 	});
 
-    vkDestroyBuffer(devicehandler.getlogicaldevice(), stagingbuffer.buffer, nullptr);
-    vkFreeMemory(devicehandler.getlogicaldevice(), stagingbuffer.devicememory, nullptr);
+    vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), stagingbuffer.buffer, nullptr);
+    vkFreeMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, nullptr);
 
-	deletorhandler.pushfunction([=]() {
-		vkDestroyImage(devicehandler.getlogicaldevice(), texture.image, nullptr);
-	    vkFreeMemory(devicehandler.getlogicaldevice(), texture.memory, nullptr);
-	});
+	// deletorhandler->pushfunction([=]() {
+	// 	vkDestroyImage(devicehandler.getlogicaldevice(), texture.image, nullptr);
+	//     vkFreeMemory(devicehandler.getlogicaldevice(), texture.memory, nullptr);
+	// });
 
 
 }
@@ -184,11 +197,11 @@ void TextureBuilder::createtextureimageview() {
 	viewInfo.subresourceRange.baseArrayLayer = 0;
 	viewInfo.subresourceRange.layerCount = 1;
 
-	VK_ASSERT(vkCreateImageView(devicehandler.getlogicaldevice(), &viewInfo, nullptr, &texture.imageview), "failed to create texture image view!");
+	VK_ASSERT(vkCreateImageView(renderer.getdevice()->getlogicaldevice(), &viewInfo, nullptr, &texture.imageview), "failed to create texture image view!");
 
-	deletorhandler.pushfunction([=]() {
-			vkDestroyImageView(devicehandler.getlogicaldevice(), texture.imageview, nullptr);
-		});
+	// deletorhandler->pushfunction([=]() {
+	// 		vkDestroyImageView(devicehandler.getlogicaldevice(), texture.imageview, nullptr);
+	// 	});
 }
 
 void TextureBuilder::createsampler() {
@@ -205,9 +218,9 @@ void TextureBuilder::createsampler() {
 	samplerinfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerinfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 
-	VK_ASSERT(vkCreateSampler(devicehandler.getlogicaldevice(), &samplerinfo, nullptr, &texture.sampler), "failed to create sampler!");
+	VK_ASSERT(vkCreateSampler(renderer.getdevice()->getlogicaldevice(), &samplerinfo, nullptr, &texture.sampler), "failed to create sampler!");
 
-	deletorhandler.pushfunction([=]() { 
-		vkDestroySampler(devicehandler.getlogicaldevice(), texture.sampler, nullptr);
-	});
+	// deletorhandler->pushfunction([=]() { 
+	// 	vkDestroySampler(devicehandler.getlogicaldevice(), texture.sampler, nullptr);
+	// });
 }

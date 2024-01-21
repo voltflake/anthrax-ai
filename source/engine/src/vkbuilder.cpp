@@ -41,15 +41,16 @@ void VkBuilder::buildinstance() {
 
 	VkDebug::setupDebugMessenger(instance, debugmessenger, enablevalidationlayers);
 
+	deletorhandler.pushfunction([=]() {
+	    vkDestroyInstance(instance, nullptr);
+	});
+
 	if (enablevalidationlayers) {
 		deletorhandler.pushfunction([=]() {
 	        VkDebug::DestroyDebugUtilsMessengerEXT(instance, debugmessenger, nullptr);
 		});
 	}
 	
-	deletorhandler.pushfunction([=]() {
-	    vkDestroyInstance(instance, nullptr);
-	});
 }
 
 #ifdef OS_WINDOWS
@@ -84,6 +85,12 @@ void VkBuilder::buildlinuxsurface(xcb_connection_t* connection, xcb_window_t& wi
 	});
 }
 #endif
+
+void VkBuilder::resizewindow(bool& winprepared, VkExtent2D windowextendh, bool check) {
+	devicehandler.recreateswapchain(winprepared, windowextendh);
+	renderer.recreateframebuffer();
+	pipeline.recreatepipeline(check);
+}
 
 bool VkBuilder::instanceextensionssupport()
 {

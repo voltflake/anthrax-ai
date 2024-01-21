@@ -23,19 +23,19 @@ void BufferBuilder::allocbuffer(RenderBuilder& renderer, BufferHandler& bufhandl
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VK_ASSERT(vkCreateBuffer(renderer.getdevice().getlogicaldevice(), &bufferInfo, nullptr, &bufhandler.buffer), "failed to create buffer!");
+    VK_ASSERT(vkCreateBuffer(renderer.getdevice()->getlogicaldevice(), &bufferInfo, nullptr, &bufhandler.buffer), "failed to create buffer!");
 
     VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(renderer.getdevice().getlogicaldevice(), bufhandler.buffer, &memRequirements);
+    vkGetBufferMemoryRequirements(renderer.getdevice()->getlogicaldevice(), bufhandler.buffer, &memRequirements);
 
     VkMemoryAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
     allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findmemorytype(renderer.getdevice().getphysicaldevice(), memRequirements.memoryTypeBits, properties);
+    allocInfo.memoryTypeIndex = findmemorytype(renderer.getdevice()->getphysicaldevice(), memRequirements.memoryTypeBits, properties);
 
-    VK_ASSERT(vkAllocateMemory(renderer.getdevice().getlogicaldevice(), &allocInfo, nullptr, &bufhandler.devicememory), "failed to allocate buffer memory!");
+    VK_ASSERT(vkAllocateMemory(renderer.getdevice()->getlogicaldevice(), &allocInfo, nullptr, &bufhandler.devicememory), "failed to allocate buffer memory!");
 
-    vkBindBufferMemory(renderer.getdevice().getlogicaldevice(), bufhandler.buffer, bufhandler.devicememory, 0);
+    vkBindBufferMemory(renderer.getdevice()->getlogicaldevice(), bufhandler.buffer, bufhandler.devicememory, 0);
 }
 
 void BufferBuilder::copybuffer(RenderBuilder& renderer, VkBuffer& srcbuffer, VkBuffer& dstbuffer, VkDeviceSize size) {
@@ -55,16 +55,16 @@ void BufferBuilder::createbuffer(RenderBuilder& renderer, BufferHandler& bufferh
     allocbuffer(renderer, stagingbuffer, buffersize, flags[0]/*VK_BUFFER_USAGE_TRANSFER_SRC_BIT*/, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* datadst;
-    vkMapMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory, 0, buffersize, 0, &datadst);
+    vkMapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, 0, buffersize, 0, &datadst);
         memcpy(datadst, datasrc, (size_t)buffersize);
-    vkUnmapMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory);
+    vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory);
 
     allocbuffer(renderer, bufferhandler, buffersize, flags[1]/*VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT*/, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     copybuffer(renderer, stagingbuffer.buffer, bufferhandler.buffer, buffersize);
 
-    vkDestroyBuffer(renderer.getdevice().getlogicaldevice(), stagingbuffer.buffer, nullptr);
-    vkFreeMemory(renderer.getdevice().getlogicaldevice(), stagingbuffer.devicememory, nullptr);
+    vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), stagingbuffer.buffer, nullptr);
+    vkFreeMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, nullptr);
 }
 
 void BufferBuilder::crearetexturebuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkDeviceSize buffersize, void *pixels) {
@@ -72,14 +72,12 @@ void BufferBuilder::crearetexturebuffer(RenderBuilder& renderer, BufferHandler& 
     allocbuffer(renderer, bufferhandler, buffersize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     void* datadst;
-    vkMapMemory(renderer.getdevice().getlogicaldevice(), bufferhandler.devicememory, 0, buffersize, 0, &datadst);
+    vkMapMemory(renderer.getdevice()->getlogicaldevice(), bufferhandler.devicememory, 0, buffersize, 0, &datadst);
         memcpy(datadst, pixels, (size_t)buffersize);
-    vkUnmapMemory(renderer.getdevice().getlogicaldevice(), bufferhandler.devicememory);
+    vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), bufferhandler.devicememory);
 }
 
 void BufferBuilder::createuniformbuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkDeviceSize buffersize) {
 
    allocbuffer(renderer, bufferhandler, buffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-   //vkMapMemory(renderer.getdevice().getlogicaldevice(), bufferhandler.devicememory, 0, buffersize, 0, &bufferhandler.uniformmapedmemory);
-
 }

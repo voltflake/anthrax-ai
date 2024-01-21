@@ -68,7 +68,7 @@ void DeviceBuilder::buildlogicaldevice() {
 	vkGetDeviceQueue(logicaldevbuilder, indices.graphicsfamily.value(), 0, &queue.graphicsqueue);
 	vkGetDeviceQueue(logicaldevbuilder, indices.presentfamily.value(), 0, &queue.presentqueue);
 
-	deletorhandler.pushfunction([=]() {
+	deletorhandler->pushfunction([=]() {
 	    vkDestroyDevice(logicaldevbuilder, nullptr);
 	});
 }
@@ -201,8 +201,8 @@ VkExtent2D DeviceBuilder::chooseswapextent(const VkSurfaceCapabilitiesKHR& capab
 		}
 #endif
 #ifdef OS_LINUX
-		width = WindowExtend.width;
-		height = WindowExtend.height;
+		width = windowextend.width;
+		height = windowextend.height;
 #endif
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),
@@ -268,9 +268,6 @@ void DeviceBuilder::buildswapchain() {
 	swapchainimgformatbuilder = surfaceFormat.format;
 	swapchainextentbuilder = extent;
 
-	deletorhandler.pushfunction([=]() {
-		vkDestroySwapchainKHR(logicaldevbuilder, swapchainbuilder, nullptr);
-	});
 }
 
 void DeviceBuilder::buildimagesview() {
@@ -298,8 +295,32 @@ void DeviceBuilder::buildimagesview() {
 
 		VK_ASSERT(vkCreateImageView(logicaldevbuilder, &createInfo, nullptr, &swapchainimgviewsbuilder[i]), "failed to create image view!");
 
-		deletorhandler.pushfunction([=]() {
-			vkDestroyImageView(logicaldevbuilder, swapchainimgviewsbuilder[i], nullptr);
-		});
 	}
+}
+
+void DeviceBuilder::cleanswapchain() {
+
+	vkDestroySwapchainKHR(logicaldevbuilder, swapchainbuilder, nullptr);
+
+	for (size_t i = 0; i < swapchainimgbuilder.size(); i++) {
+		vkDestroyImageView(logicaldevbuilder, swapchainimgviewsbuilder[i], nullptr);
+	}
+}
+
+void DeviceBuilder::recreateswapchain(bool& winprepared, VkExtent2D windowextendh) {
+
+	if (!winprepared) {
+		return;
+	}
+	windowextend = windowextendh;
+	winprepared = false;
+
+	vkDeviceWaitIdle(logicaldevbuilder);
+
+	cleanswapchain();
+	
+	buildswapchain();
+	buildimagesview();
+
+	std::cout << "recreated swapchain\n";
 }

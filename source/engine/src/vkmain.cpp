@@ -1,7 +1,13 @@
 #include "../includes/vkengine.h"
 
-int main(int argc, char **argv)
-{
+void Engine::start() {
+	ASSERT(state != INIT_ENGINE, "How is it possible?");
+	linuxinitwindow();
+	init();
+	state = ENGINE_EDITOR;
+}
+
+int main(int argc, char **argv) {
 	Engine engine;
 	
 #ifdef OS_WINDOWS
@@ -12,10 +18,8 @@ int main(int argc, char **argv)
 #endif
 
 #ifdef OS_LINUX
-		engine.linuxinitwindow();
-		engine.init();
+		engine.start();
 		engine.runlinux();
-		engine.cleanup();
 #endif
 
 	return 0;

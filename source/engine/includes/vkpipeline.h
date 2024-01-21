@@ -19,15 +19,17 @@ struct MeshPushConstants {
 
 class PipelineBuilder {
 public:
-	void 									init(DeviceBuilder& device, RenderBuilder& renderhandler, DescriptorBuilder& desc, DeletionQueue& deletor) 
+	void 									init(DeviceBuilder* device, RenderBuilder& renderhandler, DescriptorBuilder* desc, DeletionQueue* deletor) 
 											{ devicehandler = device; renderer = renderhandler; deletorhandler = deletor; descriptors = desc;};
 	bool 									loadshader(const char* filepath, VkShaderModule* outshadermodule);
 
 	void 									setuppipeline();
 	void 									buildpipeline(bool check);
+	void 									clearpipeline();
+	void									recreatepipeline(bool check);
 
 	VkPipeline& 							getpipeline() 	{ return pipeline; };
-	DeviceBuilder&							getdevice()		{ return devicehandler; };
+	DeviceBuilder*							getdevice()		{ return devicehandler; };
 	RenderBuilder&							getrenderer()	{ return renderer; };
 
 	VkPipelineShaderStageCreateInfo 		pipelineshadercreateinfo(VkShaderStageFlagBits stage, VkShaderModule shadermodule);
@@ -45,10 +47,10 @@ public:
 void getvertexdescription();
 
 private:
-	DeletionQueue							deletorhandler;
-	DeviceBuilder 							devicehandler;
+	DeletionQueue*							deletorhandler;
+	DeviceBuilder* 							devicehandler;
 	RenderBuilder 							renderer;
-	DescriptorBuilder						descriptors;
+	DescriptorBuilder*						descriptors;
 	
 	VertexInputDescription 					vertexdescription;
 

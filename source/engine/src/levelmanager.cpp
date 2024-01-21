@@ -2,7 +2,16 @@
 #include <filesystem>
 #include <fstream>
 
-void LevelManager::newlevel() {
+bool LevelManager::newlevel() {
+	bool open = true;
+
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 210), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 450), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin("NewLevel", &open, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+
  	if (ImGui::CollapsingHeader("Player")) {
         ImGui::InputText("1Path",     level.player.path, 64);
 		static bool visible = false;
@@ -18,13 +27,7 @@ void LevelManager::newlevel() {
        	ImGui::Separator();
 
     	ImGui::Checkbox("collision", &level.player.collision);
-    	if (level.player.collision){
-    		//ImGui::TextUnformatted("Path:");
-    	}
     	ImGui::Checkbox("show", &visible);
-    	if (visible){
-    		//ImGui::TextUnformatted("Path:");
-    	}
 
     	ImGui::Separator();
 
@@ -32,12 +35,12 @@ void LevelManager::newlevel() {
     if (ImGui::CollapsingHeader("Camera")) {
         ImGui::InputText("Follow",     level.camera.path, 64);
         ImGui::TextUnformatted("Size");
-        	ImGui::Separator();
+        ImGui::Separator();
 
     }
     if (ImGui::CollapsingHeader("Background")) {
         ImGui::InputText("2Path",     level.background.path, 64);
-        	ImGui::Separator();
+       	ImGui::Separator();
 
     }
     if (ImGui::CollapsingHeader("Objects")) {
@@ -63,12 +66,8 @@ void LevelManager::newlevel() {
         if (ImGui::TreeNode("Trigger")) {
         	
         	ImGui::Checkbox("visible", &level.trigger.visible);
-        	if (level.trigger.visible){
-        		ImGui::Checkbox("collision", &level.trigger.collision);
-	        	if (level.player.collision){
-	        		ImGui::InputText("4Path",    level.trigger.path, 64);
-	        	}
-        	}
+       		ImGui::Checkbox("collision", &level.trigger.collision);
+        	ImGui::InputText("4Path",    level.trigger.path, 64);
         	ImGui::Separator();
         	ImGui::Columns(3);
         	ImGui::TextUnformatted("Position:");
@@ -82,17 +81,48 @@ void LevelManager::newlevel() {
             ImGui::TreePop();
             ImGui::Spacing();
         }
+        if (ImGui::TreeNode("Object")) {
+        	
+       		ImGui::Checkbox("collision", &level.object.collision);
+        	ImGui::InputText("5Path",    level.object.path, 64);
+        	ImGui::Separator();
+        	ImGui::Columns(3);
+        	ImGui::TextUnformatted("Position:");
+        	ImGui::NextColumn();
+        	ImGui::InputInt("x", &level.object.x);
+        	ImGui::NextColumn();
+        	ImGui::InputInt("y", &level.object.y);
+        	ImGui::NextColumn();
+        	ImGui::Columns(1);
+
+            ImGui::TreePop();
+            ImGui::Spacing();
+        }
         	ImGui::Separator();
 
     }
     if (ImGui::Button("Save Level")){
     	savelevel();
     }
+
+	ImGui::End();
+	
+	if (!open) { return false; };
+	
+	return true;
 }
 
-void LevelManager::loadlevel() {
+bool LevelManager::loadlevel() {
 
 	static char filename[64] = "";
+	bool open = true;
+
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+	ImGui::SetNextWindowSize(ImVec2(500, 80), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 120), 0);
+
+    ImGui::Begin("LoadLevel", &open, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
 	ImGui::InputText("Level:", filename, 64);
     std::string modify;
@@ -181,6 +211,29 @@ void LevelManager::loadlevel() {
 
     			level.trigger.y = stoi(modify);
     		}
+    		if (modify == "Object:") {
+    			
+    			std::getline(in, modify);
+    			std::size_t found = modify.find_first_of(":") + 2;
+    			modify.erase(0,found);
+
+    			strcpy(level.object.path,modify.c_str());
+				std::getline(in, modify);
+				found = modify.find_first_of(":") + 2;
+    			modify.erase(0,found);
+
+    			level.object.collision = (modify)  != "0";
+    			std::getline(in, modify);
+    			found = modify.find_first_of(":") + 2;
+    			modify.erase(0,found);
+
+    			level.object.x = stoi(modify);
+    			std::getline(in, modify);
+    			found = modify.find_first_of(":") + 2;
+    			modify.erase(0,found);
+
+    			level.object.y = stoi(modify);
+    		}
     	}
 	}
 	
@@ -190,16 +243,21 @@ void LevelManager::loadlevel() {
 	    if (filename == sss) {
 	    	for (const auto & entry : std::filesystem::directory_iterator("./textures/check/")) {
 		    	if (entry.path() == ""){
-		    		return ;
+		    		return true;
 		    	}
 		    }
 	    	check = true;
 	    	std::cout << "check passed\n";
-	    	return ;
+	    	return true;
 	    }
 
     	level.loaded = true;
     }
+
+    ImGui::End();
+
+	if (!open) { return false; };
+	return true;
 }
 
 void LevelManager::savelevel() {
@@ -292,6 +350,18 @@ void LevelManager::savelevel() {
     			files.push_back(modify + std::to_string(level.trigger.x));
     			std::getline(in, modify);
     			files.push_back(modify + std::to_string(level.trigger.y));
+    		}
+    		if (modify == "Object:") {
+    			files.push_back(modify);
+    			
+    			std::getline(in, modify);
+    			files.push_back(modify + level.object.path);
+				std::getline(in, modify);
+    			files.push_back(modify + std::to_string(level.object.collision));
+    			std::getline(in, modify);
+    			files.push_back(modify + std::to_string(level.object.x));
+    			std::getline(in, modify);
+    			files.push_back(modify + std::to_string(level.object.y));
     		}
     	}
 	}

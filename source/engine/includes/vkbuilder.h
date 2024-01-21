@@ -46,8 +46,6 @@ public:
 
 	std::vector<RenderObject> 				renderqueue;
 	std::vector<RenderObject>& 				getrenderqueue() {return renderqueue;};
-
-
 	void 									pushrenderobject(RenderObject& object) { renderqueue.push_back(object); };
 
 //------------------------------------------------------------------------------------------
@@ -66,40 +64,46 @@ public:
 
 	DeviceBuilder devicehandler;
 #ifdef OS_WINDOWS
-	void initdevicebuilder(HWND& hwnd)	{ devicehandler.init(hwnd, instance, surface, deletorhandler);};
+	void initdevicebuilder(HWND& hwnd)	{ devicehandler.init(hwnd, instance, surface, &deletorhandler);};
 #endif
 #ifdef OS_LINUX
-	void initdevicebuilder()	{ devicehandler.init(instance, surface, deletorhandler);};
+	void initdevicebuilder(VkExtent2D windowextend)	{ devicehandler.init(windowextend, instance, surface, &deletorhandler);};
 #endif
+	
 	void buildphysicaldevice()	{ devicehandler.findphysicaldevice();	};
 	void buildlogicaldevice()	{ devicehandler.buildlogicaldevice();	};
 	void buildswapchain() 		{ devicehandler.buildswapchain();		};
 	void buildimagesview()		{ devicehandler.buildimagesview();		};
+	void cleanswapchain() 		{ devicehandler.cleanswapchain(); 		};
+
+	void resizewindow(bool& winprepared, VkExtent2D windowextend, bool check);
 
 	RenderBuilder renderer;
-	void initrenderbuilder()	{ renderer.init(devicehandler, deletorhandler);};
+	void initrenderbuilder()	{ renderer.init(&devicehandler, &deletorhandler);};
 	void buildcommandpool()		{ renderer.buildcommandpool();		};
 	void buildrenderpass() 		{ renderer.buildrenderpass();		};
 	void builframebuffers() 	{ renderer.builframebuffers();		};
+	void clearframebuffers() 	{ renderer.clearframebuffers();		};
 	void startsync() 			{ renderer.sync();					};
 
 	TextureBuilder texturehandler;
-	void inittexture(std::unordered_map<std::string, Positions>& resources) 			{ texturehandler.init(renderer, devicehandler, deletorhandler, resources);};
+	void inittexture(std::unordered_map<std::string, Positions>& resources) { texturehandler.init(renderer, devicehandler, &deletorhandler, resources);};
 	void loadimages() 		{ texturehandler.loadimages();	};
 	void clearimages() 		{ texturehandler.clearimages();	};
 
 
 	DescriptorBuilder descriptors;
-	void initdescriptors() 		{ descriptors.init(renderer, deletorhandler, texturehandler); };
+	void initdescriptors() 		{ descriptors.init(renderer, &deletorhandler, texturehandler); };
 	void builddescriptors()		{ descriptors.builddescriptors();				};
 	void cleartextureset() 		{ descriptors.cleartextureset();};
 
 	PipelineBuilder pipeline;
-	void initpipelinebuilder()	{ pipeline.init(devicehandler, renderer, descriptors, deletorhandler);};
+	void initpipelinebuilder()	{ pipeline.init(&devicehandler, renderer, &descriptors, &deletorhandler);};
 	void buildpipeline(bool check)		{ pipeline.buildpipeline(check);			};
+	void clearpipeline()		{ pipeline.clearpipeline();			};
 
 	MeshBuilder meshhandler;
-	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, deletorhandler);		};
+	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, &deletorhandler);		};
 	void loadmeshes(std::unordered_map<std::string, Positions>& resources)			{ meshhandler.loadmeshes(resources);			};
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
@@ -107,7 +111,7 @@ public:
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(const std::string& name) { return meshhandler.getmesh(name);};
-	Texture* 		gettexture(const std::string& name) { return texturehandler.gettexture(name);};
+	Texture* 	gettexture(const std::string& name) { return texturehandler.gettexture(name);};
 
 
 	void copycheck(uint32_t swapchainimageindex);

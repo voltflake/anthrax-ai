@@ -29,12 +29,12 @@ struct SwapChainSupportDetails {
 class DeviceBuilder {
 public:
 #ifdef OS_WINDOWS
-	void 						init(HWND& hwndh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue&	deletor) 
+	void 						init(HWND& hwndh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
 								{ hwnd = hwndh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
 #endif
 #ifdef OS_LINUX
-	void 						init(VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue&	deletor) 
-								{ instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
+	void 						init(VkExtent2D windowextendh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
+								{ windowextend = windowextendh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
 #endif
 
 	QueueFamilyIndex			findqueuefamilies(VkPhysicalDevice& device);
@@ -42,10 +42,13 @@ public:
 	bool						deviceextensionssupport(VkPhysicalDevice& device);
 	bool						isdevisesuitable(VkPhysicalDevice device);
 
+	void 						cleanswapchain();
+
 	void 						findphysicaldevice();
 	void 						buildlogicaldevice();
 	void 						buildswapchain();
 	void 						buildimagesview();
+	void 						recreateswapchain(bool& winprepared, VkExtent2D windowextendh);
 
 	VkExtent2D 					chooseswapextent(const VkSurfaceCapabilitiesKHR& capabilities);
 
@@ -58,6 +61,7 @@ public:
 	VkExtent2D&					getswapchainextent()		{ return swapchainextentbuilder;};
 	QueueBuilder& 				getqueue()					{ return queue;					};
 	VkSurfaceKHR&				getsurface()				{ return surface;				};
+	VkExtent2D&					getwindowxtent()			{ return windowextend;};
 
 	size_t 						minuniformbufferoffsetalignment;
 
@@ -66,7 +70,7 @@ private:
 #ifdef OS_WINDOWS
 	HWND 						hwnd;
 #endif
-	DeletionQueue				deletorhandler;
+	DeletionQueue*				deletorhandler;
 	VkInstance					instance;
 	VkSurfaceKHR 				surface;
 	VkPhysicalDevice 			physicaldevbuilder;
@@ -76,7 +80,7 @@ private:
 	std::vector<VkImage>		swapchainimgbuilder;
 	std::vector<VkImageView> 	swapchainimgviewsbuilder;
 	VkExtent2D 					swapchainextentbuilder;
-
+	VkExtent2D 					windowextend;
 
 	QueueBuilder				queue;
 };

@@ -16,6 +16,13 @@
 #include "imgui/imgui_impl_x11.h"
 #include "imgui/imgui_impl_vulkan.h"
 static ImGui_ImplVulkanH_Window MainWindowData;
+
+static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn, bool only_if_exists, const char *str)
+{
+	xcb_intern_atom_cookie_t cookie = xcb_intern_atom(conn, only_if_exists, strlen(str), str);
+	return xcb_intern_atom_reply(conn, cookie, NULL);
+}
+
 #endif
 #ifdef OS_WINDOWS
 #include <windows.h>
@@ -25,6 +32,7 @@ static ImGui_ImplVulkanH_Window MainWindowData;
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <thread>
 #include <vector>
 #include <array>
 #include <sstream>
@@ -39,6 +47,8 @@ static ImGui_ImplVulkanH_Window MainWindowData;
 #include "glm/gtc/matrix_transform.hpp"
 
 #include "vulkan/vk_enum_string_helper.h"
+
+
 
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
@@ -66,13 +76,15 @@ do                                                              \
 	}                                                           \
 } while (0)
 
+
+
 #ifdef OS_WINDOWS
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 #ifdef OS_LINUX
 #define VK_USE_PLATFORM_XCB_KHR
 
-
+#define ESC_KEY 65307
 #define W_KEY 119
 #define D_KEY 100
 #define A_KEY 97
@@ -87,14 +99,14 @@ do                                                              \
 #define FRAG_SHADER "./shaders/simpleShader.frag.spv"
 #define VERTEX_SHADER "./shaders/simpleShader.vert.spv"
 
-// #define A_KEY 0x41
-// #define D_KEY 0x44
-// #define S_KEY 0x53
-// #define W_KEY 0x57
-// #define E_KEY 0x45
-// #define F_KEY 0x46
-// #define P_KEY 0x50
-// #define Q_KEY 0x51
+enum Physics {
+	IDLE 		= 1 << 0,
+	MOVE_RIGHT 	= 1 << 1,
+	MOVE_UP 	= 1 << 2,
+	MOVE_LEFT 	= 1 << 3,
+	MOVE_DOWN 	= 1 << 4,
+	JUMP 		= 1 << 5
+};
 
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;
@@ -164,8 +176,6 @@ struct Positions {
 const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
-
-const VkExtent2D WindowExtend = {1920, 1080};
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

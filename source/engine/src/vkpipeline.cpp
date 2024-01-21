@@ -22,7 +22,7 @@ bool PipelineBuilder::loadshader(const char* filepath, VkShaderModule* outshader
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
 
 	VkShaderModule shadermodule;
-	if (vkCreateShaderModule(devicehandler.getlogicaldevice(), &createInfo, nullptr, &shadermodule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(devicehandler->getlogicaldevice(), &createInfo, nullptr, &shadermodule) != VK_SUCCESS) {
 		std::cout << "failed to create shader module!\n";
 		return false;
 	}
@@ -50,6 +50,19 @@ Material* PipelineBuilder::creatematerial(VkPipeline pipeline, VkPipelineLayout 
 	mat.pipelinelayout = layout;
 	materials[name] = mat;
 	return &materials[name];
+}
+
+void PipelineBuilder::recreatepipeline(bool check) {
+	clearpipeline();
+	vertexdescription.attributes.clear();
+	vertexdescription.bindings.clear();
+	shaderstages.clear();
+	buildpipeline(check);
+}
+
+void PipelineBuilder::clearpipeline() {
+	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayout, nullptr);
+	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipeline, nullptr);
 }
 
 void PipelineBuilder::buildpipeline(bool check) {
@@ -91,11 +104,11 @@ void PipelineBuilder::buildpipeline(bool check) {
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
 
-	VkDescriptorSetLayout setLayouts[] = { descriptors.getgloballayout(), descriptors.getsamplerlayout() };
+	VkDescriptorSetLayout setLayouts[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout() };
 	pipelinelayoutinfo.setLayoutCount = 2;
 	pipelinelayoutinfo.pSetLayouts = setLayouts;
 
-	VK_ASSERT(vkCreatePipelineLayout(devicehandler.getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayout), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayout), "failed to create pipeline layput!");
 
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
@@ -107,13 +120,13 @@ void PipelineBuilder::buildpipeline(bool check) {
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = (float)WindowExtend.width;
-	viewport.height = (float)WindowExtend.height;
+	viewport.width = (float)devicehandler->getwindowxtent().width;
+	viewport.height = (float)devicehandler->getwindowxtent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	scissor.offset = { 0, 0 };
-	scissor.extent = WindowExtend;
+	scissor.extent = devicehandler->getwindowxtent();
 
 	rasterizer = rasterezationcreateinfo(VK_POLYGON_MODE_FILL);
 
@@ -124,13 +137,13 @@ void PipelineBuilder::buildpipeline(bool check) {
 	setuppipeline();
 	creatematerial(pipeline, pipelinelayout, "defaultmesh");
 
-	vkDestroyShaderModule(devicehandler.getlogicaldevice(), vertexshader, nullptr);
-	vkDestroyShaderModule(devicehandler.getlogicaldevice(), fragshader, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshader, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshader, nullptr);
 
-	deletorhandler.pushfunction([=]() {
-		vkDestroyPipeline(devicehandler.getlogicaldevice(), pipeline, nullptr);
-		vkDestroyPipelineLayout(devicehandler.getlogicaldevice(), pipelinelayout, nullptr);
-	});
+	// deletorhandler->pushfunction([=]() {
+	// 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipeline, nullptr);
+	// 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayout, nullptr);
+	// });
 }
 
 void PipelineBuilder::setuppipeline() {
@@ -174,7 +187,7 @@ void PipelineBuilder::setuppipeline() {
 	pipelineinfo.subpass = 0;
 	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
 	
-	if (vkCreateGraphicsPipelines(devicehandler.getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipeline) != VK_SUCCESS) {
 		std::cout << "failed to create pipeline\n";
 	}
 }

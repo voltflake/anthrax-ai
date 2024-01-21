@@ -19,15 +19,22 @@ const std::string levelinfo =
 \tcollision: \n\
 \tvisible: \n\
 \tx: \n\
+\ty: \n\
+\nObject:\n\
+\tpath: \n\
+\tcollision: \n\
+\tx: \n\
 \ty: \n";
 
 struct Resources {
-	char path[64] = "";
-	int x = 0;
-	int y = 0;
-	int follow = 0;
-	bool collision = 0;
-	bool visible = 0;
+	char	path[64] = "";
+	int 	x = 0;
+	int 	y = 0;
+	int 	follow = 0;
+	bool 	collision = 0;
+	bool 	visible = 0;
+
+	int state = IDLE;
 };
 
 struct NewLevel {
@@ -36,14 +43,15 @@ struct NewLevel {
 	Resources background;
 	Resources npc;
 	Resources trigger;
+	Resources object;
 
 	bool loaded = false;
 };
 
 class LevelManager {
 public:
-	void newlevel();
-	void loadlevel();
+	bool newlevel();
+	bool loadlevel();
 
 	void savelevel();
 

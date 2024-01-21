@@ -1,8 +1,8 @@
 Player:
 	path: cube.png
-	collision: 0
-	x: 0
-	y: 0
+	collision: 1
+	x: 10
+	y: 10
 Camera:
 	follow: 0
 Background:
@@ -17,3 +17,8 @@ Trigger:
 	visible: 0
 	x: 0
 	y: 0
+Object:
+	path: floor.jpg
+	collision: 0
+	x: 0
+	y: 800

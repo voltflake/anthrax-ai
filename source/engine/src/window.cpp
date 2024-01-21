@@ -1,6 +1,7 @@
 
 #include "../includes/vkengine.h"
 #include        <chrono>
+#include 		<ctime>
 
 #ifdef OS_WINDOWS
 void Engine::wininitwindow() {
@@ -84,9 +85,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 #endif
 
 #ifdef OS_LINUX
-// xcb_key_symbols_t   *KeySyms; // move to engine.h
 
 void Engine::linuxinitwindow() {
+	uint32_t value_mask, value_list[32];
+
 	int screenp = 0;
 
 	connection = xcb_connect(NULL, &screenp);
@@ -95,48 +97,38 @@ void Engine::linuxinitwindow() {
 
 	}
 	window = xcb_generate_id(connection);
+
 	xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
 
 	for (int s = screenp; s > 0; s--) {
 	    xcb_screen_next(&iter);
 	}
 	screen = iter.data;
-	window = xcb_generate_id(connection);
-	uint32_t eventMask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
-	uint32_t valueList[2] ;//= {screen->black_pixel, 0};
-	valueList[0] = screen->black_pixel;
-	   valueList[1] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY |
-        XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE |
-        XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE |
-        XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_BUTTON_MOTION;
-	xcb_create_window(
-	connection,
-	XCB_COPY_FROM_PARENT,
-	window,
-	screen->root,
-	0,
-	0,
-	screen->width_in_pixels,
-	screen->height_in_pixels,
-	0,
-	XCB_WINDOW_CLASS_INPUT_OUTPUT,
-	screen->root_visual,
-	eventMask,
-	valueList);
 
-	xcb_change_property(
-	connection,
-	XCB_PROP_MODE_REPLACE,
-	window,
-	XCB_ATOM_WM_NAME,
-	XCB_ATOM_STRING,
-	8,
-	strlen("35"),
-	"35");
+	value_mask = XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK;
+	value_list[0] = screen->black_pixel;
+	value_list[1] =
+		XCB_EVENT_MASK_KEY_RELEASE |
+		XCB_EVENT_MASK_KEY_PRESS |
+		XCB_EVENT_MASK_EXPOSURE |
+		XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+		XCB_EVENT_MASK_POINTER_MOTION |
+		XCB_EVENT_MASK_BUTTON_PRESS |
+		XCB_EVENT_MASK_BUTTON_RELEASE;
 
-	xcb_map_window(connection, window);
-	xcb_flush(connection);
-	KeySyms = xcb_key_symbols_alloc(connection);
+	bool fullscreen = false;
+	if (fullscreen) {
+		WindowExtend.width = screen->width_in_pixels;
+		WindowExtend.height = screen->height_in_pixels;
+	}
+
+	xcb_create_window(connection,
+		XCB_COPY_FROM_PARENT,
+		window, screen->root,
+		0, 0, WindowExtend.width, WindowExtend.height, 0,
+		XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		screen->root_visual,
+		value_mask, value_list);
 
 	xcb_intern_atom_cookie_t wmDeleteCookie = xcb_intern_atom(
     connection, 0, strlen("WM_DELETE_WINDOW"), "WM_DELETE_WINDOW");
@@ -150,43 +142,70 @@ void Engine::linuxinitwindow() {
 	wmProtocols = wmProtocolsReply->atom;
 
 	xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window,
-	                    wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
+	wmProtocolsReply->atom, 4, 32, 1, &wmDeleteReply->atom);
 
+
+	std::string windowtitle = "35";
+	xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
+	window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
+	windowtitle.size(), windowtitle.c_str());
+
+	std::string wm_class;
+	std::string name = "name";
+	wm_class = wm_class.insert(0, name);
+	wm_class = wm_class.insert(name.size(), 1, '\0');
+	wm_class = wm_class.insert(name.size() + 1, windowtitle);
+	wm_class = wm_class.insert(wm_class.size(), 1, '\0');
+	xcb_change_property(connection, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS, XCB_ATOM_STRING, 8, wm_class.size() + 2, wm_class.c_str());
+
+	if (fullscreen) {
+		xcb_intern_atom_reply_t *atom_wm_state = intern_atom_helper(connection, false, "_NET_WM_STATE");
+		xcb_intern_atom_reply_t *atom_wm_fullscreen = intern_atom_helper(connection, false, "_NET_WM_STATE_FULLSCREEN");
+		xcb_change_property(connection,
+		XCB_PROP_MODE_REPLACE,
+		window, atom_wm_state->atom,
+		XCB_ATOM_ATOM, 32, 1,
+		&(atom_wm_fullscreen->atom));
+		free(atom_wm_fullscreen);
+		free(atom_wm_state);
+	}
+
+	xcb_map_window(connection, window);
+	xcb_flush(connection);
+	KeySyms = xcb_key_symbols_alloc(connection);
 }
 
-uint32_t getTick() {
-    struct timespec ts;
-    unsigned theTick = 0U;
-    clock_gettime( CLOCK_REALTIME, &ts );
-    theTick  = ts.tv_nsec / 1000000;
-    theTick += ts.tv_sec * 1000;
-    return theTick;
-}
-
-bool Engine::handleEvent(const xcb_generic_event_t *event)
+bool Engine::eventhandler(const xcb_generic_event_t *event)
 {
 	switch (event->response_type & ~0x80) {
 		case XCB_KEY_PRESS: {
-			 xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
+			xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
         	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
-        	if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
-				std::cout << "lol\n\n";
+			//std::cout << k << '\n';
 
+        	if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
         		checkupdate = true;
         	}
-        	if(k == D_KEY) {
-        		playerpos.x += 5;
+			if (k == ESC_KEY) {
+        		state ^= PLAY_GAME;
+				state |= ENGINE_EDITOR;
         	}
-        	if(k == W_KEY) {
-        		playerpos.y -= 5;
+        	if (k == D_KEY) {
+				Levels.level.player.state |= MOVE_RIGHT;
         	}
-        	if(k == A_KEY) {
-        		playerpos.x -= 5;
+        	if (k == W_KEY) {
+				Levels.level.player.state |= MOVE_UP;
         	}
-        	if(k == S_KEY) {
-        		playerpos.y += 5;
+        	if (k == A_KEY) {
+				Levels.level.player.state |= MOVE_LEFT;
+        	}
+        	if (k == S_KEY) {
+				Levels.level.player.state |= MOVE_DOWN;
         	}
 			return true;
+		}
+		case XCB_KEY_RELEASE: {
+        	Levels.level.player.state ^= Levels.level.player.state;
 		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
@@ -202,7 +221,7 @@ bool Engine::handleEvent(const xcb_generic_event_t *event)
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
             if (e->detail == 1) {
                 mousepos.x = 0;//e->event_x ;
-            	mousepos.y= 0;;
+            	mousepos.y = 0;
             	std::cout <<  "|release|" << '\n';
             }
            	return true;
@@ -211,76 +230,98 @@ bool Engine::handleEvent(const xcb_generic_event_t *event)
 		    xcb_flush(connection);
 		    return true;
 		}
-		case XCB_CLIENT_MESSAGE: {
-		    if(((xcb_client_message_event_t*)event)->data.data32[0] == wmDeleteWin)
-		       running = false;
+		case XCB_DESTROY_NOTIFY:
+			state |= EXIT;
+			running = false;
 		    return true;
+		break;
+		case XCB_CLIENT_MESSAGE: {
+		    if(((xcb_client_message_event_t*)event)->data.data32[0] == wmDeleteWin) {
+				state |= EXIT;
+		    	running = false;
+			}
+		    return true;
+		}
+		case XCB_CONFIGURE_NOTIFY: {
+			const xcb_configure_notify_event_t *cfgEvent = (const xcb_configure_notify_event_t *)event;
+			if ((winprepared) && ((cfgEvent->width != WindowExtend.width) || (cfgEvent->height != WindowExtend.height))) {
+				WindowExtend.width = cfgEvent->width;
+				WindowExtend.height = cfgEvent->height;
+				if ((WindowExtend.width > 0) && (WindowExtend.height > 0)) {
+					Builder.resizewindow(winprepared, WindowExtend, Levels.check);
+					std::cout << "window w: " << WindowExtend.width << " && h: " << WindowExtend.height << '\n';
+				}
+			}
 		}
 		default:
             return false;
 	}
-	
+	return false;
+}
+
+void Engine::calculateFPS(std::chrono::duration<double, std::milli>& delta) {
+
+    if (delta.count() < (1000.0f / MAX_FPS + 2.0f / MAX_FPS)) {
+        std::chrono::duration<double, std::milli> deltams((1000.0f / MAX_FPS) + (2.0f / MAX_FPS) - delta.count());
+        auto msduration = std::chrono::duration_cast<std::chrono::milliseconds>(deltams);
+        std::this_thread::sleep_for(std::chrono::milliseconds(msduration.count()));
+        fps = 1000.0f / deltams.count();
+    }
+}
+
+void Engine::checkstate() {
+	xcb_generic_event_t *event;
+	while ((event = xcb_poll_for_event(connection))) {
+		ImGui_ImplX11_Event(event);
+		eventhandler(event);
+		free(event);
+	}
 }
 
 void Engine::runlinux() {
+	
 	xcb_flush(connection);
-	static int ticktrigger = 0;
-	static float frameTimer = 1.0f;
-	static float fpsTimer = 0.0f;
-	static uint32_t frameCounter = 0;
-	//int tickcount;
 
-	while (running)
-	{
-		auto tStart = std::chrono::high_resolution_clock::now();
-		xcb_generic_event_t *event;
-		event = xcb_poll_for_event(connection);
-		if (event)
-		{
-			ImGui_ImplX11_Event(event);
-		 	handleEvent(event);
-			free(event);
-		}
-		else {
-				auto tEnd = std::chrono::high_resolution_clock::now();
-				auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
-				//ameTimer = tDiff / 1000.0f;
-				//fpsTimer += (float)tDiff;
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	state |= ENGINE_EDITOR;
 
-			    ImGui_ImplVulkan_NewFrame();
-		        ImGui_ImplX11_NewFrame();
-		        ImGui::NewFrame();
-
-		        ui();
-
-		        if (checkupdate) {
-		        	checkupdate = false;
-		        	checkimg++;
-		        	loadmylevel();
-		        }
-		       	draw();
-				//draw();
-				//frameCounter++;
-				//auto tEnd = std::chrono::high_resolution_clock::now();
-				//auto tDiff = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
-				frameTimer = tDiff / 1000.0f;
-				fpsTimer += (float)tDiff;
-				if (fpsTimer > 1000.0f)
-				{
-					xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
-					window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
-					strlen("35"), "35");
-					lastFPS = (float)frameCounter * (1000.0f / fpsTimer);
-					fpsTimer = 0.0f;
-					frameCounter = 0;
-				}
-			}
+	while (running) {
 		
-	}
+		checkstate();
 
-	vkDeviceWaitIdle(Builder.getdevice());
-	ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplX11_Shutdown();
-    ImGui::DestroyContext();
+		if (state & PLAY_GAME) {
+			ImGui_ImplVulkan_NewFrame();
+			ImGui_ImplX11_NewFrame();
+			ImGui::NewFrame();
+			
+			start = std::chrono::system_clock::now();
+			std::chrono::duration<double, std::milli> delta = start - end;
+			calculateFPS(delta);
+
+			move();
+			draw();
+			end = std::chrono::system_clock::now();
+		}
+		if (state & ENGINE_EDITOR) {
+			ImGui_ImplVulkan_NewFrame();
+			ImGui_ImplX11_NewFrame();
+			ImGui::NewFrame();
+
+			start = std::chrono::system_clock::now();
+			std::chrono::duration<double, std::milli> delta = start - end;
+			calculateFPS(delta);
+			
+			ui();
+			draw();
+
+			end = std::chrono::system_clock::now();
+		}
+		if (state & EXIT) {
+			xcb_key_symbols_free(KeySyms);
+			cleanup();
+		}
+	
+	}
 }
 #endif

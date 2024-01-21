@@ -7,7 +7,7 @@
 
 class DescriptorBuilder {
 public:
-	void init(RenderBuilder& rendererh, DeletionQueue& deletor, TextureBuilder& texture) { deletorhandler = deletor; renderer = rendererh; texturehandler = texture;};
+	void init(RenderBuilder& rendererh, DeletionQueue* deletor, TextureBuilder& texture) { deletorhandler = deletor; renderer = rendererh; texturehandler = texture;};
 
 	void builddescriptors();
 
@@ -20,7 +20,7 @@ void updatesamplerdescriptors2(std::string texture,std::string texture2);
 	VkDescriptorSetLayout& getsamplerlayout() { return singletexturesetlayout; };
 
 	std::vector<VkDescriptorSet>& getmainsamplerdescriptor() { return textureset;};
-	void cleartextureset() {textureset.clear(); descriptorsets.clear();};
+	void cleartextureset();
 
 
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
@@ -40,7 +40,7 @@ private:
 	UboArray 						CameraBuffer;
 
 
-	DeletionQueue	deletorhandler;
+	DeletionQueue*	deletorhandler;
 	TextureBuilder texturehandler;
 	RenderBuilder renderer;
 

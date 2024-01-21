@@ -16,6 +16,9 @@ void MeshBuilder::loadmeshes(std::unordered_map<std::string, Positions>& resourc
 	float w, h;
 
 	for (auto& list : resources) {
+		if (list.first == "") {
+            continue;
+        }
 		h = texturehandler.gettexture(list.first)->h;
 		w = texturehandler.gettexture(list.first)->w;
 
@@ -75,11 +78,11 @@ void MeshBuilder::updatemesh(Mesh& mesh){
 	VkBufferUsageFlags flags2[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT};
 	buffer.createbuffer(pipelinehandler.getrenderer(), mesh.indexbuffer, flags2, sizeof(mesh.indices[0]) * mesh.indices.size(), mesh.indices.data());
 	
-	deletorhandler.pushfunction([=]() {
-       vkDestroyBuffer(pipelinehandler.getdevice().getlogicaldevice(), mesh.vertexbuffer.buffer, nullptr);
-       vkFreeMemory(pipelinehandler.getdevice().getlogicaldevice(), mesh.vertexbuffer.devicememory, nullptr);
-       vkDestroyBuffer(pipelinehandler.getdevice().getlogicaldevice(), mesh.indexbuffer.buffer, nullptr);
-       vkFreeMemory(pipelinehandler.getdevice().getlogicaldevice(), mesh.indexbuffer.devicememory, nullptr);
+	deletorhandler->pushfunction([=]() {
+       vkDestroyBuffer(pipelinehandler.getdevice()->getlogicaldevice(), mesh.vertexbuffer.buffer, nullptr);
+       vkFreeMemory(pipelinehandler.getdevice()->getlogicaldevice(), mesh.vertexbuffer.devicememory, nullptr);
+       vkDestroyBuffer(pipelinehandler.getdevice()->getlogicaldevice(), mesh.indexbuffer.buffer, nullptr);
+       vkFreeMemory(pipelinehandler.getdevice()->getlogicaldevice(), mesh.indexbuffer.devicememory, nullptr);
  
     });
 }

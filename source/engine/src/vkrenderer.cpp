@@ -72,34 +72,34 @@ VkSemaphoreCreateInfo RenderBuilder::semaphorecreateinfo(VkSemaphoreCreateFlags 
 
 void RenderBuilder::buildcommandpool() {
 
-	QueueFamilyIndex queuefamilyindices = devicehandler.findqueuefamilies(devicehandler.getphysicaldevice());
+	QueueFamilyIndex queuefamilyindices = devicehandler->findqueuefamilies(devicehandler->getphysicaldevice());
 
     VkCommandPoolCreateInfo poolInfo = commandpoolcreateinfo(queuefamilyindices.graphicsfamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 
-    	VK_ASSERT(vkCreateCommandPool(devicehandler.getlogicaldevice(), &poolInfo, nullptr, &frames[i].CommandPool), "failed to create command pool!");
+    	VK_ASSERT(vkCreateCommandPool(devicehandler->getlogicaldevice(), &poolInfo, nullptr, &frames[i].CommandPool), "failed to create command pool!");
 		
 		VkCommandBufferAllocateInfo cmdAllocInfo = commandbufferallcoteinfo(frames[i].CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
-		VK_ASSERT(vkAllocateCommandBuffers(devicehandler.getlogicaldevice(), &cmdAllocInfo, &frames[i].MainCommandBuffer), "failed to allocate command buffers!");
+		VK_ASSERT(vkAllocateCommandBuffers(devicehandler->getlogicaldevice(), &cmdAllocInfo, &frames[i].MainCommandBuffer), "failed to allocate command buffers!");
 
-		deletorhandler.pushfunction([=]() {
-			vkDestroyCommandPool(devicehandler.getlogicaldevice(), frames[i].CommandPool, nullptr);
+		deletorhandler->pushfunction([=]() {
+			vkDestroyCommandPool(devicehandler->getlogicaldevice(), frames[i].CommandPool, nullptr);
 		});
 	}
 
 	VkCommandPoolCreateInfo uploadcommandpoolinfo = commandpoolcreateinfo(queuefamilyindices.graphicsfamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	
-	VK_ASSERT(vkCreateCommandPool(devicehandler.getlogicaldevice(), &uploadcommandpoolinfo, nullptr, &uploadcontext.CommandPool), "failed to create upload command pool!");
+	VK_ASSERT(vkCreateCommandPool(devicehandler->getlogicaldevice(), &uploadcommandpoolinfo, nullptr, &uploadcontext.CommandPool), "failed to create upload command pool!");
 
-	deletorhandler.pushfunction([=]() {
-		vkDestroyCommandPool(devicehandler.getlogicaldevice(), uploadcontext.CommandPool, nullptr);
+	deletorhandler->pushfunction([=]() {
+		vkDestroyCommandPool(devicehandler->getlogicaldevice(), uploadcontext.CommandPool, nullptr);
 	});
 
 	VkCommandBufferAllocateInfo cmdallocinfo = commandbufferallcoteinfo(uploadcontext.CommandPool, 1);
 
-	VK_ASSERT(vkAllocateCommandBuffers(devicehandler.getlogicaldevice(), &cmdallocinfo, &uploadcontext.CommandBuffer), "failed to allocate upload command buffers!");
+	VK_ASSERT(vkAllocateCommandBuffers(devicehandler->getlogicaldevice(), &cmdallocinfo, &uploadcontext.CommandBuffer), "failed to allocate upload command buffers!");
 }
 
 
@@ -117,18 +117,18 @@ void RenderBuilder::immediatesubmit(std::function<void(VkCommandBuffer cmd)>&& f
 
 	VkSubmitInfo submit = submitinfo(&cmd);
 
-	VK_ASSERT(vkQueueSubmit(devicehandler.getqueue().graphicsqueue, 1, &submit, uploadcontext.UploadFence), "failed to submit upload queue!");
+	VK_ASSERT(vkQueueSubmit(devicehandler->getqueue().graphicsqueue, 1, &submit, uploadcontext.UploadFence), "failed to submit upload queue!");
 
-	vkWaitForFences(devicehandler.getlogicaldevice(), 1, &uploadcontext.UploadFence, true, 9999999999);
-	vkResetFences(devicehandler.getlogicaldevice(), 1, &uploadcontext.UploadFence);
+	vkWaitForFences(devicehandler->getlogicaldevice(), 1, &uploadcontext.UploadFence, true, 9999999999);
+	vkResetFences(devicehandler->getlogicaldevice(), 1, &uploadcontext.UploadFence);
 
-	vkResetCommandPool(devicehandler.getlogicaldevice(), uploadcontext.CommandPool, 0);
+	vkResetCommandPool(devicehandler->getlogicaldevice(), uploadcontext.CommandPool, 0);
 }
 
 void RenderBuilder::buildrenderpass() {
 
 	VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = devicehandler.getswapchainformat();
+    colorAttachment.format = devicehandler->getswapchainformat();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -166,11 +166,18 @@ void RenderBuilder::buildrenderpass() {
 	renderPassInfo.dependencyCount = 1;
 	renderPassInfo.pDependencies = &dependency;
 
-	VK_ASSERT(vkCreateRenderPass(devicehandler.getlogicaldevice(), &renderPassInfo, nullptr, &renderpass), "failder to create render pass !");
+	VK_ASSERT(vkCreateRenderPass(devicehandler->getlogicaldevice(), &renderPassInfo, nullptr, &renderpass), "failder to create render pass !");
 
-	deletorhandler.pushfunction([=]() {
-		vkDestroyRenderPass(devicehandler.getlogicaldevice(), renderpass, nullptr);
+	deletorhandler->pushfunction([=]() {
+		vkDestroyRenderPass(devicehandler->getlogicaldevice(), renderpass, nullptr);
 	});
+}
+
+void RenderBuilder::clearframebuffers() {
+	const uint32_t swapchainimagecount = devicehandler->getswapchainimage().size();
+	for (int i = 0; i < swapchainimagecount; i++) {
+		vkDestroyFramebuffer(devicehandler->getlogicaldevice(), framebuffers[i], nullptr);
+	}
 }
 
 void RenderBuilder::builframebuffers() {
@@ -181,22 +188,30 @@ void RenderBuilder::builframebuffers() {
 
 	fbinfo.renderPass = renderpass;
 	fbinfo.attachmentCount = 1;
-	fbinfo.width = devicehandler.getswapchainextent().width;
-	fbinfo.height = devicehandler.getswapchainextent().height;
+	fbinfo.width = devicehandler->getswapchainextent().width;
+	fbinfo.height = devicehandler->getswapchainextent().height;
 	fbinfo.layers = 1;
 
-	const uint32_t swapchainimagecount = devicehandler.getswapchainimage().size();
+	const uint32_t swapchainimagecount = devicehandler->getswapchainimage().size();
 	framebuffers = std::vector<VkFramebuffer>(swapchainimagecount);
-	std::vector<VkImageView> imageviews = devicehandler.getswapchainimageview();
+	std::vector<VkImageView> imageviews = devicehandler->getswapchainimageview();
 	for (int i = 0; i < swapchainimagecount; i++) {
 		fbinfo.pAttachments = &imageviews[i];
 
-		VK_ASSERT(vkCreateFramebuffer(devicehandler.getlogicaldevice(), &fbinfo, nullptr, &framebuffers[i]), "faild to create frame buffer!");
+		VK_ASSERT(vkCreateFramebuffer(devicehandler->getlogicaldevice(), &fbinfo, nullptr, &framebuffers[i]), "faild to create frame buffer!");
 
-		deletorhandler.pushfunction([=]() {
-			vkDestroyFramebuffer(devicehandler.getlogicaldevice(), framebuffers[i], nullptr);
-		});
+		// deletorhandler->pushfunction([=]() {
+		// 	vkDestroyFramebuffer(devicehandler->getlogicaldevice(), framebuffers[i], nullptr);
+		// });
 	}
+}
+
+void RenderBuilder::recreateframebuffer() {
+	
+	clearframebuffers();
+	builframebuffers();
+
+	std::cout << "frame buffer recreated\n";
 }
 
 void RenderBuilder::sync() {
@@ -206,26 +221,26 @@ void RenderBuilder::sync() {
 
 	VkSemaphoreCreateInfo semaphoreCreateInfo = semaphorecreateinfo();
 
-	VK_ASSERT(vkCreateFence(devicehandler.getlogicaldevice(), &uploadfencecreateinfo, nullptr, &uploadcontext.UploadFence), "failder to create upload fence ! ");
+	VK_ASSERT(vkCreateFence(devicehandler->getlogicaldevice(), &uploadfencecreateinfo, nullptr, &uploadcontext.UploadFence), "failder to create upload fence ! ");
 
-    deletorhandler.pushfunction([=]() {
-		vkDestroyFence(devicehandler.getlogicaldevice(), uploadcontext.UploadFence, nullptr);
+    deletorhandler->pushfunction([=]() {
+		vkDestroyFence(devicehandler->getlogicaldevice(), uploadcontext.UploadFence, nullptr);
 	});
 
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {     
 
-		VK_ASSERT(vkCreateFence(devicehandler.getlogicaldevice(), &fenceCreateInfo, nullptr, &frames[i].RenderFence), "failder to create fence ! ");
+		VK_ASSERT(vkCreateFence(devicehandler->getlogicaldevice(), &fenceCreateInfo, nullptr, &frames[i].RenderFence), "failder to create fence ! ");
         
-        deletorhandler.pushfunction([=]() {
-			vkDestroyFence(devicehandler.getlogicaldevice(), frames[i].RenderFence, nullptr);
+        deletorhandler->pushfunction([=]() {
+			vkDestroyFence(devicehandler->getlogicaldevice(), frames[i].RenderFence, nullptr);
 		});
 
-       	VK_ASSERT(vkCreateSemaphore(devicehandler.getlogicaldevice(), &semaphoreCreateInfo, nullptr, &frames[i].PresentSemaphore), "failder to create present semaphore!");
-		VK_ASSERT(vkCreateSemaphore(devicehandler.getlogicaldevice(), &semaphoreCreateInfo, nullptr, &frames[i].RenderSemaphore), "failder to create render semaphore!");
+       	VK_ASSERT(vkCreateSemaphore(devicehandler->getlogicaldevice(), &semaphoreCreateInfo, nullptr, &frames[i].PresentSemaphore), "failder to create present semaphore!");
+		VK_ASSERT(vkCreateSemaphore(devicehandler->getlogicaldevice(), &semaphoreCreateInfo, nullptr, &frames[i].RenderSemaphore), "failder to create render semaphore!");
 
-		deletorhandler.pushfunction([=]() {
-	        vkDestroySemaphore(devicehandler.getlogicaldevice(), frames[i].PresentSemaphore, nullptr);
-	        vkDestroySemaphore(devicehandler.getlogicaldevice(), frames[i].RenderSemaphore, nullptr);
+		deletorhandler->pushfunction([=]() {
+	        vkDestroySemaphore(devicehandler->getlogicaldevice(), frames[i].PresentSemaphore, nullptr);
+	        vkDestroySemaphore(devicehandler->getlogicaldevice(), frames[i].RenderSemaphore, nullptr);
 	    });
 	}
 

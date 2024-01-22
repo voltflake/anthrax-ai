@@ -66,8 +66,8 @@ void Engine::draw() {
 
 	ImGui::Render();
 
-	if (Levels.level.loaded) {
-		Levels.level.loaded = false;
+	if (Levels.level.initres) {
+		Levels.level.initres = false;
 		reloadresources();
 	}
 

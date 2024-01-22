@@ -9,11 +9,13 @@ void Engine::collision(int& state, bool collision) {
 	w = Builder.texturehandler.gettexture(Levels.level.player.path)->w;
 	h = Builder.texturehandler.gettexture(Levels.level.player.path)->h;
 
-    if (Levels.level.player.y + h + h + 20 <= Levels.level.object.y) {
-        state |= MOVE_DOWN;
-    }
-    else if (state & MOVE_DOWN) {
-        state = IDLE;
+    for (int i = 0; i < Levels.level.object.size(); i++) {
+        if (Levels.level.player.y + h + h + 20 <= Levels.level.object[i].y) {
+            state |= MOVE_DOWN;
+        }
+        else if (state & MOVE_DOWN) {
+            state = IDLE;
+        }
     }
 }
 

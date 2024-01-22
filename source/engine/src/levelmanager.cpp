@@ -7,10 +7,10 @@ bool LevelManager::newlevel() {
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 210), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 450), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 215), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(500, 450), 0);
 
-    ImGui::Begin("NewLevel", &open, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("NewLevel", &open, ImGuiWindowFlags_NoResize);
 
  	if (ImGui::CollapsingHeader("Player")) {
         ImGui::InputText("1Path",     level.player.path, 64);
@@ -27,7 +27,7 @@ bool LevelManager::newlevel() {
        	ImGui::Separator();
 
     	ImGui::Checkbox("collision", &level.player.collision);
-    	ImGui::Checkbox("show", &visible);
+    	ImGui::Checkbox("show collision", &visible);
 
     	ImGui::Separator();
 
@@ -41,64 +41,67 @@ bool LevelManager::newlevel() {
     if (ImGui::CollapsingHeader("Background")) {
         ImGui::InputText("2Path",     level.background.path, 64);
        	ImGui::Separator();
-
     }
     if (ImGui::CollapsingHeader("Objects")) {
-
- 		if (ImGui::TreeNode("NPC")) {
-        	ImGui::InputText("3Path",    level.npc.path, 64);
-
-        	ImGui::Separator();
-        	ImGui::Columns(3);
-        	ImGui::TextUnformatted("Position:");
-        	ImGui::NextColumn();
-        	ImGui::InputInt("x", &level.npc.x);
-        	ImGui::NextColumn();
-        	ImGui::InputInt("y", &level.npc.y);
-        	ImGui::NextColumn();
-        	ImGui::Columns(1);
-
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-        	ImGui::Separator();
-
         if (ImGui::TreeNode("Trigger")) {
-        	
-        	ImGui::Checkbox("visible", &level.trigger.visible);
-       		ImGui::Checkbox("collision", &level.trigger.collision);
-        	ImGui::InputText("4Path",    level.trigger.path, 64);
-        	ImGui::Separator();
-        	ImGui::Columns(3);
-        	ImGui::TextUnformatted("Position:");
-        	ImGui::NextColumn();
-        	ImGui::InputInt("x", &level.trigger.x);
-        	ImGui::NextColumn();
-        	ImGui::InputInt("y", &level.trigger.y);
-        	ImGui::NextColumn();
-        	ImGui::Columns(1);
+			int size = level.trigger.size();
+        	ImGui::InputInt("amount", &size);        	
+			if (size != level.trigger.size()) {
+				level.trigger.resize(size);
+			}
+			for (int i = 0; i < size + 1; i++) {
+				std::string name = "[" + std::to_string(i) + "]";
+				if (ImGui::TreeNode(name.c_str())) {
+					ImGui::Checkbox("visible", &level.trigger[i].visible);
+					ImGui::Checkbox("collision", &level.trigger[i].collision);
+					ImGui::InputText("4Path",    level.trigger[i].path, 64);
+					ImGui::Separator();
+					ImGui::Columns(3);
+					ImGui::TextUnformatted("Position:");
+					ImGui::NextColumn();
+					ImGui::InputInt("x", &level.trigger[i].x);
+					ImGui::NextColumn();
+					ImGui::InputInt("y", &level.trigger[i].y);
+					ImGui::NextColumn();
+					ImGui::Columns(1);
 
+					ImGui::TreePop();
+					ImGui::Spacing();
+				}
+			}
             ImGui::TreePop();
             ImGui::Spacing();
         }
         if (ImGui::TreeNode("Object")) {
         	
-       		ImGui::Checkbox("collision", &level.object.collision);
-        	ImGui::InputText("5Path",    level.object.path, 64);
-        	ImGui::Separator();
-        	ImGui::Columns(3);
-        	ImGui::TextUnformatted("Position:");
-        	ImGui::NextColumn();
-        	ImGui::InputInt("x", &level.object.x);
-        	ImGui::NextColumn();
-        	ImGui::InputInt("y", &level.object.y);
-        	ImGui::NextColumn();
-        	ImGui::Columns(1);
+			int size = level.object.size();
+        	ImGui::InputInt("amount", &size);        	
+			if (size != level.object.size()) {
+				level.object.resize(size);
+			}
+			for (int i = 0; i < size + 1; i++) {
+				std::string name = "[" + std::to_string(i) + "]";
+				if (ImGui::TreeNode(name.c_str())) {
+					ImGui::Checkbox("collision", &level.object[i].collision);
+					ImGui::InputText("5Path",    level.object[i].path, 64);
+					ImGui::Separator();
+					ImGui::Columns(3);
+					ImGui::TextUnformatted("Position:");
+					ImGui::NextColumn();
+					ImGui::InputInt("x", &level.object[i].x);
+					ImGui::NextColumn();
+					ImGui::InputInt("y", &level.object[i].y);
+					ImGui::NextColumn();
+					ImGui::Columns(1);
 
+					ImGui::TreePop();
+					ImGui::Spacing();
+				}
+			}
             ImGui::TreePop();
             ImGui::Spacing();
         }
-        	ImGui::Separator();
+        ImGui::Separator();
 
     }
     if (ImGui::Button("Save Level")){
@@ -119,16 +122,24 @@ bool LevelManager::loadlevel() {
 
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-	ImGui::SetNextWindowSize(ImVec2(500, 80), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 120), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 80), 0);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 130), ImGuiCond_Once);
 
-    ImGui::Begin("LoadLevel", &open, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("LoadLevel", &open,  ImGuiWindowFlags_NoResize);
 
 	ImGui::InputText("Level:", filename, 64);
     std::string modify;
 
     std::string ff = "levels/";
     ff += std::string(filename);
+
+	static int triggerind = 0;
+	static int objectind = 0;
+
+	if (!level.loaded) {
+			level.trigger.clear();
+	level.object.clear();
+	std::cout << "!!!!!!!!!!!!!" << level.loaded << '\n';
 
 	if (std::ifstream in{ff}) {
     	while (std::getline(in, modify)) {
@@ -166,75 +177,73 @@ bool LevelManager::loadlevel() {
 
     			strcpy(level.background.path,modify.c_str());
     		}
-    		if (modify == "NPC:") {
-    			std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
-
-    			strcpy(level.npc.path,modify.c_str());
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
-
-    			level.npc.x = stoi(modify);
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
-
-    			level.npc.y = stoi(modify);
-    		}
     		if (modify == "Trigger:") {
-    			
+    			Resources tmp;
+
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			strcpy(level.trigger.path,modify.c_str());
+    			strcpy(tmp.path, modify.c_str());
 				std::getline(in, modify);
 				found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.trigger.collision = (modify)  != "0";
+    			tmp.collision = (modify)  != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.trigger.visible = (modify)  != "0";
+    			tmp.visible = (modify)  != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.trigger.x = stoi(modify);
+    			tmp.x = stoi(modify);
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.trigger.y = stoi(modify);
+    			tmp.y = stoi(modify);
+				
+				//if (triggerind < level.trigger.size()) {
+					level.trigger.emplace_back(tmp);
+				//}
+				triggerind++;
     		}
     		if (modify == "Object:") {
+    			Resources tmp;
     			
     			std::getline(in, modify);
     			std::size_t found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			strcpy(level.object.path,modify.c_str());
+    			strcpy(tmp.path,modify.c_str());
 				std::getline(in, modify);
 				found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.object.collision = (modify)  != "0";
+    			tmp.collision = (modify)  != "0";
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.object.x = stoi(modify);
+    			tmp.x = stoi(modify);
     			std::getline(in, modify);
     			found = modify.find_first_of(":") + 2;
     			modify.erase(0,found);
 
-    			level.object.y = stoi(modify);
+    			tmp.y = stoi(modify);
+				//if (objectind - 1 < level.object.size()) {
+					level.object.emplace_back(tmp);
+				//}
+				objectind++;
     		}
     	}
+    	level.loaded = true;
+    	level.initres = true;
+
+	}
 	}
 	
 	if (ImGui::Button("Load")){
@@ -250,8 +259,7 @@ bool LevelManager::loadlevel() {
 	    	std::cout << "check passed\n";
 	    	return true;
 	    }
-
-    	level.loaded = true;
+		level.loaded = false;
     }
 
     ImGui::End();
@@ -301,6 +309,9 @@ void LevelManager::savelevel() {
 	files.clear();
     std::string modify;
 
+	int triggerind = 0;
+	int objectind = 0;
+
  	if (std::ifstream in{ff}) {
     	while (std::getline(in, modify)) {
     		if (modify == "Player:") {
@@ -327,41 +338,43 @@ void LevelManager::savelevel() {
     			std::getline(in, modify);
     			files.push_back(modify + level.background.path);
     		}
-    		if (modify == "NPC:") {
-    			files.push_back(modify);
-    			
-    			std::getline(in, modify);
-    			files.push_back(modify + level.npc.path);
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.npc.x));
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.npc.y));
-    		}
     		if (modify == "Trigger:") {
-    			files.push_back(modify);
-    			
-    			std::getline(in, modify);
-    			files.push_back(modify + level.trigger.path);
+				files.push_back(modify);
+				
 				std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.trigger.collision));
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.trigger.visible));
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.trigger.x));
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.trigger.y));
+				files.push_back(modify + level.trigger[triggerind].path);
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.trigger[triggerind].collision));
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.trigger[triggerind].visible));
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.trigger[triggerind].x));
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.trigger[triggerind].y));
+
+				triggerind++;
+				if (triggerind < level.trigger.capacity()) {
+					files.push_back("Trigger:");
+				}
     		}
     		if (modify == "Object:") {
-    			files.push_back(modify);
-    			
-    			std::getline(in, modify);
-    			files.push_back(modify + level.object.path);
+				files.push_back(modify);
+				
 				std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.object.collision));
+				files.push_back(modify + level.object[objectind].path);
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.object[objectind].collision));
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.object[objectind].x));
+				std::getline(in, modify);
+				files.push_back(modify + std::to_string(level.object[objectind].y));
+
+				objectind++;
+				std::cout << level.trigger.capacity() << '\n';
+				if (objectind < level.object.capacity()) {
+					files.push_back("Object:");
+				}
     			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.object.x));
-    			std::getline(in, modify);
-    			files.push_back(modify + std::to_string(level.object.y));
     		}
     	}
 	}

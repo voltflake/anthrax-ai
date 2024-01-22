@@ -10,10 +10,6 @@ const std::string levelinfo =
 \tfollow: \n\
 \nBackground:\n\
 \tpath: \n\
-\nNPC:\n\
-\tpath: \n\
-\tx: \n\
-\ty: \n\
 \nTrigger:\n\
 \tpath: \n\
 \tcollision: \n\
@@ -41,11 +37,14 @@ struct NewLevel {
 	Resources player;
 	Resources camera;
 	Resources background;
-	Resources npc;
-	Resources trigger;
-	Resources object;
-
+	std::vector<Resources> trigger;
+	std::vector<Resources> object;
+	
 	bool loaded = false;
+	bool initres = false;
+
+	int triggersize = 10;
+	int objectsize = 10;
 };
 
 class LevelManager {

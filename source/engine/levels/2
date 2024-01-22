@@ -7,10 +7,6 @@ Camera:
 	follow: 0
 Background:
 	path: bg.jpg
-NPC:
-	path: 
-	x: 0
-	y: 0
 Trigger:
 	path: 
 	collision: 0

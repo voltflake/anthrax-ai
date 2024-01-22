@@ -52,6 +52,8 @@ void Engine::initengine(LevelManager &levels) {
 
 	levels.level.background.x = 0;
 	levels.level.background.y = 0;
+	levels.level.trigger.reserve(levels.level.triggersize);
+	levels.level.object.reserve(levels.level.objectsize);
 
 	resources["placeholder.jpg"] = {levels.level.background.x, levels.level.background.y};
 }
@@ -78,16 +80,17 @@ void Engine::initscene() {
 
 void Engine::initresources()
 {
-	if (Levels.level.trigger.path != "") {
-		resources[Levels.level.trigger.path] = {Levels.level.trigger.x, Levels.level.trigger.y};
+	for (int i = 0; i < Levels.level.trigger.size(); i++) {
+		if (Levels.level.trigger[i].path != "") {
+			resources[Levels.level.trigger[i].path] = {Levels.level.trigger[i].x, Levels.level.trigger[i].y};
+		}
 	}
-	if (Levels.level.npc.path != "") {
-		resources[Levels.level.npc.path] = {Levels.level.npc.x, Levels.level.npc.y};	
+	for (int i = 0; i < Levels.level.object.size(); i++) {
+		if (Levels.level.object[i].path != "") {
+			resources[Levels.level.object[i].path] = {Levels.level.object[i].x, Levels.level.object[i].y};
+		}
 	}
-	if (Levels.level.object.path != "") {
-		resources[Levels.level.object.path] = {Levels.level.object.x, Levels.level.object.y};
-	}
-		if (Levels.level.player.path != "") {
+	if (Levels.level.player.path != "") {
 		resources[Levels.level.player.path] = {Levels.level.player.x, Levels.level.player.y}; // player has to be always second -- stupid
 	}
 	if (Levels.level.background.path != "") {

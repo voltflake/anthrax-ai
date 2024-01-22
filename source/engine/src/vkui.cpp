@@ -66,8 +66,7 @@ void Engine::checkuistate() {
 	}
 	if (state & LOAD_LEVEL) {
 		Levels.loadlevel();
-		if (Levels.level.loaded && !Levels.check) {
-			state ^= LOAD_LEVEL;
+		if (Levels.level.initres && !Levels.check) {
         	state |= NEW_LEVEL;
 		}
 	}
@@ -99,12 +98,12 @@ void Engine::ui() {
 	}
    	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 30), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 80), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 40), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 85), ImGuiCond_FirstUseEver);
 
 	ImGui::Begin("Engine ;p", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     
-	ImGui::Columns(3, "enginebuttons");
+	ImGui::Columns(3, "enginebuttons", false);
 	if (ImGui::Button("New Level")) {
         state |= NEW_LEVEL;
 	}
@@ -118,6 +117,7 @@ void Engine::ui() {
 	}
 	ImGui::NextColumn();
 	ImGui::Separator();
+
 	ImGui::Columns(1);
 	if (ImGui::Button("Play")) {
 		active = false;

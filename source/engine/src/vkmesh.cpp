@@ -1,8 +1,8 @@
 #include "../includes/vkmesh.h"
 
-Mesh* MeshBuilder::getmesh(const std::string& name)
+Mesh* MeshBuilder::getmesh(int id)
 {
-	auto it = meshes.find(name);
+	auto it = meshes.find(id);
 	if (it == meshes.end()) {
 		return nullptr;
 	}
@@ -12,26 +12,28 @@ Mesh* MeshBuilder::getmesh(const std::string& name)
 }
 
 
-void MeshBuilder::loadmeshes(std::unordered_map<std::string, Positions>& resources){
+void MeshBuilder::loadmeshes(){
 	float w, h;
 
-	for (auto& list : resources) {
-		if (list.first == "") {
+	for (auto list : texturehandler.resources) {
+		if (list.second.texturepath == "") {
             continue;
         }
-		h = texturehandler.gettexture(list.first)->h;
-		w = texturehandler.gettexture(list.first)->w;
+		h = texturehandler.gettexture(list.second.texturepath)->h;
+		w = texturehandler.gettexture(list.second.texturepath)->w;
 
 		Mesh 			triangle;
 
+		triangle.path = list.second.texturepath;
 		triangle.vertices.resize(4);
-		
-		std::cout << list.second.x << " ----- " << list.second.y << "\n";
 
-		triangle.vertices[0].position = {list.second.x, list.second.y, 0.0f};
-		triangle.vertices[1].position = {list.second.x, list.second.y + h, 0.0f};
-		triangle.vertices[2].position = {list.second.x + w, list.second.y + h, 0.0f};
-		triangle.vertices[3].position ={list.second.x + w, list.second.y, 0.0f};
+		   std::cout << (list.second.pos.x ) << "!www!" << w << "\n";
+             std::cout << (list.second.pos.y ) << "!hhh!" << h << "\n";
+
+		triangle.vertices[0].position = {list.second.pos.x, list.second.pos.y, 0.0f};
+		triangle.vertices[1].position = {list.second.pos.x, list.second.pos.y + h, 0.0f};
+		triangle.vertices[2].position = {list.second.pos.x + w, list.second.pos.y + h, 0.0f};
+		triangle.vertices[3].position ={list.second.pos.x + w, list.second.pos.y, 0.0f};
 
 		triangle.vertices[0].color = { 0.f, 1.f, 0.0f };
 		triangle.vertices[1].color = { 0.f, 1.f, 0.0f };
@@ -50,14 +52,15 @@ void MeshBuilder::loadmeshes(std::unordered_map<std::string, Positions>& resourc
 
 }
 
-void MeshBuilder::updateplayermesh(Mesh* mesh, std::string texture, int newx, int newy) {
+void MeshBuilder::updatemesh(Mesh* mesh, int id, Positions newpos) {
 	float w, h;
-	
-	w = texturehandler.gettexture(texture)->w;
-	h = texturehandler.gettexture(texture)->h;
 
-	float x = texturehandler.resources[texture].x + newx;
-	float y = texturehandler.resources[texture].y + newy;
+	w = texturehandler.gettexture(texturehandler.resources[id].texturepath)->w;
+	h = texturehandler.gettexture(texturehandler.resources[id].texturepath)->h;
+
+	float x = newpos.x;
+	float y = newpos.y;
+        // std::cout << x << "|NEW|" << y << "| |\n";
 
 	mesh->vertices[0].position = {x , y, 0.0f};
 	mesh->vertices[1].position = {x, y + h, 0.0f};
@@ -68,21 +71,20 @@ void MeshBuilder::updateplayermesh(Mesh* mesh, std::string texture, int newx, in
 }
 
 void MeshBuilder::updatemesh(Mesh& mesh){
-	
+
 	BufferBuilder buffer;
-	
+
 	VkBufferUsageFlags flags[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
 
 	buffer.createbuffer(pipelinehandler.getrenderer(), mesh.vertexbuffer, flags, sizeof(mesh.vertices[0]) * mesh.vertices.size(), mesh.vertices.data());
 
 	VkBufferUsageFlags flags2[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT};
 	buffer.createbuffer(pipelinehandler.getrenderer(), mesh.indexbuffer, flags2, sizeof(mesh.indices[0]) * mesh.indices.size(), mesh.indices.data());
-	
+
 	deletorhandler->pushfunction([=]() {
        vkDestroyBuffer(pipelinehandler.getdevice()->getlogicaldevice(), mesh.vertexbuffer.buffer, nullptr);
        vkFreeMemory(pipelinehandler.getdevice()->getlogicaldevice(), mesh.vertexbuffer.devicememory, nullptr);
        vkDestroyBuffer(pipelinehandler.getdevice()->getlogicaldevice(), mesh.indexbuffer.buffer, nullptr);
        vkFreeMemory(pipelinehandler.getdevice()->getlogicaldevice(), mesh.indexbuffer.devicememory, nullptr);
- 
     });
 }

@@ -62,11 +62,11 @@ void Engine::initimgui() {
 void Engine::checkuistate() {
 
 	if (state & NEW_LEVEL) {
-		Levels.newlevel();
+		Level.newlevel();
 	}
-	if (state & LOAD_LEVEL) {
-		Levels.loadlevel();
-		if (Levels.level.initres && !Levels.check) {
+	if (state & LOAD_LEVEL && Level.loaded  == false) {
+		Level.loadlevel();
+		if (Level.initres && !Level.check) {
         	state |= NEW_LEVEL;
 		}
 	}
@@ -80,7 +80,7 @@ void Engine::ui() {
 		loadmylevel();
 	}
 
-    if (Levels.check2 || Levels.check) {
+    if (Level.check2 || Level.check) {
     	return;
     }
     bool active = true;
@@ -103,27 +103,32 @@ void Engine::ui() {
 
 	ImGui::Begin("Engine ;p", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     
-	ImGui::Columns(3, "enginebuttons", false);
+	ImGui::Columns(2, "enginebuttons", false);
 	if (ImGui::Button("New Level")) {
         state |= NEW_LEVEL;
 	}
 	ImGui::NextColumn();
 	if (ImGui::Button("Load Level")) {
         state |= LOAD_LEVEL;
-	}
-	ImGui::NextColumn();
-	if (ImGui::Button("Close")) {
-       	active = false; 
+		Level.loaded = false;
 	}
 	ImGui::NextColumn();
 	ImGui::Separator();
 
-	ImGui::Columns(1);
+	ImGui::Columns(2, "enginebuttons2", false);
 	if (ImGui::Button("Play")) {
 		active = false;
 		state |= PLAY_GAME;
 		state ^= ENGINE_EDITOR;
 	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Close")) {
+       	active = false;
+	}
+	ImGui::NextColumn();
+
+	ImGui::Columns(1);
+    ImGui::Checkbox("Free Move", &freemove);
 
 	checkuistate();
 

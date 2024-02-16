@@ -17,7 +17,7 @@ struct Texture {
 
 class TextureBuilder {
 public:
-	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue* deletor, std::unordered_map<std::string, Positions>& res) { renderer = renderb; devicehandler = device; deletorhandler = deletor; resources = res;};
+	void init(RenderBuilder& renderb, DeviceBuilder& device, DeletionQueue* deletor, std::unordered_map<int, Data>& res) { renderer = renderb; devicehandler = device; deletorhandler = deletor; resources = res;};
 	void createtexture(const std::string& texturepath);
 	void createtextureimageview();
 	void createsampler();
@@ -37,7 +37,7 @@ public:
 													return &(*it).second;
 												}
 											}
-	std::unordered_map<std::string, Positions> resources;
+	std::unordered_map<int, Data> resources;
 
 
 private:

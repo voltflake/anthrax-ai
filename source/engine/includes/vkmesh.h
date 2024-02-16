@@ -10,6 +10,7 @@
 #include <vector>
 
 struct Mesh {
+	std::string path;
 	std::vector<Vertex> vertices;
 	BufferHandler vertexbuffer;
 
@@ -22,14 +23,14 @@ struct Mesh {
 
 class MeshBuilder {
 public:
-	void init(PipelineBuilder& pipeline,TextureBuilder& textb, DeletionQueue* deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
-	void loadmeshes(std::unordered_map<std::string, Positions>& resources);
+	void init(PipelineBuilder& pipeline, TextureBuilder& textb, DeletionQueue* deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
+	void loadmeshes();
 	void updatemesh(Mesh& mesh);
-	void updateplayermesh(Mesh* mesh, std::string texture, int newx, int newy);
+	void updatemesh(Mesh* mesh, int id, Positions newpos);
 
 	void clearmeshes() { meshes.clear();};
 
-	Mesh* 		getmesh(const std::string& name);
+	Mesh* 		getmesh(int id);
 
 private:
 	PipelineBuilder pipelinehandler;
@@ -38,6 +39,6 @@ private:
 	
 	//Mesh 			triangle;
 	std::unordered_map
-	<std::string, Mesh> 	meshes;
+	<int, Mesh> 	meshes;
 
 };

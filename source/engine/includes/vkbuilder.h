@@ -87,7 +87,7 @@ public:
 	void startsync() 			{ renderer.sync();					};
 
 	TextureBuilder texturehandler;
-	void inittexture(std::unordered_map<std::string, Positions>& resources) { texturehandler.init(renderer, devicehandler, &deletorhandler, resources);};
+	void inittexture(std::unordered_map<int, Data>& resources) { texturehandler.init(renderer, devicehandler, &deletorhandler, resources);};
 	void loadimages() 		{ texturehandler.loadimages();	};
 	void clearimages() 		{ texturehandler.clearimages();	};
 
@@ -104,13 +104,13 @@ public:
 
 	MeshBuilder meshhandler;
 	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, &deletorhandler);		};
-	void loadmeshes(std::unordered_map<std::string, Positions>& resources)			{ meshhandler.loadmeshes(resources);			};
+	void loadmeshes()			{ meshhandler.loadmeshes();			};
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
-	void updateplayer(Mesh* mesh, std::string texture, int x, int y) 		{ meshhandler.updateplayermesh(mesh, texture, x, y);	};
+	void updatemesh(Mesh* mesh, int id, Positions newpos) 		{ meshhandler.updatemesh(mesh, id, newpos);	};
 
 	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
-	Mesh* 		getmesh(const std::string& name) { return meshhandler.getmesh(name);};
+	Mesh* 		getmesh(int id) { return meshhandler.getmesh(id);};
 	Texture* 	gettexture(const std::string& name) { return texturehandler.gettexture(name);};
 
 

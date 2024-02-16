@@ -5,19 +5,19 @@
 void TextureBuilder::loadimages() {
 	
 	for (auto& list : resources) {
-        if (list.first == "") {
+        if (list.second.texturepath == "") {
             continue;
         }
 		std::string path = "./textures/";
-		path += list.first;
+		path += list.second.texturepath;
 
-		std::cout << "textures"<< list.second.x << " ----- " << list.second.y << "\n";
+		std::cout << "textures|"<< list.second.pos.x << " ----- " << list.second.pos.y << "\n";
 
 		createtexture(path);
 		createtextureimageview();
 		createsampler();
 
-		loadedtextures[list.first] = texture;
+		loadedtextures[list.second.texturepath] = texture;
 	}
 
 }

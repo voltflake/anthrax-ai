@@ -1,7 +1,7 @@
 #include "../includes/vkengine.h"
 
 void Engine::init() {
-	initengine(Levels);
+	initengine(Level);
 	initvulkan();
 	initscene();
 	initimgui();
@@ -41,31 +41,31 @@ void Engine::initvulkan() {
 	Builder.builddescriptors();
 
 	Builder.initpipelinebuilder();
-	Builder.buildpipeline(Levels.check);
+	Builder.buildpipeline(Level.check);
 
 	Builder.initmeshbuilder();
-	Builder.loadmeshes(resources);
+	Builder.loadmeshes();
 
 }
 
 void Engine::initengine(LevelManager &levels) {
 
-	levels.level.background.x = 0;
-	levels.level.background.y = 0;
-	levels.level.trigger.reserve(levels.level.triggersize);
-	levels.level.object.reserve(levels.level.objectsize);
+	Level.getbackground().setposition({0, 0});
+	Level.getbackground().setpath("placeholder.jpg");
+	Level.gettrigger().reserve(10);
+	Level.getobject().reserve(10);
 
-	resources["placeholder.jpg"] = {levels.level.background.x, levels.level.background.y};
+	resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition()};
 }
 
 void Engine::initscene() {
 
 	int i = 0;
 	for (auto& list : resources) {
-		if (list.first == "") {
+		if (list.second.texturepath == "") {
             continue;
         }
-		Builder.descriptors.updatesamplerdescriptors(list.first);
+		Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
 
 		RenderObject tri;
 		tri.mesh = Builder.getmesh(list.first);
@@ -80,21 +80,23 @@ void Engine::initscene() {
 
 void Engine::initresources()
 {
-	for (int i = 0; i < Levels.level.trigger.size(); i++) {
-		if (Levels.level.trigger[i].path != "") {
-			resources[Levels.level.trigger[i].path] = {Levels.level.trigger[i].x, Levels.level.trigger[i].y};
+	int triggersize = Level.gettrigger().size();
+	int objectsize = Level.getobject().size();
+	for (int i = 0; i < triggersize; i++) {
+		if (Level.gettrigger()[i].getpath() != "") {
+			resources[TYPE_OBJECT + i] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition()};
 		}
 	}
-	for (int i = 0; i < Levels.level.object.size(); i++) {
-		if (Levels.level.object[i].path != "") {
-			resources[Levels.level.object[i].path] = {Levels.level.object[i].x, Levels.level.object[i].y};
+	for (int i = triggersize; i < triggersize + objectsize; i++) {
+		if (Level.getobject()[i].getpath() != "") {
+			resources[TYPE_OBJECT + i] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition()};
 		}
 	}
-	if (Levels.level.player.path != "") {
-		resources[Levels.level.player.path] = {Levels.level.player.x, Levels.level.player.y}; // player has to be always second -- stupid
+	if (Level.getplayer()->getpath() != "") {
+		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition()}; // player has to be always second -- stupid
 	}
-	if (Levels.level.background.path != "") {
-		resources[Levels.level.background.path] = {Levels.level.background.x, Levels.level.background.y}; // background for some reason should be always top, looks kinda broken
+	if (Level.getbackground().getpath() != "") {
+		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition()}; // background for some reason should be always top, looks kinda broken
 	}
 }
 
@@ -118,7 +120,7 @@ void Engine::reloadresources() {
 	Builder.builddescriptors();
 
 	Builder.initmeshbuilder();
-	Builder.loadmeshes(resources);
+	Builder.loadmeshes(); // check why here are weird x,y pos for resource
 
 	initscene();
 }

@@ -12,6 +12,7 @@ layout(set = 0, binding = 0) uniform  CameraBuffer{
     mat4 proj;
     mat4 viewproj;
     vec2 pos;
+    vec2 viewport;
 } cameraData;
 
 //push constants block
@@ -28,9 +29,9 @@ out gl_PerVertex {
 
 void main()
 {
-    float halfWidth = 1920 / 2.0f;
-    float halfHeight = 1080 / 2.0f;
- 
+    float halfWidth = cameraData.viewport.x / 2.0f;//1920 / 2.0f;
+    float halfHeight = cameraData.viewport.y / 2.0f;//1080 / 2.0f;
+
     mat4 transformMatrix = (PushConstants.render_matrix);
     gl_Position = vec4(vPosition.x / halfWidth - 1.0f, vPosition.y / halfHeight - 1.0f, 0.0, 1.0);
     outColor = vColor;

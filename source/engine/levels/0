@@ -1,24 +1,16 @@
 Player:
+	ID: 0
 	path: cube.png
-	collision: 0
+	collision: 1
 	x: 10
-	y: 10
-Camera:
-	follow: 0
+	y: 110
 Background:
+	ID: 0
 	path: bg.jpg
-NPC:
-	path: 
-	x: 0
-	y: 0
-Trigger:
-	path: 
-	collision: 0
-	visible: 0
-	x: 0
-	y: 0
 Object:
-	path: floor.jpg
+	ID: 0
+	path: kote-v-bote.jpg
 	collision: 0
 	x: 0
 	y: 800
+

@@ -52,13 +52,14 @@ void checkuistate();
 	void 						initengine(LevelManager &levels);
 
 	VkBuilder 					Builder;
-	LevelManager				Levels;
+	LevelManager				Level;
 
-	std::unordered_map<std::string, Positions> resources;
+	std::unordered_map<int, Data> resources;
 
 	VkExtent2D 					WindowExtend = {800, 800};
 	bool 						winprepared = false;
-	
+	bool						freemove = false;
+
 	Positions 					playerpos = {0, 0};
 	Positions 					mousepos = {0, 0};
 	std::string 				namepath;
@@ -88,8 +89,9 @@ private:
 	DeletionQueue 				Deletor;
 	int 						FrameIndex = 0;
 
-	void 						move();
-	void 						collision(int& state, bool collision);
+	void 						moveplayer();
+	void 						editormove();
+	bool 						collision(int& state, bool collision, Positions pos);
 
 	void 						draw();
 	void 						drawobjects(VkCommandBuffer cmd,RenderObject* first, int count);

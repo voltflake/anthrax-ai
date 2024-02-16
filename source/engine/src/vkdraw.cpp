@@ -13,6 +13,7 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	camdata.view = view;
 	camdata.viewproj = projection * view;
 	camdata.pos = {mousepos.x, mousepos.y};
+	camdata.viewport = {WindowExtend.width, WindowExtend.height};
 
 	char* datadst;
    	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
@@ -66,8 +67,8 @@ void Engine::draw() {
 
 	ImGui::Render();
 
-	if (Levels.level.initres) {
-		Levels.level.initres = false;
+	if (Level.initres) {
+		Level.initres = false;
 		reloadresources();
 	}
 
@@ -79,7 +80,7 @@ void Engine::draw() {
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Builder.getdevice(), Builder.getswapchain(), 1000000000, Builder.getframes()[FrameIndex].PresentSemaphore, nullptr, &swapchainimageindex);
 	if (e == VK_ERROR_OUT_OF_DATE_KHR) {
-        winprepared = true;       
+        winprepared = true;
 		return ;
 	}
 
@@ -151,10 +152,10 @@ void Engine::draw() {
 	FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 	
 	static int countt = 0;
-	if (Levels.check2 && !Levels.check) {
+	if (Level.check2 && !Level.check) {
 		countt++;
 		if (countt > 5){
-			Builder.copycheck(swapchainimageindex);	
+			Builder.copycheck(swapchainimageindex);
 		}
 	}
 }
@@ -163,7 +164,7 @@ void Engine::loadmylevel() {
 
 	playerpos.x = 0;
 	playerpos.y = 0;
-	Levels.check = true;
+	Level.check = true;
 
 	Builder.cleartextureset();
 	Builder.clearimages();
@@ -173,10 +174,10 @@ void Engine::loadmylevel() {
 
 	Builder.renderqueue.clear();
 
-	resources["check/back.jpg"] = {0,0};
+	resources[TYPE_BACKGROUND] = {"check/back.jpg", {0,0}};
 	std::string checkstr = "check/" + checkimgs[checkimg];
 	std::cout << checkstr << '\n';
-	resources[checkstr] = {0,0};
+	resources[TYPE_OBJECT] = {checkstr, {0,0}};
 
 	Builder.inittexture(resources);
 	Builder.loadimages();
@@ -184,10 +185,10 @@ void Engine::loadmylevel() {
 	Builder.initdescriptors();
 	Builder.builddescriptors();
 
-	Builder.buildpipeline(Levels.check);
+	Builder.buildpipeline(Level.check);
 
 	Builder.initmeshbuilder();
-	Builder.loadmeshes(resources);
+	Builder.loadmeshes();
 
 	int i = 0;
 	Builder.descriptors.updatesamplerdescriptors2("check/back.jpg", checkstr);
@@ -205,7 +206,7 @@ void Engine::loadmylevel() {
 		break ;
 	}
 
-	Levels.check = false;
-	Levels.check2 = true;
+	Level.check = false;
+	Level.check2 = true;
 
 }

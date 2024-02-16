@@ -9,7 +9,8 @@ layout(set = 0, binding = 0) uniform  CameraBuffer{
     mat4 view;
     mat4 proj;
     mat4 viewproj;
-    vec4 color;
+    vec2 pos;
+    vec2 viewport;
 } cameraData;
 
 layout(set = 1, binding = 0) uniform sampler2D texSampler;

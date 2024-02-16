@@ -191,39 +191,42 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 				state |= ENGINE_EDITOR;
         	}
         	if (k == D_KEY) {
-				Levels.level.player.state |= MOVE_RIGHT;
+				Level.getplayer()->state |= MOVE_RIGHT;
         	}
         	if (k == W_KEY) {
-				Levels.level.player.state |= MOVE_UP;
+				Level.getplayer()->state |= MOVE_UP;
         	}
         	if (k == A_KEY) {
-				Levels.level.player.state |= MOVE_LEFT;
+				Level.getplayer()->state |= MOVE_LEFT;
         	}
         	if (k == S_KEY) {
-				Levels.level.player.state |= MOVE_DOWN;
+				Level.getplayer()->state |= MOVE_DOWN;
         	}
 			return true;
 		}
 		case XCB_KEY_RELEASE: {
-        	Levels.level.player.state ^= Levels.level.player.state;
+        	Level.getplayer()->state = IDLE;//Levels.level.player.state;
 		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
             if (e->detail == 1) {
-            	mousepos.x = e->event_x ;
-            	mousepos.y= e->event_y ;
-
-            	std::cout <<  e->event_x << "||"<< e->event_y << '\n';
+            	mousepos.x = e->event_x;
+            	mousepos.y = e->event_y;
+            	std::cout <<  e->event_x << "|press|"<< e->event_y << '\n';
             }
            	return true;
         }
         case XCB_BUTTON_RELEASE: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
-            if (e->detail == 1) {
-                mousepos.x = 0;//e->event_x ;
+            if (e->detail == 1 && Level.check2) {
+                mousepos.x = 0;
             	mousepos.y = 0;
-            	std::cout <<  "|release|" << '\n';
             }
+			else if (e->detail == 1) {
+				mousepos.x = e->event_x;
+            	mousepos.y = e->event_y;
+            	std::cout <<  mousepos.x << "|release|"<< mousepos.y << '\n';
+			}
            	return true;
         }
 		case XCB_EXPOSE: {
@@ -248,7 +251,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 				WindowExtend.width = cfgEvent->width;
 				WindowExtend.height = cfgEvent->height;
 				if ((WindowExtend.width > 0) && (WindowExtend.height > 0)) {
-					Builder.resizewindow(winprepared, WindowExtend, Levels.check);
+					Builder.resizewindow(winprepared, WindowExtend, Level.check);
 					std::cout << "window w: " << WindowExtend.width << " && h: " << WindowExtend.height << '\n';
 				}
 			}
@@ -299,7 +302,7 @@ void Engine::runlinux() {
 			std::chrono::duration<double, std::milli> delta = start - end;
 			calculateFPS(delta);
 
-			move();
+			moveplayer();
 			draw();
 			end = std::chrono::system_clock::now();
 		}
@@ -313,8 +316,8 @@ void Engine::runlinux() {
 			calculateFPS(delta);
 			
 			ui();
+			editormove();
 			draw();
-
 			end = std::chrono::system_clock::now();
 		}
 		if (state & EXIT) {

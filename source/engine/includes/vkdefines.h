@@ -108,6 +108,12 @@ enum Physics {
 	JUMP 		= 1 << 5
 };
 
+enum DataTypes {
+	TYPE_PLAYER = 0,
+	TYPE_BACKGROUND,
+	TYPE_OBJECT
+};
+
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;
 
@@ -151,6 +157,7 @@ struct CameraData {
 	glm::mat4 proj;
 	glm::mat4 viewproj;
 	glm::vec2 pos;
+	glm::vec2 viewport;
 };
 
 struct FrameData {
@@ -171,6 +178,11 @@ struct UploadContext {
 struct Positions {
 	int x;
 	int y;
+};
+
+struct Data {
+	std::string texturepath;
+	Positions pos;
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;

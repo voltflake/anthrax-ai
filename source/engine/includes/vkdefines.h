@@ -114,6 +114,13 @@ enum DataTypes {
 	TYPE_OBJECT
 };
 
+enum MouseState {
+	MOUSE_IDLE = 0,
+	MOUSE_PRESSED,
+	MOUSE_MOVE,
+	MOUSE_RELEASED
+};
+
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;
 

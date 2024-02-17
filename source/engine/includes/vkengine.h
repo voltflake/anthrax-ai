@@ -62,7 +62,7 @@ void checkuistate();
 
 	Positions 					playerpos = {0, 0};
 	Positions 					mousepos = {0, 0};
-	std::string 				namepath;
+	MouseState					mousestate = MOUSE_IDLE;
 
 	std::vector<std::string> 	checkimgs= {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
 	int 						checkimg = 0;
@@ -90,7 +90,9 @@ private:
 	int 						FrameIndex = 0;
 
 	void 						moveplayer();
-	void 						editormove();
+	void 						catchobject();
+	void 						uncatchobject();
+	bool 						editormove();
 	bool 						collision(int& state, bool collision, Positions pos);
 
 	void 						draw();

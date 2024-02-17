@@ -1,0 +1,16 @@
+Player:
+	ID: 0
+	path: cube.png
+	collision: 1
+	x: 90
+	y: 830
+Background:
+	ID: 0
+	path: bg.jpg
+Object:
+	ID: 0
+	path: kote-v-bote.jpg
+	collision: 0
+	x: 157
+	y: 336
+

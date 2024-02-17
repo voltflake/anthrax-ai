@@ -205,13 +205,23 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 			return true;
 		}
 		case XCB_KEY_RELEASE: {
-        	Level.getplayer()->state = IDLE;//Levels.level.player.state;
+        	Level.getplayer()->state = IDLE;
+		}
+		case XCB_MOTION_NOTIFY: {
+			xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
+			if (mousestate == MOUSE_MOVE) {
+				mousepos.x = motion->event_x;
+            	mousepos.y = motion->event_y;
+			}
+			printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
+			return true;
 		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
             if (e->detail == 1) {
             	mousepos.x = e->event_x;
             	mousepos.y = e->event_y;
+				mousestate = MOUSE_PRESSED;
             	std::cout <<  e->event_x << "|press|"<< e->event_y << '\n';
             }
            	return true;
@@ -225,6 +235,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 			else if (e->detail == 1) {
 				mousepos.x = e->event_x;
             	mousepos.y = e->event_y;
+				mousestate = MOUSE_RELEASED;
             	std::cout <<  mousepos.x << "|release|"<< mousepos.y << '\n';
 			}
            	return true;
@@ -316,7 +327,9 @@ void Engine::runlinux() {
 			calculateFPS(delta);
 			
 			ui();
+			catchobject();
 			editormove();
+			uncatchobject();
 			draw();
 			end = std::chrono::system_clock::now();
 		}

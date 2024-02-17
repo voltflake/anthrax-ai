@@ -124,6 +124,8 @@ public:
 	bool 	collision = 0;
 	bool 	visible = 0;
 
+	bool	move = 0;
+
 	void clear() {
 		setpath("");
 		setposition({0, 0});

@@ -19,12 +19,9 @@ bool Engine::collision(int& state, bool collision, Positions pos) {
         pos.y + h > Level.getobject()[i].getposition().y ) {
             return true;
         }
-        else {
-            state |= MOVE_DOWN;
-            return false;
-        }
     }
-    return true;
+    state |= MOVE_DOWN;
+    return false;
 }
 
 void Engine::moveplayer() {
@@ -60,7 +57,7 @@ bool Engine::editormove() {
             continue;
         }
         if (Level.getobject()[i].move) {
-            Builder.updatemesh(Builder.getmesh(TYPE_OBJECT + Level.getobject()[i].ID), TYPE_OBJECT, mousepos);
+            Builder.updatemesh(Builder.getmesh(TYPE_OBJECT + Level.getobject()[i].ID), TYPE_OBJECT + Level.getobject()[i].ID, mousepos);
             Level.getobject()[i].setposition(mousepos);
             return true ;
         }

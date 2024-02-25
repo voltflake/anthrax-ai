@@ -15,12 +15,13 @@ layout(set = 0, binding = 0) uniform  CameraBuffer{
     vec2 viewport;
 } cameraData;
 
-//push constants block
-layout( push_constant ) uniform constants
-{
- vec4 data;
- mat4 render_matrix;
-} PushConstants;
+// //push constants block
+// layout( push_constant ) uniform constants
+// {
+//  vec4 data;
+//  mat4 render_matrix;
+//  bool debugcollision;
+// } PushConstants;
 
 
 out gl_PerVertex {
@@ -32,7 +33,7 @@ void main()
     float halfWidth = cameraData.viewport.x / 2.0f;//1920 / 2.0f;
     float halfHeight = cameraData.viewport.y / 2.0f;//1080 / 2.0f;
 
-    mat4 transformMatrix = (PushConstants.render_matrix);
+  //  mat4 transformMatrix = (PushConstants.render_matrix);
     gl_Position = vec4(vPosition.x / halfWidth - 1.0f, vPosition.y / halfHeight - 1.0f, 0.0, 1.0);
     outColor = vColor;
     outCoord = vUv;

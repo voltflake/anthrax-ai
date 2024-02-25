@@ -212,8 +212,8 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 			if (mousestate == MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
+				printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
-			printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			return true;
 		}
 	  	case XCB_BUTTON_PRESS: {
@@ -221,6 +221,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
             if (e->detail == 1) {
             	mousepos.x = e->event_x;
             	mousepos.y = e->event_y;
+	            mousebegin = mousepos;
 				mousestate = MOUSE_PRESSED;
             	std::cout <<  e->event_x << "|press|"<< e->event_y << '\n';
             }

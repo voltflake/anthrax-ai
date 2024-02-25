@@ -35,63 +35,12 @@ const std::string objectinfo =
 \tx: \n\
 \ty: \n";
 
-// const std::string levelinfo =
-// "Player:\n\
-// \tID: \n\
-// \tpath: \n\
-// \tcollision: \n\
-// \tx: \n\
-// \ty: \n\
-// \nCamera:\n\
-// \tID: \n\
-// \tfollow: \n\
-// \nBackground:\n\
-// \tID: \n\
-// \tpath: \n\
-// \nTrigger:\n\
-// \tID: \n\
-// \tpath: \n\
-// \tcollision: \n\
-// \tvisible: \n\
-// \tx: \n\
-// \ty: \n\
-// \nObject:\n\
-// \tID: \n\
-// \tpath: \n\
-// \tcollision: \n\
-// \tx: \n\
-// \ty: \n";
-
-// struct Resources {
-// 	char	path[64] = "";
-// 	int 	x = 0;
-// 	int 	y = 0;
-// 	int 	follow = 0;
-// 	bool 	collision = 0;
-// 	bool 	visible = 0;
-
-// 	int state = IDLE;
-// };
-
-// struct NewLevel {
-// 	Resources player;
-// 	Resources camera;
-// 	Resources background;
-// 	std::vector<Resources> trigger;
-// 	std::vector<Resources> object;
-	
-// 	bool loaded = false;
-// 	bool initres = false;
-
-// 	int triggersize = 0;
-// 	int objectsize = 0;
-// };
-
 class Player {
 public:
 	int 	ID = 0;
 	bool 	collision = 0;
-	int state = IDLE;
+	int 	state = IDLE;
+	bool 	debugcollision = false;
 
 	void clear() {
 		setpath("");
@@ -99,6 +48,15 @@ public:
 		collision = 0;
 		state = IDLE;
 	}
+
+	Player() {};
+	Player(const Player& pl) {
+		ID = pl.ID;
+		collision = pl.collision;
+		state = pl.state;
+		path = pl.path;
+		pos = pl.pos;
+	};
 
 	void setpath(std::string str) { path = str; };
 	void setposition(Positions postmp) { pos = postmp; };
@@ -115,15 +73,20 @@ class Camera {
 public:
 	int 	ID = 0;
 	bool 	follow = 0;
+
+
+	Camera() {};
+	Camera(const Camera& cam) {
+		ID = cam.ID;
+		follow = cam.follow;
+	};
 };
 
 class Resources {
 public:
 	int 	ID = 0;
-	
 	bool 	collision = 0;
 	bool 	visible = 0;
-
 	bool	move = 0;
 
 	void clear() {
@@ -132,6 +95,16 @@ public:
 		collision = 0;
 		visible = 0;
 	}
+
+	Resources() {};
+	Resources(const Resources& res) {
+		ID = res.ID;
+		collision = res.collision;
+		visible = res.visible;
+		move = res.move;
+		path = res.path;
+		pos = res.pos;
+	};
 
 	void setpath(std::string str) { path = str; };
 	void setposition(Positions postmp) { pos = postmp; };
@@ -162,6 +135,13 @@ public:
 	Resources& 				getbackground() {return background; };
 	std::vector<Resources>& gettrigger() {return trigger; };
 	std::vector<Resources>& getobject() {return object; };
+
+	void 					setplayer(const Player& pl) { player = pl; };
+	void 					setcamera(const Camera& cam) { camera = cam; };
+	void 					setbackground(const Resources& bg) { background = bg; };
+	void 					setobject(const std::vector<Resources>& obj);
+	void 					settrigger(const std::vector<Resources>& tr);
+
 
 
 private:

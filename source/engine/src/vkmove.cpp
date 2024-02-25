@@ -57,8 +57,13 @@ bool Engine::editormove() {
             continue;
         }
         if (Level.getobject()[i].move) {
-            Builder.updatemesh(Builder.getmesh(TYPE_OBJECT + Level.getobject()[i].ID), TYPE_OBJECT + Level.getobject()[i].ID, mousepos);
-            Level.getobject()[i].setposition(mousepos);
+            Positions tmp = Level.getobject()[i].getposition();
+            int factorx = (mousebegin.x - mousepos.x) ;
+            int factory = (mousebegin.y - mousepos.y) ;
+            Positions finpos = {(tmp.x - factorx), ((tmp.y - factory))};
+            Builder.updatemesh(Builder.getmesh(TYPE_OBJECT + Level.getobject()[i].ID), TYPE_OBJECT + Level.getobject()[i].ID, finpos);
+            Level.getobject()[i].setposition(finpos);
+            mousebegin = mousepos;
             return true ;
         }
     }
@@ -104,13 +109,10 @@ void Engine::catchobject() {
             mousepos.y > Level.getobject()[i].getposition().y ) {
             // std::cout << (mousepos.x ) << "!X!" << Level.getobject()[i].getposition().x<< "\n";
             // std::cout << (mousepos.y ) << "!Y!" << Level.getobject()[i].getposition().y << "\n";
-
             std::cout << "mouse catched object [" << Level.getobject()[i].getpath() << "]\n";
             Level.getobject()[i].move = true;
             mousestate = MOUSE_MOVE;
             break;
-            // Builder.updatemesh(Builder.getmesh(TYPE_OBJECT + Level.getobject()[i].ID), TYPE_OBJECT, mousepos);
-            // Level.getobject()[i].setposition(mousepos);
         }
    }
 }

@@ -42,12 +42,11 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 	
 		}
-		glm::mat4 model = object.transformmatrix;
-		
+		//glm::mat4 model = object.transformmatrix;
 		MeshPushConstants constants;
-		constants.render_matrix = object.transformmatrix;
+		constants.debugcollision = static_cast<int>(object.debugcollision);
 
-		vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+		vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
 
 		if (object.mesh != lastMesh) {
 			VkDeviceSize offset = {0};

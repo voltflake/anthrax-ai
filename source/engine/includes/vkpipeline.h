@@ -13,8 +13,10 @@ struct Material {
 };
 
 struct MeshPushConstants {
-	glm::vec4 data;
-	glm::mat4 render_matrix;
+	//glm::vec4 data;
+	//glm::mat4 render_matrix;
+	int test;
+	int debugcollision;
 };
 
 class PipelineBuilder {

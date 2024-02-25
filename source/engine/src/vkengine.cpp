@@ -55,7 +55,7 @@ void Engine::initengine(LevelManager &levels) {
 	Level.gettrigger().reserve(10);
 	Level.getobject().reserve(10);
 
-	resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition()};
+	resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false};
 }
 
 void Engine::initscene() {
@@ -72,6 +72,7 @@ void Engine::initscene() {
 		tri.material = Builder.getmaterial("defaultmesh");
 
 		tri.textureset = &Builder.getsamplerset()[i];
+		tri.debugcollision = list.second.debugcollision;
 		Builder.pushrenderobject(tri);
 
 		i++;
@@ -84,19 +85,19 @@ void Engine::initresources()
 	int objectsize = Level.getobject().size();
 	for (int i = 0; i < triggersize; i++) {
 		if (Level.gettrigger()[i].getpath() != "") {
-			resources[TYPE_OBJECT + i] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition()};
+			resources[TYPE_OBJECT + i] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision};
 		}
 	}
 	for (int i = triggersize; i < triggersize + objectsize; i++) {
 		if (Level.getobject()[i].getpath() != "") {
-			resources[TYPE_OBJECT + i] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition()};
+			resources[TYPE_OBJECT + i] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition(), Level.getobject()[i].collision};
 		}
 	}
 	if (Level.getplayer()->getpath() != "") {
-		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition()}; // player has to be always second -- stupid
+		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition(), Level.getplayer()->debugcollision}; // player has to be always second -- stupid
 	}
 	if (Level.getbackground().getpath() != "") {
-		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition()}; // background for some reason should be always top, looks kinda broken
+		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false}; // background for some reason should be always top, looks kinda broken
 	}
 }
 

@@ -16,6 +16,7 @@ struct RenderObject {
 	VkDescriptorSet* textureset;
 	
 	glm::mat4 transformmatrix;
+	bool debugcollision;
 };
 
 class VkBuilder {

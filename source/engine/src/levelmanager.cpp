@@ -7,19 +7,42 @@ bool LevelManager::newlevel() {
 
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 215), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 390), ImGuiCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(500, 450), 0);
 
     ImGui::Begin("NewLevel", &open, ImGuiWindowFlags_NoResize);
 
+	Player playertmp = *getplayer();
+	Resources bgtmp =  getbackground();
+	Camera camtmp = getcamera();
+	std::vector<Resources> trigtmp = gettrigger();
+	std::vector<Resources> objtmp = getobject();
+
+	// if (!check && initres) {
+	// 	playertmp = *getplayer();
+	// 	bgtmp = getbackground();
+	// 	camtmp = getcamera();
+		
+	// 	objtmp.clear(); 
+	// 	objtmp.reserve(getobject().size());
+	// 	for (auto& o : getobject()) { 
+	// 		objtmp.push_back(o);
+	// 	}
+	// 	trigtmp.clear(); 
+	// 	trigtmp.reserve(gettrigger().size());
+	// 	for (auto& o : gettrigger()) { 
+	// 		trigtmp.push_back(o);
+	// 	}
+	// }
+
  	if (ImGui::CollapsingHeader("Player")) {
 		char path[64] = "";
-		strcpy(path, getplayer()->getpath().c_str());
-		Positions tmppos = getplayer()->getposition();
+		strcpy(path, playertmp.getpath().c_str());
+		Positions tmppos = playertmp.getposition();
 
         ImGui::InputText("1path", path, 64);
-		if (strcmp(path, getplayer()->getpath().c_str()) != 0) {
-			getplayer()->setpath(path);
+		if (strcmp(path, playertmp.getpath().c_str()) != 0) {
+			playertmp.setpath(path);
 		}
 	    ImGui::Columns(3);
     	ImGui::TextUnformatted("position:");
@@ -27,58 +50,59 @@ bool LevelManager::newlevel() {
     	ImGui::InputInt("x", &tmppos.x);
     	ImGui::NextColumn();
     	ImGui::InputInt("y", &tmppos.y);
-		if (tmppos.x != getplayer()->getposition().x || tmppos.y != getplayer()->getposition().y) {
-			getplayer()->setposition(tmppos);
+		if (tmppos.x != playertmp.getposition().x || tmppos.y != playertmp.getposition().y) {
+			playertmp.setposition(tmppos);
 		}
     	ImGui::NextColumn();
     	ImGui::Columns(1);
        	ImGui::Separator();
 
-    	ImGui::Checkbox("collision", &getplayer()->collision);
+    	ImGui::Checkbox("collision", &playertmp.collision);
+    	ImGui::Checkbox("debug collision", &playertmp.debugcollision);
     	ImGui::Separator();
 
     }
     if (ImGui::CollapsingHeader("Camera")) {
-        ImGui::Checkbox("follow", &camera.follow);
+        ImGui::Checkbox("follow", &camtmp.follow);
         ImGui::Separator();
     }
     if (ImGui::CollapsingHeader("Background")) {
 		char path[64] = "";
-		strcpy(path, getbackground().getpath().c_str());
+		strcpy(path, bgtmp.getpath().c_str());
         ImGui::InputText("2path", path, 64);
-		if (strcmp(path, getbackground().getpath().c_str()) != 0) {
-			getbackground().setpath(path);
+		if (strcmp(path, bgtmp.getpath().c_str()) != 0) {
+			bgtmp.setpath(path);
 		}
        	ImGui::Separator();
     }
     if (ImGui::CollapsingHeader("Objects")) {
         if (ImGui::TreeNode("Trigger")) {
-			int size = gettrigger().size();
+			int size = trigtmp.size();
         	ImGui::InputInt("trigger amount", &size);
-			if (size != gettrigger().size()) {
-				gettrigger().resize(size);
+			if (size != trigtmp.size()) {
+				trigtmp.resize(size);
 			}
 			for (int i = 0; i < size; i++) {
 				std::string name = "[" + std::to_string(i) + "]";
 				if (ImGui::TreeNode(name.c_str())) {
-					gettrigger()[i].ID = i;
-					ImGui::Checkbox("visible", &gettrigger()[i].visible);
-					ImGui::Checkbox("collision", &gettrigger()[i].collision);
+					trigtmp[i].ID = i;
+					ImGui::Checkbox("visible", &trigtmp[i].visible);
+					ImGui::Checkbox("collision", &trigtmp[i].collision);
 					char path[64] = "";
-					strcpy(path, gettrigger()[i].getpath().c_str());
+					strcpy(path, trigtmp[i].getpath().c_str());
 					ImGui::InputText("3path", path, 64);
-					if (strcmp(path, gettrigger()[i].getpath().c_str()) != 0) {
-						gettrigger()[i].setpath(path);
+					if (strcmp(path, trigtmp[i].getpath().c_str()) != 0) {
+						trigtmp[i].setpath(path);
 					}
 					ImGui::Separator();
 					ImGui::Columns(3);
 					ImGui::TextUnformatted("trigger position:");
 					ImGui::NextColumn();
-					Positions tmppos = gettrigger()[i].getposition();
+					Positions tmppos = trigtmp[i].getposition();
 					ImGui::InputInt("x", &tmppos.x);
 					ImGui::NextColumn();
 					ImGui::InputInt("y", &tmppos.y);
-					gettrigger()[i].setposition(tmppos);
+					trigtmp[i].setposition(tmppos);
 					ImGui::NextColumn();
 					ImGui::Columns(1);
 
@@ -90,31 +114,31 @@ bool LevelManager::newlevel() {
             ImGui::Spacing();
         }
         if (ImGui::TreeNode("Object")) {
-			int size = getobject().size();
+			int size = objtmp.size();
         	ImGui::InputInt("object amount", &size);
-			if (size != getobject().size()) {
-				getobject().resize(size);
+			if (size != objtmp.size()) {
+				objtmp.resize(size);
 			}
 			for (int i = 0; i < size; i++) {
 				std::string name = "[" + std::to_string(i) + "]";
 				if (ImGui::TreeNode(name.c_str())) {
-					getobject()[i].ID = i;
-					ImGui::Checkbox("collision", &getobject()[i].collision);
+					objtmp[i].ID = i;
+					ImGui::Checkbox("collision", &objtmp[i].collision);
 					char path[64] = "";
-					strcpy(path, getobject()[i].getpath().c_str());
+					strcpy(path, objtmp[i].getpath().c_str());
 					ImGui::InputText("4path", path, 64);
-					if (strcmp(path, getobject()[i].getpath().c_str()) != 0) {
-						getobject()[i].setpath(path);
+					if (strcmp(path, objtmp[i].getpath().c_str()) != 0) {
+						objtmp[i].setpath(path);
 					}
 					ImGui::Separator();
 					ImGui::Columns(3);
 					ImGui::TextUnformatted("object position:");
 					ImGui::NextColumn();
-					Positions tmppos = getobject()[i].getposition();
+					Positions tmppos = objtmp[i].getposition();
 					ImGui::InputInt("x", &tmppos.x);
 					ImGui::NextColumn();
 					ImGui::InputInt("y", &tmppos.y);
-					getobject()[i].setposition(tmppos);
+					objtmp[i].setposition(tmppos);
 					ImGui::NextColumn();
 					ImGui::Columns(1);
 
@@ -128,7 +152,27 @@ bool LevelManager::newlevel() {
         ImGui::Separator();
 
     }
-    if (ImGui::Button("save level")){
+    if (ImGui::Button("save level")) {
+		setplayer(playertmp);
+		setbackground(bgtmp);
+		setcamera(camtmp);
+		setobject(objtmp);
+		settrigger(trigtmp);
+
+		playertmp = *getplayer();
+		bgtmp = getbackground();
+		camtmp = getcamera();
+		
+		objtmp.clear(); 
+		objtmp.reserve(getobject().size());
+		for (auto& o : getobject()) { 
+			objtmp.push_back(o);
+		}
+		trigtmp.clear(); 
+		trigtmp.reserve(gettrigger().size());
+		for (auto& o : gettrigger()) { 
+			trigtmp.push_back(o);
+		}
     	savelevel();
     }
 
@@ -147,7 +191,7 @@ bool LevelManager::loadlevel() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
 	ImGui::SetNextWindowSize(ImVec2(500, 80), 0);
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 130), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 300), ImGuiCond_Once);
 
     ImGui::Begin("LoadLevel", &open, ImGuiWindowFlags_NoResize);
 
@@ -447,4 +491,20 @@ void LevelManager::savelevel() {
   	std::ofstream outf(ff);
 	outf << info << std::endl;
 	outf.close();
+}
+
+void LevelManager::setobject(const std::vector<Resources>& obj) { 
+	object.clear(); 
+	object.reserve(obj.size());
+	for (auto& o : obj) { 
+		object.push_back(o);
+	} 
+}
+
+void LevelManager::settrigger(const std::vector<Resources>& tri) { 
+	trigger.clear(); 
+	trigger.reserve(tri.size());
+	for (auto& o : tri) { 
+		trigger.push_back(o);
+	} 
 }

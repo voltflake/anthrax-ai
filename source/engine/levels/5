@@ -10,19 +10,19 @@ Background:
 Object:
 	ID: 0
 	path: kote-v-bote.jpg
-	collision: 1
-	x: 540
-	y: 500
+	collision: 0
+	x: 35
+	y: 211
 Object:
 	ID: 1
 	path: floor.jpg
-	collision: 1
-	x: 0
-	y: 800
+	collision: 0
+	x: 22
+	y: 764
 Object:
 	ID: 2
 	path: popo.png
-	collision: 1
-	x: 500
-	y: 0
+	collision: 0
+	x: 1082
+	y: 309
 

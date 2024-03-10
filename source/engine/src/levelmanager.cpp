@@ -18,23 +18,6 @@ bool LevelManager::newlevel() {
 	std::vector<Resources> trigtmp = gettrigger();
 	std::vector<Resources> objtmp = getobject();
 
-	// if (!check && initres) {
-	// 	playertmp = *getplayer();
-	// 	bgtmp = getbackground();
-	// 	camtmp = getcamera();
-		
-	// 	objtmp.clear(); 
-	// 	objtmp.reserve(getobject().size());
-	// 	for (auto& o : getobject()) { 
-	// 		objtmp.push_back(o);
-	// 	}
-	// 	trigtmp.clear(); 
-	// 	trigtmp.reserve(gettrigger().size());
-	// 	for (auto& o : gettrigger()) { 
-	// 		trigtmp.push_back(o);
-	// 	}
-	// }
-
  	if (ImGui::CollapsingHeader("Player")) {
 		char path[64] = "";
 		strcpy(path, playertmp.getpath().c_str());

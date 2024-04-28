@@ -27,6 +27,7 @@ public:
 	void loadmeshes();
 	void updatemesh(Mesh& mesh);
 	void updatemesh(Mesh* mesh, int id, Positions newpos);
+	void updateanimation(Mesh* mesh, int id);
 
 	void clearmeshes() { meshes.clear();};
 

@@ -27,8 +27,8 @@ void MeshBuilder::loadmeshes(){
 		triangle.path = list.second.texturepath;
 		triangle.vertices.resize(4);
 
-		   std::cout << (list.second.pos.x ) << "!www!" << w << "\n";
-             std::cout << (list.second.pos.y ) << "!hhh!" << h << "\n";
+		//    std::cout << (list.second.pos.x ) << "!www!" << w << "\n";
+        //      std::cout << (list.second.pos.y ) << "!hhh!" << h << "\n";
 
 		triangle.vertices[0].position = {list.second.pos.x, list.second.pos.y, 0.0f};
 		triangle.vertices[1].position = {list.second.pos.x, list.second.pos.y + h, 0.0f};
@@ -49,7 +49,6 @@ void MeshBuilder::loadmeshes(){
 
 		meshes[list.first] = triangle;
 	}
-
 }
 
 void MeshBuilder::updatemesh(Mesh* mesh, int id, Positions newpos) {
@@ -60,12 +59,33 @@ void MeshBuilder::updatemesh(Mesh* mesh, int id, Positions newpos) {
 
 	float x = newpos.x;
 	float y = newpos.y;
-        // std::cout << x << "|NEW|" << y << "| |\n";
 
 	mesh->vertices[0].position = {x , y, 0.0f};
 	mesh->vertices[1].position = {x, y + h, 0.0f};
 	mesh->vertices[2].position = {x + w, y + h, 0.0f};
 	mesh->vertices[3].position = {x + w, y, 0.0f};
+
+	updatemesh(*mesh);
+}
+
+void MeshBuilder::updateanimation(Mesh* mesh, int id) {
+	float w, h;
+	
+	//full width is 352 --> 11 frames --> 32x32 --> 1 / 11 = 0.09 (uv)
+	w = 32;//texturehandler.gettexture(texturehandler.resources[id].texturepath)->w;
+	h = texturehandler.gettexture(texturehandler.resources[id].texturepath)->h;
+
+	//w /= 2;
+	
+	mesh->vertices[0].position = {mesh->vertices[0].position.x , mesh->vertices[0].position.y, 0.0f};
+	mesh->vertices[1].position = {mesh->vertices[0].position.x, mesh->vertices[0].position.y + h, 0.0f};
+	mesh->vertices[2].position = {mesh->vertices[0].position.x + w, mesh->vertices[0].position.y + h, 0.0f};
+	mesh->vertices[3].position = {mesh->vertices[0].position.x + w, mesh->vertices[0].position.y, 0.0f};
+
+	mesh->vertices[0].uv = {0.0f, 0.0f};
+	mesh->vertices[1].uv = {0.0f, 1.0f};
+	mesh->vertices[2].uv = {0.09f, 1.0f};
+	mesh->vertices[3].uv = {0.09f, 0.0f};
 
 	updatemesh(*mesh);
 }

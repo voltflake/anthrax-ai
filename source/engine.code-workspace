@@ -78,7 +78,10 @@
 			"cinttypes": "cpp",
 			"typeinfo": "cpp",
 			"variant": "cpp",
-			"expected": "cpp"
+			"expected": "cpp",
+			"bitset": "cpp",
+			"forward_list": "cpp",
+			"unordered_set": "cpp"
 		}
 	}
 }

@@ -71,7 +71,7 @@ bool Engine::editormove() {
 }
 
 void Engine::uncatchobject() {
-    if (mousestate != MOUSE_RELEASED || !freemove || Level.getobject().empty()) {
+    if (state & PLAY_GAME || mousestate != MOUSE_RELEASED || !freemove || Level.getobject().empty()) {
         return ;
     }
     for (int i = 0; i < Level.getobject().size(); i++) {
@@ -86,7 +86,7 @@ void Engine::uncatchobject() {
 }
 
 void Engine::catchobject() {
-    if (mousestate != MOUSE_PRESSED || !freemove || Level.getobject().empty()) {
+    if (state & PLAY_GAME || mousestate != MOUSE_PRESSED || !freemove || Level.getobject().empty()) {
         return ;
     }
 

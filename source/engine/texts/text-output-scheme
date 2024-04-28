@@ -1,0 +1,11 @@
+#type text
+hey i am test text output
+#type text 2
+hey i am test text output another 
+#'>' - this symbol on next line means that player has to press ENTER to continue outputting text
+>
+hey i am another test output
+>
+la la la aaaaaaaaaaa
+la la la aaaaaaa aaa
+#text displaying will work until ENTER and EOF

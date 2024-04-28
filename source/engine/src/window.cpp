@@ -181,11 +181,12 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 		case XCB_KEY_PRESS: {
 			xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
         	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
-			//std::cout << k << '\n';
-
-        	if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
-        		checkupdate = true;
-        	}
+        	// if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
+        	// 	checkupdate = true;
+        	// }
+			if (k == ENTER_KEY) {
+				processtextind();
+			}
 			if (k == ESC_KEY) {
         		state ^= PLAY_GAME;
 				state |= ENGINE_EDITOR;
@@ -212,7 +213,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 			if (mousestate == MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
-				printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
+				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
 			return true;
 		}
@@ -302,27 +303,26 @@ void Engine::runlinux() {
 	state |= ENGINE_EDITOR;
 
 	while (running) {
-		
 		checkstate();
 
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplX11_NewFrame();
+		ImGui::NewFrame();
+		
+		fpsoverlay();
+
 		if (state & PLAY_GAME) {
-			ImGui_ImplVulkan_NewFrame();
-			ImGui_ImplX11_NewFrame();
-			ImGui::NewFrame();
-			
 			start = std::chrono::system_clock::now();
 			std::chrono::duration<double, std::milli> delta = start - end;
 			calculateFPS(delta);
 
+			processanimation();
+			processtrigger();
 			moveplayer();
 			draw();
 			end = std::chrono::system_clock::now();
 		}
 		if (state & ENGINE_EDITOR) {
-			ImGui_ImplVulkan_NewFrame();
-			ImGui_ImplX11_NewFrame();
-			ImGui::NewFrame();
-
 			start = std::chrono::system_clock::now();
 			std::chrono::duration<double, std::milli> delta = start - end;
 			calculateFPS(delta);

@@ -2,7 +2,6 @@
 
 #define OS_LINUX
 // #define OS_WINDOWS
-
 #include "vulkan/vulkan.h"
 
 #ifdef OS_LINUX
@@ -48,7 +47,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 
 #include "vulkan/vk_enum_string_helper.h"
 
-
+#include "lookup.h"
 
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
@@ -76,50 +75,23 @@ do                                                              \
 	}                                                           \
 } while (0)
 
-
-
 #ifdef OS_WINDOWS
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
 #ifdef OS_LINUX
 #define VK_USE_PLATFORM_XCB_KHR
-
 #define ESC_KEY 65307
 #define W_KEY 119
 #define D_KEY 100
 #define A_KEY 97
 #define S_KEY 115
 #define ENTER_KEY 65293
-
 #endif
-
 
 #define _USE_MATH_DEFINE
 
 #define FRAG_SHADER "./shaders/simpleShader.frag.spv"
 #define VERTEX_SHADER "./shaders/simpleShader.vert.spv"
-
-enum Physics {
-	IDLE 		= 1 << 0,
-	MOVE_RIGHT 	= 1 << 1,
-	MOVE_UP 	= 1 << 2,
-	MOVE_LEFT 	= 1 << 3,
-	MOVE_DOWN 	= 1 << 4,
-	JUMP 		= 1 << 5
-};
-
-enum DataTypes {
-	TYPE_PLAYER = 0,
-	TYPE_BACKGROUND,
-	TYPE_OBJECT
-};
-
-enum MouseState {
-	MOUSE_IDLE = 0,
-	MOUSE_PRESSED,
-	MOUSE_MOVE,
-	MOUSE_RELEASED
-};
 
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;
@@ -181,7 +153,6 @@ struct UploadContext {
 	VkCommandBuffer CommandBuffer;
 };
 
-
 struct Positions {
 	int x;
 	int y;
@@ -191,6 +162,7 @@ struct Data {
 	std::string texturepath;
 	Positions pos;
 	bool debugcollision;
+	bool animation;
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;

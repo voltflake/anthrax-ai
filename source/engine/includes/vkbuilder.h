@@ -109,10 +109,11 @@ public:
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
 	void updatemesh(Mesh* mesh, int id, Positions newpos) 		{ meshhandler.updatemesh(mesh, id, newpos);	};
+	void updateanimation(Mesh* mesh, int id) 					{ meshhandler.updateanimation(mesh, id);	};
 
-	Material* 	getmaterial(const std::string& name) { return pipeline.getmaterial(name);};
-	Mesh* 		getmesh(int id) { return meshhandler.getmesh(id);};
-	Texture* 	gettexture(const std::string& name) { return texturehandler.gettexture(name);};
+	Material* 	getmaterial(const std::string& name)			{ return pipeline.getmaterial(name);};
+	Mesh* 		getmesh(int id) 								{ return meshhandler.getmesh(id);};
+	Texture* 	gettexture(const std::string& name) 			{ return texturehandler.gettexture(name);};
 
 
 	void copycheck(uint32_t swapchainimageindex);

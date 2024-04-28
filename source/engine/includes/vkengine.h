@@ -65,7 +65,7 @@ void checkuistate();
 	Positions 					mousebegin = {0, 0};
 	MouseState					mousestate = MOUSE_IDLE;
 
-	std::vector<std::string> 	checkimgs= {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
+	std::vector<std::string> 	checkimgs = {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
 	int 						checkimg = 0;
 	bool 						checkupdate = false;
 
@@ -86,11 +86,21 @@ void checkuistate();
 	void 						init();
 	void 						cleanup();
 
+	ImGuiStyle 					EditorStyle;
+	ImGuiStyle 					TextDisplayStyle;
 private:
 	DeletionQueue 				Deletor;
 	int 						FrameIndex = 0;
 
 	void 						moveplayer();
+
+	void 						processanimation();
+
+	bool 						processtrigger();
+	void 						processaction();
+	void 						processtext();
+	void 						processtextind();
+
 	void 						catchobject();
 	void 						uncatchobject();
 	bool 						editormove();

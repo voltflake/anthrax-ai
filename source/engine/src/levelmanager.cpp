@@ -43,12 +43,14 @@ bool LevelManager::newlevel() {
     	ImGui::Checkbox("collision", &playertmp.collision);
     	ImGui::Checkbox("debug collision", &playertmp.debugcollision);
     	ImGui::Separator();
+		setplayer(playertmp);
 
     }
     if (ImGui::CollapsingHeader("Camera")) {
         ImGui::Checkbox("follow", &camtmp.follow);
         ImGui::Separator();
-    }
+		setcamera(camtmp);
+	}
     if (ImGui::CollapsingHeader("Background")) {
 		char path[64] = "";
 		strcpy(path, bgtmp.getpath().c_str());
@@ -57,6 +59,7 @@ bool LevelManager::newlevel() {
 			bgtmp.setpath(path);
 		}
        	ImGui::Separator();
+		setbackground(bgtmp);
     }
     if (ImGui::CollapsingHeader("Objects")) {
         if (ImGui::TreeNode("Trigger")) {
@@ -69,7 +72,6 @@ bool LevelManager::newlevel() {
 				std::string name = "[" + std::to_string(i) + "]";
 				if (ImGui::TreeNode(name.c_str())) {
 					trigtmp[i].ID = i;
-					ImGui::Checkbox("visible", &trigtmp[i].visible);
 					ImGui::Checkbox("collision", &trigtmp[i].collision);
 					char path[64] = "";
 					strcpy(path, trigtmp[i].getpath().c_str());
@@ -78,7 +80,7 @@ bool LevelManager::newlevel() {
 						trigtmp[i].setpath(path);
 					}
 					ImGui::Separator();
-					ImGui::Columns(3);
+					ImGui::Columns(3, "trigger info");
 					ImGui::TextUnformatted("trigger position:");
 					ImGui::NextColumn();
 					Positions tmppos = trigtmp[i].getposition();
@@ -88,13 +90,38 @@ bool LevelManager::newlevel() {
 					trigtmp[i].setposition(tmppos);
 					ImGui::NextColumn();
 					ImGui::Columns(1);
-
+					
+					static int item = trigtmp[i].gettriggertype();
+					ImGui::Combo("trigger type", &item, LOOKUP_NAME, IM_ARRAYSIZE(LOOKUP_NAME));
+					if (static_cast<TriggerType>(item) != trigtmp[i].gettriggertype()) {
+						trigtmp[i].settriggertype(static_cast<TriggerType>(item));
+					}
+					if (trigtmp[i].gettriggertype() == TYPE_TEXT) {
+						char patht[64] = "";
+						strcpy(patht, trigtmp[i].gettextpath().c_str());
+						ImGui::InputText("5path", patht, 64);
+						if (strcmp(patht, trigtmp[i].gettextpath().c_str()) != 0) {
+							trigtmp[i].settextpath(patht);
+						}
+						ImGui::Separator();
+						ImGui::Columns(3, "text info");
+						ImGui::TextUnformatted("text position:");
+						ImGui::NextColumn();
+						Positions tmppost = trigtmp[i].gettextposition();
+						ImGui::InputInt("x1", &tmppost.x);
+						ImGui::NextColumn();
+						ImGui::InputInt("y1", &tmppost.y);
+						trigtmp[i].settextposition(tmppost);
+						ImGui::NextColumn();
+						ImGui::Columns(1);
+					}
 					ImGui::TreePop();
 					ImGui::Spacing();
 				}
 			}
             ImGui::TreePop();
             ImGui::Spacing();
+			settrigger(trigtmp);
         }
         if (ImGui::TreeNode("Object")) {
 			int size = objtmp.size();
@@ -131,31 +158,12 @@ bool LevelManager::newlevel() {
 			}
             ImGui::TreePop();
             ImGui::Spacing();
+			setobject(objtmp);
         }
         ImGui::Separator();
-
     }
-    if (ImGui::Button("save level")) {
-		setplayer(playertmp);
-		setbackground(bgtmp);
-		setcamera(camtmp);
-		setobject(objtmp);
-		settrigger(trigtmp);
-
-		playertmp = *getplayer();
-		bgtmp = getbackground();
-		camtmp = getcamera();
 		
-		objtmp.clear(); 
-		objtmp.reserve(getobject().size());
-		for (auto& o : getobject()) { 
-			objtmp.push_back(o);
-		}
-		trigtmp.clear(); 
-		trigtmp.reserve(gettrigger().size());
-		for (auto& o : gettrigger()) { 
-			trigtmp.push_back(o);
-		}
+    if (ImGui::Button("save level")) {
     	savelevel();
     }
 
@@ -192,11 +200,13 @@ bool LevelManager::loadlevel() {
 	int triggerind = 0;
 	int objectind = 0;
 
-	if (!loaded) {
+	if (ImGui::Button("Load")){
+
 		gettrigger().clear();
 		getobject().clear();
 		getplayer()->clear();
 		getbackground().clear();
+		parser.Clear();
 
 		if (std::ifstream in{ff}) {
 			while (std::getline(in, modify)) {
@@ -215,131 +225,78 @@ bool LevelManager::loadlevel() {
 		if (objectind != 0) {
 			getobject().reserve(objectind);
 		}
-		std::ifstream in(ff);
-    	while (std::getline(in, modify)) {
-    		if (modify == "Player:") {
-				std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			getplayer()->ID = stoi(modify);
 
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-				getplayer()->setpath(modify.c_str());
+		parser.Load(ff);
+		if (parser.GetElement("Player:")) {
+			getplayer()->ID = parser.GetElement<int>(PARSE_ID);
+			getplayer()->setpath(parser.GetElement<std::string>(PARSE_PATH));
+			getplayer()->collision = parser.GetElement<bool>(PARSE_COLLISION);
+			Positions pos;
+			pos.x = parser.GetElement<int>(PARSE_X);
+			pos.y = parser.GetElement<int>(PARSE_Y);
+			getplayer()->setposition(pos);
+			getplayer()->animation = parser.GetElement<bool>(PARSE_ANIMATION);
+			Positions sizes;
+			sizes.x = parser.GetElement<int>(PARSE_W);
+			sizes.y = parser.GetElement<int>(PARSE_H);
+			getplayer()->setanimsize(sizes);
+		}
+		if (parser.GetElement("Background:")) {
+   			getbackground().ID = parser.GetElement<int>(PARSE_ID);
+			getbackground().setpath(parser.GetElement<std::string>(PARSE_PATH));
+		}
+		if (parser.GetElement("Camera:")) {
+			getcamera().ID = parser.GetElement<int>(PARSE_ID);
+			getcamera().follow = parser.GetElement<bool>(PARSE_FOLLOW);
+		}
+		while (parser.GetElement("Trigger:")) {
+    		Resources tmp;
 
-				std::getline(in, modify);
-				found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			getplayer()->collision = (modify) != "0";
+			tmp.ID = parser.GetElement<int>(PARSE_ID);
+			tmp.setpath(parser.GetElement<std::string>(PARSE_PATH));
+			tmp.collision = parser.GetElement<bool>(PARSE_COLLISION);
+			Positions pos;
+			pos.x = parser.GetElement<int>(PARSE_X);
+			pos.y = parser.GetElement<int>(PARSE_Y);
+			tmp.setposition(pos);
+			tmp.animation = parser.GetElement<bool>(PARSE_ANIMATION);
+			if (tmp.animation) {
+				Positions sizes;
+				sizes.x = parser.GetElement<int>(PARSE_W);
+				sizes.y = parser.GetElement<int>(PARSE_H);
+				tmp.setanimsize(sizes);
+			}
+			tmp.settriggertype(GetKey<TriggerType>(parser.GetElement<std::string>(PARSE_TYPE)));
+			
+			if (tmp.gettriggertype() == TYPE_TEXT) {
+				tmp.settextpath(parser.GetElement<std::string>(PARSE_TEXT));
+				Positions post;
+				post.x = parser.GetElement<int>(PARSE_X);
+				post.y = parser.GetElement<int>(PARSE_Y);
+				tmp.settextposition(post);
+			}
+			gettrigger().emplace_back(tmp);
+		}
+		while (parser.GetElement("Object:")) {
+			Resources tmp;
 
-				int x, y;
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			x = stoi(modify);
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			y = stoi(modify);
-				getplayer()->setposition({x, y});
-    		}
-    		if (modify == "Camera:") {
-				std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			getcamera().ID = stoi(modify);
+			tmp.ID = parser.GetElement<int>(PARSE_ID);
+			tmp.setpath(parser.GetElement<std::string>(PARSE_PATH));
+			tmp.collision = parser.GetElement<bool>(PARSE_COLLISION);
+			Positions pos;
+			pos.x = parser.GetElement<int>(PARSE_X);
+			pos.y = parser.GetElement<int>(PARSE_Y);
+			tmp.setposition(pos);
+			tmp.animation = parser.GetElement<bool>(PARSE_ANIMATION);
+			if (tmp.animation) {
+				Positions sizes;
+				sizes.x = parser.GetElement<int>(PARSE_W);
+				sizes.y = parser.GetElement<int>(PARSE_H);
+				tmp.setanimsize(sizes);
+			}
 
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
-
-    			getcamera().follow = stoi(modify);
-    		}
-    		if (modify == "Background:") {
-				std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			getbackground().ID = stoi(modify);
-
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0,found);
-    			getbackground().setpath(modify.c_str());
-    		}
-    		if (modify == "Trigger:") {
-    			Resources tmp;
-
-    			std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			tmp.ID = stoi(modify);
-
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-				tmp.setpath(modify.c_str());
-
-				std::getline(in, modify);
-				found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			tmp.collision = (modify) != "0";
-
-				std::getline(in, modify);
-				found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			tmp.visible = (modify) != "0";
-
-				int x, y;
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			x = stoi(modify);
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			y = stoi(modify);
-				tmp.setposition({x, y});
-
-				gettrigger().emplace_back(tmp);
-    		}
-    		if (modify == "Object:") {
-    			Resources tmp;
-
-    			std::getline(in, modify);
-    			std::size_t found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			tmp.ID = stoi(modify);
-
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-				tmp.setpath(modify.c_str());
-
-				std::getline(in, modify);
-				found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			tmp.collision = (modify) != "0";
-
-				int x, y;
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			x = stoi(modify);
-    			std::getline(in, modify);
-    			found = modify.find_first_of(":") + 2;
-    			modify.erase(0, found);
-    			y = stoi(modify);
-				tmp.setposition({x, y});
-
-				getobject().emplace_back(tmp);
-    		}
-    	}
-		in.close();
-	}
-
-	if (ImGui::Button("Load")){
-		loaded = true;
+			getobject().emplace_back(tmp);
+		}
     	initres = true;
 
 		std::cout << filename << "\n";
@@ -423,6 +380,8 @@ void LevelManager::savelevel() {
 			info += currline + std::to_string(getplayer()->getposition().x) + "\n";
 			std::getline(infile, currline);
 			info += currline + std::to_string(getplayer()->getposition().y) + "\n";
+			std::getline(infile, currline);
+			info += currline + std::to_string(getplayer()->animation) + "\n";
 		}
 		if (currline == "Camera:") {
 			info += currline + "\n";
@@ -447,11 +406,13 @@ void LevelManager::savelevel() {
 			std::getline(infile, currline);
 			info += currline + std::to_string(gettrigger()[triggerind].collision) + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(gettrigger()[triggerind].visible) + "\n";
-			std::getline(infile, currline);
 			info += currline + std::to_string(gettrigger()[triggerind].getposition().x) + "\n";
 			std::getline(infile, currline);
 			info += currline + std::to_string(gettrigger()[triggerind].getposition().y) + "\n";
+			std::getline(infile, currline);
+			info += currline + std::to_string(gettrigger()[triggerind].animation) + "\n";
+			std::getline(infile, currline);
+			info += currline + LOOKUP_NAME[gettrigger()[triggerind].gettriggertype()] + "\n";
 			triggerind++;
 		}
 		if (currline == "Object:") {
@@ -466,6 +427,8 @@ void LevelManager::savelevel() {
 			info += currline + std::to_string(getobject()[objind].getposition().x) + "\n";
 			std::getline(infile, currline);
 			info += currline + std::to_string(getobject()[objind].getposition().y) + "\n";
+			std::getline(infile, currline);
+			info += currline + std::to_string(getobject()[objind].animation) + "\n";
 			objind++;
 		}
 	}

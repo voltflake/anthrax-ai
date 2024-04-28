@@ -7,16 +7,23 @@ Player:
 Background:
 	ID: 0
 	path: bg.jpg
+Trigger:
+	ID: 0
+	path: popo.png
+	collision: 0
+	x: 500
+	y: 800
+	type: TYPE_NONE
 Object:
 	ID: 0
 	path: kote-v-bote.jpg
 	collision: 0
-	x: 540
-	y: 500
+	x: 1015
+	y: 210
 Object:
 	ID: 1
 	path: floor.jpg
 	collision: 0
-	x: 0
-	y: 800
+	x: 5
+	y: 811
 

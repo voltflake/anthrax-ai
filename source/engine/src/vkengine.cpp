@@ -83,21 +83,26 @@ void Engine::initresources()
 {
 	int triggersize = Level.gettrigger().size();
 	int objectsize = Level.getobject().size();
-	for (int i = 0; i < triggersize; i++) {
-		if (Level.gettrigger()[i].getpath() != "") {
-			resources[TYPE_OBJECT + i] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision};
+	int k = 0;
+	for (int i = 0; i < objectsize; i++) {
+		if (Level.getobject()[i].getpath() != "") {
+			resources[TYPE_OBJECT + k] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition(), Level.getobject()[i].collision, Level.getobject()[i].animation};
+			k++;
 		}
 	}
-	for (int i = triggersize; i < triggersize + objectsize; i++) {
-		if (Level.getobject()[i].getpath() != "") {
-			resources[TYPE_OBJECT + i] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition(), Level.getobject()[i].collision};
+	k = objectsize;
+	// should be here ause i don't handle move/catch code for triggers yet
+	for (int i = 0; i < triggersize; i++) {
+		if (Level.gettrigger()[i].getpath() != "") {
+			resources[TYPE_OBJECT + k] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision, Level.getobject()[i].animation};
+			k++;
 		}
 	}
 	if (Level.getplayer()->getpath() != "") {
-		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition(), Level.getplayer()->debugcollision}; // player has to be always second -- stupid
+		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition(), Level.getplayer()->debugcollision, Level.getplayer()->animation}; // player has to be always second -- stupid
 	}
 	if (Level.getbackground().getpath() != "") {
-		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false}; // background for some reason should be always top, looks kinda broken
+		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false, false}; // background for some reason should be always top, looks kinda broken
 	}
 }
 

@@ -1,28 +1,35 @@
 Player:
 	ID: 0
-	path: cube.png
+	path: idle.png
 	collision: 1
 	x: 10
 	y: 110
+	animation: 1
+	w: 32
+	h: 32
 Background:
 	ID: 0
-	path: bg.jpg
+	path: bg5.jpg
+Trigger:
+	ID: 0
+	path: popo.png
+	collision: 0
+	x: 500
+	y: 800
+	animation: 0
+	type: TYPE_TEXT
 Object:
 	ID: 0
 	path: kote-v-bote.jpg
 	collision: 0
-	x: 540
-	y: 500
+	x: 1015
+	y: 210
+	animation: 0
 Object:
 	ID: 1
 	path: floor.jpg
 	collision: 0
-	x: 0
-	y: 800
-Object:
-	ID: 2
-	path: popo.png
-	collision: 0
-	x: 0
-	y: 0
+	x: 5
+	y: 811
+	animation: 0
 

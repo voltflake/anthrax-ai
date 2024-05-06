@@ -1,5 +1,6 @@
 #pragma once
 
+#include "animator.h"
 #include "vkdefines.h"
 #include "vkdevices.h"
 #include "vkrenderer.h"
@@ -25,9 +26,10 @@ class MeshBuilder {
 public:
 	void init(PipelineBuilder& pipeline, TextureBuilder& textb, DeletionQueue* deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
 	void loadmeshes();
+	bool loadmeshfromobj(const char* filename);
+
 	void updatemesh(Mesh& mesh);
-	void updatemesh(Mesh* mesh, int id, Positions newpos);
-	void updateanimation(Mesh* mesh, int id);
+	void updatemesh(Mesh* mesh, Positions size, Positions newpos);
 
 	void clearmeshes() { meshes.clear();};
 

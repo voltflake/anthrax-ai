@@ -49,6 +49,9 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 
 #include "lookup.h"
 
+#define MAX_FPS 60
+#define FPS_SAMPLER 100
+
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
 {                                                               \
@@ -153,9 +156,18 @@ struct UploadContext {
 	VkCommandBuffer CommandBuffer;
 };
 
+struct DebugAnim {
+	int scale = 1;
+	VkDescriptorSet desc;
+	std::string path;
+};
+
 struct Positions {
 	int x;
 	int y;
+
+	Positions() {};
+	Positions(int tmpx, int tmpy) { x = tmpx; y = tmpy; };
 };
 
 struct Data {

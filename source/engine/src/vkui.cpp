@@ -141,6 +141,22 @@ void Engine::initimgui() {
         TextDisplayStyle.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 }
 
+void Engine::animator() {
+	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 2, base_pos.y + 40), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 800), ImGuiCond_FirstUseEver);
+	
+	ImGui::Begin("Vulkan Texture Test");
+	for (int i = 0; i < DebugImGuiAnim.size(); i++) {
+		ImGui::TextUnformatted(DebugImGuiAnim[i].path.c_str());
+		ImGui::SliderInt(std::string("scale " + std::to_string(i)).c_str(), &DebugImGuiAnim[i].scale, 1, 8);
+		ImGui::Image((ImTextureID)DebugImGuiAnim[i].desc, ImVec2(Builder.gettexture(DebugImGuiAnim[i].path)->w / DebugImGuiAnim[i].scale, Builder.gettexture(DebugImGuiAnim[i].path)->h / DebugImGuiAnim[i].scale));
+		ImGui::Separator();
+	}
+	ImGui::End();
+}
+
 void Engine::checkuistate() {
 
 	if (state & NEW_LEVEL) {
@@ -163,6 +179,12 @@ void Engine::debugdraw() {
 
 	ImGui::Begin("Debug", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
       ImGui::Checkbox("Free Move", &freemove);
+
+	static bool anim = false;
+	ImGui::Checkbox("Animator", &anim);
+	if (anim) {
+		animator();
+	}
     ImGui::End();
 
 }
@@ -181,7 +203,7 @@ void Engine::ui() {
     bool active = true;
 
     // ImGui::ShowDemoWindow();
-	
+
 	active = true;
 	if (state & PLAY_GAME) {
 		active = false ;
@@ -219,7 +241,7 @@ void Engine::ui() {
 	ImGui::NextColumn();
 
 	ImGui::Columns(1);
-	ImGuiStyle& style = ImGui::GetStyle();
+	ImGuiStyle& style = EditorStyle;
 	float alpha = style.Colors[ImGuiCol_WindowBg].w;
     ImGui::SliderFloat("Editor Alpha", &alpha, 0.0, 1.0, "%.1f");
 	if (style.Colors[ImGuiCol_WindowBg].w != alpha) {

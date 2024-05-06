@@ -10,9 +10,6 @@
 
 #include "vkdebug.h"
 
-#define MAX_FPS 60
-#define FPS_SAMPLER 100
-
 #ifdef OS_WINDOWS
 	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
@@ -48,7 +45,7 @@ public:
 
 	void 						start();
 	void 						checkstate();
-void checkuistate();
+	void 						checkuistate();
 	void 						initengine(LevelManager &levels);
 
 	VkBuilder 					Builder;
@@ -88,6 +85,8 @@ void checkuistate();
 
 	ImGuiStyle 					EditorStyle;
 	ImGuiStyle 					TextDisplayStyle;
+
+	std::vector<DebugAnim> 		DebugImGuiAnim;
 private:
 	DeletionQueue 				Deletor;
 	int 						FrameIndex = 0;
@@ -101,11 +100,16 @@ private:
 	void 						processtext();
 	void 						processtextind();
 
+	void 						animator();
+
+	void 						editor();
 	void 						catchobject();
 	void 						uncatchobject();
 	bool 						editormove();
-	bool 						collision(int& state, bool collision, Positions pos);
+	bool 						collision(int& state, bool collision, Positions pos, Positions sizes);
 
+	void 						move();
+	void 						update();
 	void 						draw();
 	void 						drawobjects(VkCommandBuffer cmd,RenderObject* first, int count);
 	

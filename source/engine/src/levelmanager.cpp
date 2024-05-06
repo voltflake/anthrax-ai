@@ -16,7 +16,7 @@ bool LevelManager::newlevel() {
 	Resources bgtmp =  getbackground();
 	Camera camtmp = getcamera();
 	std::vector<Resources> trigtmp = gettrigger();
-	std::vector<Resources> objtmp = getobject();
+	std::vector<Resources*> objtmp = getobject();
 
  	if (ImGui::CollapsingHeader("Player")) {
 		char path[64] = "";
@@ -41,6 +41,7 @@ bool LevelManager::newlevel() {
        	ImGui::Separator();
 
     	ImGui::Checkbox("collision", &playertmp.collision);
+    	ImGui::Checkbox("animation", &playertmp.animation);
     	ImGui::Checkbox("debug collision", &playertmp.debugcollision);
     	ImGui::Separator();
 		setplayer(playertmp);
@@ -132,23 +133,27 @@ bool LevelManager::newlevel() {
 			for (int i = 0; i < size; i++) {
 				std::string name = "[" + std::to_string(i) + "]";
 				if (ImGui::TreeNode(name.c_str())) {
-					objtmp[i].ID = i;
-					ImGui::Checkbox("collision", &objtmp[i].collision);
+					objtmp[i]->ID = i;
+					ImGui::Checkbox("collision", &objtmp[i]->collision);
+					ImGui::Checkbox("animation", &objtmp[i]->animation);
+					if (!objtmp[i]->animation) {
+						objtmp[i]->update = false;
+					}
 					char path[64] = "";
-					strcpy(path, objtmp[i].getpath().c_str());
+					strcpy(path, objtmp[i]->getpath().c_str());
 					ImGui::InputText("4path", path, 64);
-					if (strcmp(path, objtmp[i].getpath().c_str()) != 0) {
-						objtmp[i].setpath(path);
+					if (strcmp(path, objtmp[i]->getpath().c_str()) != 0) {
+						objtmp[i]->setpath(path);
 					}
 					ImGui::Separator();
 					ImGui::Columns(3);
 					ImGui::TextUnformatted("object position:");
 					ImGui::NextColumn();
-					Positions tmppos = objtmp[i].getposition();
+					Positions tmppos = objtmp[i]->getposition();
 					ImGui::InputInt("x", &tmppos.x);
 					ImGui::NextColumn();
 					ImGui::InputInt("y", &tmppos.y);
-					objtmp[i].setposition(tmppos);
+					objtmp[i]->setposition(tmppos);
 					ImGui::NextColumn();
 					ImGui::Columns(1);
 
@@ -203,6 +208,9 @@ bool LevelManager::loadlevel() {
 	if (ImGui::Button("Load")){
 
 		gettrigger().clear();
+		for (int i = 0; i < getobject().size(); i++) {
+			delete getobject()[i];
+		}
 		getobject().clear();
 		getplayer()->clear();
 		getbackground().clear();
@@ -235,11 +243,19 @@ bool LevelManager::loadlevel() {
 			pos.x = parser.GetElement<int>(PARSE_X);
 			pos.y = parser.GetElement<int>(PARSE_Y);
 			getplayer()->setposition(pos);
-			getplayer()->animation = parser.GetElement<bool>(PARSE_ANIMATION);
-			Positions sizes;
-			sizes.x = parser.GetElement<int>(PARSE_W);
-			sizes.y = parser.GetElement<int>(PARSE_H);
-			getplayer()->setanimsize(sizes);
+			if (parser.GetElement("\tanimation:")) {
+				getplayer()->animation = 1;
+				Animator anim;
+				anim.ID = parser.GetElement<int>(PARSE_ID);
+				anim.setpath(parser.GetElement<std::string>(PARSE_PATH));
+				Positions sizes;
+				sizes.x = parser.GetElement<int>(PARSE_X);
+				sizes.y = parser.GetElement<int>(PARSE_Y);
+				anim.setanimsize(sizes);
+				anim.setfps(parser.GetElement<float>(PARSE_FPS));
+				anim.settype(GetKey<AnimationType>(parser.GetElement<std::string>(PARSE_TYPE)));
+				getplayer()->pushanimator(anim);
+			}
 		}
 		if (parser.GetElement("Background:")) {
    			getbackground().ID = parser.GetElement<int>(PARSE_ID);
@@ -261,10 +277,10 @@ bool LevelManager::loadlevel() {
 			tmp.setposition(pos);
 			tmp.animation = parser.GetElement<bool>(PARSE_ANIMATION);
 			if (tmp.animation) {
-				Positions sizes;
-				sizes.x = parser.GetElement<int>(PARSE_W);
-				sizes.y = parser.GetElement<int>(PARSE_H);
-				tmp.setanimsize(sizes);
+				// Positions sizes;
+				// sizes.x = parser.GetElement<int>(PARSE_W);
+				// sizes.y = parser.GetElement<int>(PARSE_H);
+				// tmp.setanimsize(sizes);
 			}
 			tmp.settriggertype(GetKey<TriggerType>(parser.GetElement<std::string>(PARSE_TYPE)));
 			
@@ -278,23 +294,34 @@ bool LevelManager::loadlevel() {
 			gettrigger().emplace_back(tmp);
 		}
 		while (parser.GetElement("Object:")) {
-			Resources tmp;
+			Resources* tmp = new Resources;
 
-			tmp.ID = parser.GetElement<int>(PARSE_ID);
-			tmp.setpath(parser.GetElement<std::string>(PARSE_PATH));
-			tmp.collision = parser.GetElement<bool>(PARSE_COLLISION);
+			tmp->ID = parser.GetElement<int>(PARSE_ID);
+			tmp->setpath(parser.GetElement<std::string>(PARSE_PATH));
+			tmp->collision = parser.GetElement<bool>(PARSE_COLLISION);
 			Positions pos;
 			pos.x = parser.GetElement<int>(PARSE_X);
 			pos.y = parser.GetElement<int>(PARSE_Y);
-			tmp.setposition(pos);
-			tmp.animation = parser.GetElement<bool>(PARSE_ANIMATION);
-			if (tmp.animation) {
-				Positions sizes;
-				sizes.x = parser.GetElement<int>(PARSE_W);
-				sizes.y = parser.GetElement<int>(PARSE_H);
-				tmp.setanimsize(sizes);
-			}
+			tmp->setposition(pos);
+			tmp->animation = parser.GetElement<bool>(static_cast<Elements>(PARSE_ANIMATION - 2));
+			if (tmp->animation) {
 
+				if (parser.GetElement("\tanimation: 1")) {
+					tmp->animation = 1;
+					Animator anim;
+					anim.ID = parser.GetElement<int>(PARSE_ID);
+					anim.setpath(parser.GetElement<std::string>(PARSE_PATH));
+					Positions sizes;
+					sizes.x = parser.GetElement<int>(PARSE_X);
+					sizes.y = parser.GetElement<int>(PARSE_Y);
+					anim.setanimsize(sizes);
+					anim.setfps(parser.GetElement<float>(PARSE_FPS));
+
+					anim.settype(GetKey<AnimationType>(parser.GetElement<std::string>(PARSE_TYPE)));
+
+					tmp->pushanimator(anim);
+				}
+			}
 			getobject().emplace_back(tmp);
 		}
     	initres = true;
@@ -418,17 +445,17 @@ void LevelManager::savelevel() {
 		if (currline == "Object:") {
 			info += currline + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(getobject()[objind].ID) + "\n";
+			info += currline + std::to_string(getobject()[objind]->ID) + "\n";
 			std::getline(infile, currline);
-			info += currline + getobject()[objind].getpath() + "\n";
+			info += currline + getobject()[objind]->getpath() + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(getobject()[objind].collision) + "\n";
+			info += currline + std::to_string(getobject()[objind]->collision) + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(getobject()[objind].getposition().x) + "\n";
+			info += currline + std::to_string(getobject()[objind]->getposition().x) + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(getobject()[objind].getposition().y) + "\n";
+			info += currline + std::to_string(getobject()[objind]->getposition().y) + "\n";
 			std::getline(infile, currline);
-			info += currline + std::to_string(getobject()[objind].animation) + "\n";
+			info += currline + std::to_string(getobject()[objind]->animation) + "\n";
 			objind++;
 		}
 	}
@@ -439,7 +466,7 @@ void LevelManager::savelevel() {
 	outf.close();
 }
 
-void LevelManager::setobject(const std::vector<Resources>& obj) { 
+void LevelManager::setobject(const std::vector<Resources*>& obj) { 
 	object.clear(); 
 	object.reserve(obj.size());
 	for (auto& o : obj) { 

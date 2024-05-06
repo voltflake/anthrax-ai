@@ -108,8 +108,8 @@ public:
 	void loadmeshes()			{ meshhandler.loadmeshes();			};
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
-	void updatemesh(Mesh* mesh, int id, Positions newpos) 		{ meshhandler.updatemesh(mesh, id, newpos);	};
-	void updateanimation(Mesh* mesh, int id) 					{ meshhandler.updateanimation(mesh, id);	};
+	void updatemesh(Mesh* mesh, Positions size, Positions newpos) 		{ meshhandler.updatemesh(mesh, size, newpos);	};
+	//void updateanimation(Mesh* mesh, int id) 					{ meshhandler.updateanimation(mesh, id);	};
 
 	Material* 	getmaterial(const std::string& name)			{ return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(int id) 								{ return meshhandler.getmesh(id);};

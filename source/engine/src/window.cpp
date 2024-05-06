@@ -316,9 +316,8 @@ void Engine::runlinux() {
 			std::chrono::duration<double, std::milli> delta = start - end;
 			calculateFPS(delta);
 
-			processanimation();
-			processtrigger();
-			moveplayer();
+			move();
+			update();
 			draw();
 			end = std::chrono::system_clock::now();
 		}
@@ -328,9 +327,8 @@ void Engine::runlinux() {
 			calculateFPS(delta);
 			
 			ui();
-			catchobject();
-			editormove();
-			uncatchobject();
+			editor();
+			update();
 			draw();
 			end = std::chrono::system_clock::now();
 		}
@@ -338,7 +336,7 @@ void Engine::runlinux() {
 			xcb_key_symbols_free(KeySyms);
 			cleanup();
 		}
-	
+
 	}
 }
 #endif

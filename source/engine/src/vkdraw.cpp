@@ -40,7 +40,6 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 			
 			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
-	
 		}
 		//glm::mat4 model = object.transformmatrix;
 		MeshPushConstants constants;
@@ -57,7 +56,7 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 		}
 	
 		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-
+	
 		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 	}
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include <iostream>
-
+#include <typeinfo>
 enum Physics {
 	IDLE 		= 1 << 0,
 	MOVE_RIGHT 	= 1 << 1,
@@ -13,7 +13,8 @@ enum Physics {
 enum DataTypes {
 	TYPE_PLAYER = 0,
 	TYPE_BACKGROUND,
-	TYPE_OBJECT
+	TYPE_OBJECT,
+	TYPE_MODEL = 100,
 };
 
 enum MouseState {
@@ -22,6 +23,11 @@ enum MouseState {
 	MOUSE_MOVE,
 	MOUSE_RELEASED
 };
+
+#define ANIM_TYPE_LIST   \
+  X(ANIM_TYPE_NONE)             \
+  X(ANIM_TYPE_IDLE)             \
+  X(ANIM_TYPE_JUMP)            \
 
 #define TRIGGER_TYPE_LIST   \
   X(TYPE_NONE)              \
@@ -36,6 +42,14 @@ typedef enum
   TYPE_SIZE
 } TriggerType;
 
+typedef enum
+{
+  #define X(name) name,
+    ANIM_TYPE_LIST 
+  #undef X
+  ANIM_TYPE_SIZE
+} AnimationType;
+
 static const char* LOOKUP_NAME[TYPE_SIZE] =
 {
   #define X(name) [name] = #name,
@@ -43,12 +57,28 @@ static const char* LOOKUP_NAME[TYPE_SIZE] =
   #undef X
 };
 
+static const char* LOOKUP_ANIM[ANIM_TYPE_SIZE] =
+{
+  #define X(name) [name] = #name,
+    ANIM_TYPE_LIST
+  #undef X
+};
+
 template <typename T>
 inline T GetKey(std::string str) {
-	for (int i = TYPE_NONE; i < TYPE_SIZE; ++i) {
-		if (str == LOOKUP_NAME[i]) {
-			return static_cast<T>(i);
+	if (typeid(TriggerType) == typeid(T)) {
+		for (int i = TYPE_NONE; i < TYPE_SIZE; ++i) {
+			if (str == LOOKUP_NAME[i]) {
+				return static_cast<T>(i);
+			}
 		}
 	}
-	return TYPE_NONE;
+	if (typeid(T) == typeid(AnimationType)) {
+		for (int i = ANIM_TYPE_NONE; i < ANIM_TYPE_SIZE; ++i) {
+			if (str == LOOKUP_ANIM[i]) {
+				return static_cast<T>(i);
+			}
+		}
+	}
+	return static_cast<T>(TYPE_NONE);
 }

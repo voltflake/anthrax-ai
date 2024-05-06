@@ -26,6 +26,7 @@ void updatesamplerdescriptors2(std::string texture,std::string texture2);
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
 
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptorsets;};
+	TextureBuilder texturehandler;
 
 private:
 	VkDescriptorSetLayout globalsetlayout;
@@ -41,7 +42,6 @@ private:
 
 
 	DeletionQueue*	deletorhandler;
-	TextureBuilder texturehandler;
 	RenderBuilder renderer;
 
 };

@@ -5,6 +5,7 @@ void Engine::init() {
 	initvulkan();
 	initscene();
 	initimgui();
+
 }
 
 void Engine::initvulkan() {
@@ -85,8 +86,9 @@ void Engine::initresources()
 	int objectsize = Level.getobject().size();
 	int k = 0;
 	for (int i = 0; i < objectsize; i++) {
-		if (Level.getobject()[i].getpath() != "") {
-			resources[TYPE_OBJECT + k] = {Level.getobject()[i].getpath(), Level.getobject()[i].getposition(), Level.getobject()[i].collision, Level.getobject()[i].animation};
+		if (Level.getobject()[i]->getpath() != "") {
+			resources[TYPE_OBJECT + k] = {Level.getobject()[i]->getpath(), Level.getobject()[i]->getposition(), Level.getobject()[i]->collision, Level.getobject()[i]->animation};
+			Level.getobject()[i]->ID = k;
 			k++;
 		}
 	}
@@ -94,7 +96,7 @@ void Engine::initresources()
 	// should be here ause i don't handle move/catch code for triggers yet
 	for (int i = 0; i < triggersize; i++) {
 		if (Level.gettrigger()[i].getpath() != "") {
-			resources[TYPE_OBJECT + k] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision, Level.getobject()[i].animation};
+			resources[TYPE_OBJECT + k] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision, Level.gettrigger()[i].animation};
 			k++;
 		}
 	}
@@ -129,6 +131,15 @@ void Engine::reloadresources() {
 	Builder.loadmeshes(); // check why here are weird x,y pos for resource
 
 	initscene();
+
+	for (int i = 0; i < Level.getobject().size(); i++) {
+        if (Level.getobject()[i]->animation) {
+   			DebugImGuiAnim.push_back({1, ImGui_ImplVulkan_AddTexture(Builder.gettexture(Level.getobject()[i]->getpath())->sampler, Builder.gettexture(Level.getobject()[i]->getpath())->imageview, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), Level.getobject()[i]->getpath()});
+		}
+	}
+	if (Level.getplayer()->animation) {
+   		DebugImGuiAnim.push_back({1, ImGui_ImplVulkan_AddTexture(Builder.gettexture(Level.getplayer()->getpath())->sampler, Builder.gettexture(Level.getplayer()->getpath())->imageview, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL), Level.getplayer()->getpath() });
+	}
 }
 
 void Engine::cleanup() {
@@ -144,6 +155,9 @@ void Engine::cleanup() {
 	Builder.cleanswapchain();
 	Builder.clearframebuffers();
 	Builder.cleanall();
+	for (int i = 0; i < Level.getobject().size(); i++) {
+			delete Level.getobject()[i];
+	}
 
     ImGui_ImplX11_Shutdown();
     ImGui::DestroyContext();

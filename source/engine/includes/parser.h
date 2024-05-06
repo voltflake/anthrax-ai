@@ -10,10 +10,9 @@ enum Elements {
     PARSE_COLLISION,
     PARSE_X,
     PARSE_Y,
-    PARSE_ANIMATION,
-    PARSE_W,
-    PARSE_H,
+    PARSE_FPS,
     PARSE_TYPE,
+    PARSE_ANIMATION,
     PARSE_TEXT,
     PARSE_POSITION,
 };

@@ -10,13 +10,20 @@
 #include "vkdescriptors.h"
 #include "vktexture.h"
 
+enum ClearFlags {
+	CLEAR_COLOR 	= 1 << 0,	/* 0000 0001 */
+	CLEAR_DEPTH 	= 1 << 1, 	/* 0000 0010 */
+};
+
 struct RenderObject {
 	Mesh* mesh;
 	Material* material;
 	VkDescriptorSet* textureset;
 	
+	Positions pos;
 	glm::mat4 transformmatrix;
 	bool debugcollision;
+	bool model = false;;
 };
 
 class VkBuilder {
@@ -38,7 +45,7 @@ public:
 	VkRenderPass& 				getrenderpass() { return renderer.getrenderpass();};
 	std::vector<VkFramebuffer>& getframebuffers() { return renderer.getframebuffers();};
 	FrameArray&					getframes() { return renderer.getframedata();};
-	VkPipeline&					getpipeline() { return pipeline.getpipeline();};
+	VkPipeline&					getpipeline() { return pipeline.getpipelinesprite();};
 
 	std::vector<VkDescriptorSet>&  			getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
 
@@ -91,7 +98,7 @@ public:
 	void inittexture(std::unordered_map<int, Data>& resources) { texturehandler.init(renderer, devicehandler, &deletorhandler, resources);};
 	void loadimages() 		{ texturehandler.loadimages();	};
 	void clearimages() 		{ texturehandler.clearimages();	};
-
+	void builddepthbuffer() { texturehandler.createdepthbuffer(devicehandler); };
 
 	DescriptorBuilder descriptors;
 	void initdescriptors() 		{ descriptors.init(renderer, &deletorhandler, texturehandler); };
@@ -106,6 +113,7 @@ public:
 	MeshBuilder meshhandler;
 	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, &deletorhandler);		};
 	void loadmeshes()			{ meshhandler.loadmeshes();			};
+	void loadmeshfromobj(const char* filename, int id)			{ meshhandler.loadmeshfromobj(filename, id);			};
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
 	void updatemesh(Mesh* mesh, Positions size, Positions newpos) 		{ meshhandler.updatemesh(mesh, size, newpos);	};
@@ -119,4 +127,6 @@ public:
 	void copycheck(uint32_t swapchainimageindex);
 	bool instanceextensionssupport();
 	bool validationlayerssupport();
+
+	VkRenderPassBeginInfo beginrenderpass(ClearFlags flags, VkRenderPass& rp, VkExtent2D extent, VkFramebuffer framebuffer);
 };

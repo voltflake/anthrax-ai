@@ -62,12 +62,15 @@ void PipelineBuilder::recreatepipeline(bool check) {
 
 void PipelineBuilder::clearpipeline() {
 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayout, nullptr);
-	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipeline, nullptr);
+	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinesprite, nullptr);
+	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayoutmodel, nullptr);
+	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinemodel, nullptr);
 }
 
 void PipelineBuilder::buildpipeline(bool check) {
 
 	VkShaderModule fragshader;
+	VkShaderModule fragshadermodel;
 
 	std::string fragshaderstr;
 	if (check) {
@@ -75,10 +78,10 @@ void PipelineBuilder::buildpipeline(bool check) {
 		shaderstages.clear();
 	}
 	else {
-		fragshaderstr = "./shaders/simpleShader.frag.spv";
+		fragshaderstr = "./shaders/sprite.frag.spv";
 	}
 
-	if (!loadshader(fragshaderstr.c_str(), &fragshader)) {
+	if (!loadshader(fragshaderstr.c_str(), &fragshader) || !loadshader("./shaders/model.frag.spv", &fragshadermodel)) {
 		std::cout << "Error: fragment shader module" << std::endl;
 	}
 	else {
@@ -86,12 +89,15 @@ void PipelineBuilder::buildpipeline(bool check) {
 	}
 
 	VkShaderModule vertexshader;
-	if (!loadshader("./shaders/simpleShader.vert.spv", &vertexshader)) {
+	VkShaderModule vertexshadermodel;
+	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel)) {
 		std::cout << "Error: vertex shader module" << std::endl;
 	}
 	else {
 		std::cout << "Vertex shader successfully loaded" << std::endl;
 	}
+
+// sprite pipeline
 
 	VkPipelineLayoutCreateInfo pipelinelayoutinfo = pipelinelayoutcreateinfo();
 	VkPushConstantRange push_constant;
@@ -99,7 +105,7 @@ void PipelineBuilder::buildpipeline(bool check) {
 	push_constant.offset = 0;
 	
 	push_constant.size = sizeof(MeshPushConstants);
-	push_constant.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
@@ -120,8 +126,8 @@ void PipelineBuilder::buildpipeline(bool check) {
 
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = (float)devicehandler->getwindowxtent().width;
-	viewport.height = (float)devicehandler->getwindowxtent().height;
+	viewport.width = (float)devicehandler->getswapchainextent().width;
+	viewport.height = (float)devicehandler->getswapchainextent().height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
@@ -134,16 +140,26 @@ void PipelineBuilder::buildpipeline(bool check) {
 
 	colorblendattachment = colorblendattachmentcreateinfo();
 	
+	depthstencil = depthstencilcreateinfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
+	
 	setuppipeline();
-	creatematerial(pipeline, pipelinelayout, "defaultmesh");
+	creatematerial(pipelinesprite, pipelinelayout, "defaultmesh");
+	
+	shaderstages.clear();
+
+// model pipeline
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadermodel));
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadermodel));
+
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayoutmodel), "failed to create pipeline layput!");
+
+	setuppipelinemodel();
+	creatematerial(pipelinemodel, pipelinelayoutmodel, "monkey");
 
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshader, nullptr);
-
-	// deletorhandler->pushfunction([=]() {
-	// 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipeline, nullptr);
-	// 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayout, nullptr);
-	// });
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadermodel, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshadermodel, nullptr);
 }
 
 void PipelineBuilder::setuppipeline() {
@@ -182,12 +198,70 @@ void PipelineBuilder::setuppipeline() {
 	pipelineinfo.pRasterizationState = &rasterizer;
 	pipelineinfo.pMultisampleState = &multisampling;
 	pipelineinfo.pColorBlendState = &colorblending;
+	pipelineinfo.pDepthStencilState = &depthstencil;
 	pipelineinfo.layout = pipelinelayout;
 	pipelineinfo.renderPass = renderer.getrenderpass();
 	pipelineinfo.subpass = 0;
 	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
 	
-	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinesprite) != VK_SUCCESS) {
+		std::cout << "failed to create pipeline\n";
+	}
+}
+
+void PipelineBuilder::setuppipelinemodel() {
+
+	VkPipelineViewportStateCreateInfo viewportstate = {};
+	viewportstate.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportstate.pNext = nullptr;
+
+	viewportstate.viewportCount = 1;
+	viewportstate.pViewports = &viewport;
+	viewportstate.scissorCount = 1;
+	viewportstate.pScissors = &scissor;
+
+	VkPipelineColorBlendStateCreateInfo colorblending = {};
+	colorblending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorblending.pNext = nullptr;
+
+	colorblending.logicOpEnable = VK_FALSE;
+	colorblending.logicOp = VK_LOGIC_OP_COPY;
+	colorblending.attachmentCount = 1;
+	colorblending.pAttachments = &colorblendattachment;
+	colorblending.blendConstants[0] = 1.f;
+	colorblending.blendConstants[1] = 1.f;
+	colorblending.blendConstants[2] = 1.f;
+	colorblending.blendConstants[3] = 1.f;
+
+	std::vector<VkDynamicState> dynamicStates = {
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+	VkPipelineDynamicStateCreateInfo dynamicstate{};
+	dynamicstate.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicstate.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+	dynamicstate.pDynamicStates = dynamicStates.data();
+
+	VkGraphicsPipelineCreateInfo pipelineinfo = {};
+	pipelineinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineinfo.pNext = nullptr;
+
+	pipelineinfo.stageCount = shaderstages.size();
+	pipelineinfo.pStages = shaderstages.data();
+	pipelineinfo.pVertexInputState = &vertexinputinfo;
+	pipelineinfo.pInputAssemblyState = &inputassembly;
+	pipelineinfo.pViewportState = &viewportstate;
+	pipelineinfo.pRasterizationState = &rasterizer;
+	pipelineinfo.pMultisampleState = &multisampling;
+	pipelineinfo.pColorBlendState = &colorblending;
+	pipelineinfo.pDepthStencilState = &depthstencil;
+	pipelineinfo.pDynamicState = &dynamicstate;
+	pipelineinfo.layout = pipelinelayout;
+	pipelineinfo.renderPass = renderer.getrenderpass();
+	pipelineinfo.subpass = 0;
+	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
+	
+	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinemodel) != VK_SUCCESS) {
 		std::cout << "failed to create pipeline\n";
 	}
 }
@@ -197,12 +271,6 @@ VkPipelineLayoutCreateInfo PipelineBuilder::pipelinelayoutcreateinfo() {
 	VkPipelineLayoutCreateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	info.pNext = nullptr;
-
-	//info.flags = 0;
-	// info.setLayoutCount = 0;
-	// info.pSetLayouts = VK_NULL_HANDLE;
-	// info.pushConstantRangeCount = 0;
-	// info.pPushConstantRanges = nullptr;
 	return info;
 }
 
@@ -335,4 +403,21 @@ VkPipelineColorBlendAttachmentState PipelineBuilder::colorblendattachmentcreatei
 	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 	return colorBlendAttachment;
+}
+
+VkPipelineDepthStencilStateCreateInfo PipelineBuilder::depthstencilcreateinfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp)
+{
+    VkPipelineDepthStencilStateCreateInfo info = {};
+    info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    info.pNext = nullptr;
+
+    info.depthTestEnable = bDepthTest ? VK_TRUE : VK_FALSE;
+    info.depthWriteEnable = bDepthWrite ? VK_TRUE : VK_FALSE;
+    info.depthCompareOp = bDepthTest ? compareOp : VK_COMPARE_OP_ALWAYS;
+    info.depthBoundsTestEnable = VK_FALSE;
+    info.minDepthBounds = 0.0f; // Optional
+    info.maxDepthBounds = 1.0f; // Optional
+    info.stencilTestEnable = VK_FALSE;
+
+    return info;
 }

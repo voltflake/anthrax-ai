@@ -184,6 +184,12 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
         	// if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
         	// 	checkupdate = true;
         	// }
+			if (k == PLUS_KEY) {
+				zoomtest += 1;
+			}
+			if (k == MINUS_KEY) {
+				zoomtest -= 1;
+			}
 			if (k == ENTER_KEY) {
 				processtextind();
 			}

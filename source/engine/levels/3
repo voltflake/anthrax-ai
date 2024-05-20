@@ -1,0 +1,6 @@
+Player:
+	ID: 0
+	path: cube.png
+	collision: 1
+	x: 10
+	y: 110

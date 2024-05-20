@@ -65,6 +65,7 @@ public:
 		visible = 0;
 		display = 0;
 		triggertype = static_cast<TriggerType>(TYPE_NONE);
+		update = false;
 	}
 
 	Resources() {};
@@ -127,6 +128,7 @@ public:
 		collision = 0;
 		animation = 0;
 		state = IDLE;
+		update = false;
 	};
 
 	Player() {};

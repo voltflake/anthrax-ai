@@ -26,7 +26,7 @@ class MeshBuilder {
 public:
 	void init(PipelineBuilder& pipeline, TextureBuilder& textb, DeletionQueue* deletor) { pipelinehandler = pipeline; texturehandler = textb; deletorhandler = deletor;};
 	void loadmeshes();
-	bool loadmeshfromobj(const char* filename);
+	bool loadmeshfromobj(const char* filename, int id);
 
 	void updatemesh(Mesh& mesh);
 	void updatemesh(Mesh* mesh, Positions size, Positions newpos);

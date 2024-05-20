@@ -53,6 +53,7 @@ public:
 
 	std::unordered_map<int, Data> resources;
 
+	CameraData 					camdata;
 	VkExtent2D 					WindowExtend = {800, 800};
 	bool 						winprepared = false;
 	bool						freemove = false;
@@ -87,6 +88,8 @@ public:
 	ImGuiStyle 					TextDisplayStyle;
 
 	std::vector<DebugAnim> 		DebugImGuiAnim;
+
+	float zoomtest = 0;
 private:
 	DeletionQueue 				Deletor;
 	int 						FrameIndex = 0;
@@ -114,6 +117,7 @@ private:
 	void 						drawobjects(VkCommandBuffer cmd,RenderObject* first, int count);
 	
 	void  						ui();
+	void 						debuglight();
 	void 						debugdraw();
 	void  						fpsoverlay();
 

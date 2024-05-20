@@ -26,7 +26,7 @@ public:
 	void 							recreateframebuffer();
 	void 							sync();
 
-	void 							immediatesubmit(std::function<void(VkCommandBuffer cmd)>&& function);
+	void 							submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
 private:
 	DeletionQueue*					deletorhandler;

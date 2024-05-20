@@ -41,6 +41,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 #include <cstring>
 #include <functional>
 #include <deque>
+#include <algorithm>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -89,12 +90,11 @@ do                                                              \
 #define A_KEY 97
 #define S_KEY 115
 #define ENTER_KEY 65293
+#define PLUS_KEY  61
+#define MINUS_KEY 45
 #endif
 
 #define _USE_MATH_DEFINE
-
-#define FRAG_SHADER "./shaders/simpleShader.frag.spv"
-#define VERTEX_SHADER "./shaders/simpleShader.vert.spv"
 
 struct DeletionQueue {
 	std::deque<std::function<void()>> deletors;
@@ -118,6 +118,20 @@ struct BufferHandler {
 	void* uniformmapedmemory;
 };
 
+struct Texture {
+	VkImage image;
+	VkImageView imageview;
+	VkDeviceMemory memory;
+
+	VkSampler sampler;
+	float w;
+	float h;
+};
+
+struct AllocatedImage {
+    Texture* texture = nullptr;
+};
+
 struct VertexInputDescription {
 
 	std::vector<VkVertexInputBindingDescription> bindings;
@@ -135,11 +149,19 @@ struct Vertex {
 };
 
 struct CameraData {
+	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
 	glm::mat4 viewproj;
-	glm::vec2 pos;
-	glm::vec2 viewport;
+	glm::vec4 viewpos;
+	glm::vec4 pos;
+	glm::vec4 viewport;
+
+	glm::vec4 lightcolor = glm::vec4(0.63f, 0.82f, 0.48f, 1);
+	glm::vec4 lightpos= glm::vec4(1.2f, 1.0f, 2.0f, 1);
+	float ambient = 0.1;
+	float diffuse = 0.5;
+	float specular = 0.5;
 };
 
 struct FrameData {

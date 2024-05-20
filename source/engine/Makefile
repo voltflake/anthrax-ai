@@ -14,7 +14,7 @@ ifeq ($(uname), Linux)
 endif
 
 INCLUDES := includes/vulkan 
-SRC  := vkmain.cpp window.cpp vkengine.cpp vkbuilder.cpp vkdebug.cpp vkdevices.cpp vkrenderer.cpp vkdescriptors.cpp vkpipeline.cpp vkmesh.cpp vkbuffer.cpp vktexture.cpp levelmanager.cpp vkdraw.cpp vkui.cpp processtrigger.cpp processanimation.cpp move.cpp editor.cpp parser.cpp
+SRC  := vkmain.cpp window.cpp vkengine.cpp vkbuilder.cpp vkdebug.cpp vkdevices.cpp vkrenderer.cpp vkdescriptors.cpp vkpipeline.cpp vkmesh.cpp vkbuffer.cpp vktexture.cpp levelmanager.cpp vkdraw.cpp vkui.cpp vkimagehelper.cpp processtrigger.cpp processanimation.cpp move.cpp editor.cpp parser.cpp
 SRC := $(addprefix src/, $(SRC))
 
 IMGUI_INCLUDES := includes/imgui
@@ -26,7 +26,7 @@ LINK :=  -m64 -std=c++17
 OBJS := $(SRC:.cpp=.obj)
 
 %.obj:%.cpp 
-	g++ $(FLAGS) -I$(INCLUDES) -Ilib/stb -I$(IMGUI_INCLUDES) -c -o $@ $<
+	g++ $(FLAGS) -I$(INCLUDES) -Ilib/stb -Ilib/tinyobjloader -I$(IMGUI_INCLUDES) -c -o $@ $<
 
 all: $(NAME)
 $(NAME): $(OBJS) $(OBJS_IMG)

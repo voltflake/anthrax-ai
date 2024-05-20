@@ -61,10 +61,10 @@ public:
 	VkExtent2D&					getswapchainextent()		{ return swapchainextentbuilder;};
 	QueueBuilder& 				getqueue()					{ return queue;					};
 	VkSurfaceKHR&				getsurface()				{ return surface;				};
-	VkExtent2D&					getwindowxtent()			{ return windowextend;};
+	VkExtent2D&					getwindowxtent()			{ return windowextend;			};
 
 	size_t 						minuniformbufferoffsetalignment;
-
+	AllocatedImage 				depthimage;
 
 private:
 #ifdef OS_WINDOWS

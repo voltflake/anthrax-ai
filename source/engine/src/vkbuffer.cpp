@@ -39,8 +39,7 @@ void BufferBuilder::allocbuffer(RenderBuilder& renderer, BufferHandler& bufhandl
 }
 
 void BufferBuilder::copybuffer(RenderBuilder& renderer, VkBuffer& srcbuffer, VkBuffer& dstbuffer, VkDeviceSize size) {
-
-    renderer.immediatesubmit([=](VkCommandBuffer cmd) {
+    renderer.submit([=](VkCommandBuffer cmd) {
         VkBufferCopy copyRegion{};
         copyRegion.srcOffset = 0;
         copyRegion.dstOffset = 0;

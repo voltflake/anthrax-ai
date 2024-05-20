@@ -1,19 +1,26 @@
 #include "../includes/vkengine.h"
 
 void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
-	glm::vec3 camPos = { 0.f,-6.f,-10.f };
-
+	glm::vec3 camPos =  { 0.f,0.f,-20.f + zoomtest};
 	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
-	
-	glm::mat4 projection = glm::perspective(glm::radians(70.f), 1700.f / 900.f, 0.1f, 200.0f);
+	static float f = 0;
+	f += 0.2f;
+	glm::mat4 modelm = glm::rotate(glm::mat4{ 1.0f },  glm::radians(f + 45.0f), glm::vec3(0, 1, 0));
+	glm::mat4 projection = glm::perspective(glm::radians(60.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.1f, 200.0f);
 	projection[1][1] *= -1;
 
-	CameraData camdata;
+	// glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+	glm::mat4 modell = glm::mat4(1.0f);
+	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
+	modell = glm::scale(modell, glm::vec3(0.2f));
+
+	camdata.model = modell;
 	camdata.proj = projection;
 	camdata.view = view;
 	camdata.viewproj = projection * view;
-	camdata.pos = {mousepos.x, mousepos.y};
-	camdata.viewport = {WindowExtend.width, WindowExtend.height};
+	camdata.viewpos = glm::vec4(camPos.x, camPos.y, camPos.z, 1.0);
+	camdata.pos = {mousepos.x, mousepos.y, 0, 0};
+	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
 
 	char* datadst;
    	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
@@ -33,31 +40,71 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	{
 		RenderObject& object = first[i];
 
-		if (object.material != lastMaterial) {
+		if (object.model) {
+			if (object.material != lastMaterial) {
 
-			vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
-			lastMaterial = object.material;
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
+				VkViewport viewport{};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = (float) Builder.getswapchainextent().width;
+				viewport.height = (float) Builder.getswapchainextent().height;
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+				vkCmdSetViewport(cmd, 0, 1, &viewport);
+				VkRect2D scissor{};
+				scissor.offset = {0, 0};
+				scissor.extent = Builder.getswapchainextent();
+				vkCmdSetScissor(cmd, 0, 1, &scissor);
+
+				lastMaterial = object.material;
+				
+				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+			}
+			camPos =  { 0.f + object.pos.x ,0.f + object.pos.y ,-20.f + zoomtest};
+			view = glm::translate(glm::mat4(1.f), camPos);
+			glm::mat4 model = object.transformmatrix;
+			MeshPushConstants constants;
+			constants.render_matrix = projection * view * modelm;
+			constants.debugcollision = static_cast<int>(object.debugcollision);
+
+			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
-			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+			if (object.mesh != lastMesh) {
+				VkDeviceSize offset = {0};
+				vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
+				lastMesh = object.mesh;
+			}
+			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+		
+			vkCmdDraw(cmd, object.mesh->vertices.size(), 1, 0, 0);
 		}
-		//glm::mat4 model = object.transformmatrix;
-		MeshPushConstants constants;
-		constants.debugcollision = static_cast<int>(object.debugcollision);
+		else {
+			if (object.material != lastMaterial) {
 
-		vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
+				lastMaterial = object.material;
+				
+				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+			}
+			glm::mat4 model = object.transformmatrix;
+			MeshPushConstants constants;
+			constants.render_matrix = projection * view * glm::mat4{ 1.0f } ;
+			constants.debugcollision = static_cast<int>(object.debugcollision);
 
-		if (object.mesh != lastMesh) {
-			VkDeviceSize offset = {0};
-			vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
-            vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-
-			lastMesh = object.mesh;
+			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+			
+			if (object.mesh != lastMesh) {
+				VkDeviceSize offset = {0};
+				vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
+				vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+				lastMesh = object.mesh;
+			}
+			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+			vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 		}
-	
-		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-	
-		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
 	}
 }
 
@@ -71,16 +118,18 @@ void Engine::draw() {
 	}
 
 	VK_ASSERT(vkWaitForFences(Builder.getdevice(), 1, &Builder.getframes()[FrameIndex].RenderFence, true, 1000000000), "vkWaitForFences failed !");
-	VK_ASSERT(vkResetFences(Builder.getdevice(), 1, &Builder.getframes()[FrameIndex].RenderFence), "vkResetFences failed !");
-
-	VK_ASSERT(vkResetCommandBuffer(Builder.getframes()[FrameIndex].MainCommandBuffer, 0), "vkResetCommandBuffer failed!");
-
+	
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Builder.getdevice(), Builder.getswapchain(), 1000000000, Builder.getframes()[FrameIndex].PresentSemaphore, nullptr, &swapchainimageindex);
 	if (e == VK_ERROR_OUT_OF_DATE_KHR) {
         winprepared = true;
 		return ;
 	}
+
+	VK_ASSERT(vkResetFences(Builder.getdevice(), 1, &Builder.getframes()[FrameIndex].RenderFence), "vkResetFences failed !");
+
+	VK_ASSERT(vkResetCommandBuffer(Builder.getframes()[FrameIndex].MainCommandBuffer, 0), "vkResetCommandBuffer failed!");
+
 
 	VkCommandBuffer cmd = Builder.getframes()[FrameIndex].MainCommandBuffer;
 
@@ -93,23 +142,25 @@ void Engine::draw() {
 
 	VK_ASSERT(vkBeginCommandBuffer(cmd, &cmdbegininfo), "failed to begin a command buffer!");
 
-	VkClearValue clearvalue;
-	clearvalue.color = { {0.0f, 0.0f, 0.0f, 0.0f } };
-
-	VkRenderPassBeginInfo rpinfo = {};
-	rpinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	rpinfo.pNext = nullptr;
-
-	rpinfo.renderPass = Builder.getrenderpass();
-	rpinfo.renderArea.offset.x = 0;
-	rpinfo.renderArea.offset.y = 0;
-	rpinfo.renderArea.extent = Builder.getswapchainextent();
-	rpinfo.framebuffer = Builder.getframebuffers()[swapchainimageindex];
-	rpinfo.clearValueCount = 1;
-	rpinfo.pClearValues = &clearvalue;
+	VkClearValue clearValue;
+	clearValue.color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+	VkClearValue depthClear;
+	depthClear.depthStencil = {1.0f, 0};
+	VkClearValue clearValues[] = { clearValue, depthClear };
+	VkRenderPassBeginInfo rpinfo = Builder.beginrenderpass(static_cast<ClearFlags>(CLEAR_COLOR | CLEAR_DEPTH), Builder.getrenderpass(), Builder.getswapchainextent(), Builder.getframebuffers()[swapchainimageindex]);
+	rpinfo.clearValueCount = 2;
+	rpinfo.pClearValues = &clearValues[0];
 
 	vkCmdBeginRenderPass(cmd, &rpinfo, VK_SUBPASS_CONTENTS_INLINE);
 
+	// VkViewport viewport;
+	// viewport.x = 0.0f;
+	// viewport.y = 0.0f;
+	// viewport.width = (float)Builder.devicehandler.getswapchainextent().width;
+	// viewport.height = (float)Builder.devicehandler.getswapchainextent().height;
+	// viewport.minDepth = 0.0f;
+	// viewport.maxDepth = 1.0f;
+	// vkCmdSetViewport(cmd, 0, 1, &viewport);
 	drawobjects(cmd, Builder.getrenderqueue().data(), Builder.getrenderqueue().size());
 
  	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

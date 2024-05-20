@@ -14,8 +14,7 @@ struct Material {
 
 struct MeshPushConstants {
 	//glm::vec4 data;
-	//glm::mat4 render_matrix;
-	int test;
+	glm::mat4 render_matrix;
 	int debugcollision;
 };
 
@@ -26,14 +25,18 @@ public:
 	bool 									loadshader(const char* filepath, VkShaderModule* outshadermodule);
 
 	void 									setuppipeline();
+	void 									setuppipelinemodel();
 	void 									buildpipeline(bool check);
 	void 									clearpipeline();
 	void									recreatepipeline(bool check);
 
-	VkPipeline& 							getpipeline() 	{ return pipeline; };
+	VkPipeline& 							getpipelinesprite() 	{ return pipelinesprite; };
+	VkPipeline& 							getpipelinemodel() 	{ return pipelinemodel; };
 	DeviceBuilder*							getdevice()		{ return devicehandler; };
 	RenderBuilder&							getrenderer()	{ return renderer; };
+	VkViewport&								getviewport() 	{return viewport; };
 
+	VkPipelineDepthStencilStateCreateInfo 	depthstencilcreateinfo(bool bDepthTest, bool bDepthWrite, VkCompareOp compareOp);
 	VkPipelineShaderStageCreateInfo 		pipelineshadercreateinfo(VkShaderStageFlagBits stage, VkShaderModule shadermodule);
 	VkPipelineVertexInputStateCreateInfo 	vertexinputstagecreateinfo();
 	VkPipelineInputAssemblyStateCreateInfo 	inputassemblycreateinput(VkPrimitiveTopology topology);
@@ -46,7 +49,7 @@ public:
 	Material* 	getmaterial(const std::string& name);
 
 	void        cleanmaterials() {materials.clear();};
-void getvertexdescription();
+	void 		getvertexdescription();
 
 private:
 	DeletionQueue*							deletorhandler;
@@ -56,8 +59,12 @@ private:
 	
 	VertexInputDescription 					vertexdescription;
 
-	VkPipeline pipeline;
+	VkPipeline pipelinesprite;
+	VkPipeline pipelinemodel;
+
 	std::vector<VkPipelineShaderStageCreateInfo> shaderstages;
+	std::vector<VkPipelineShaderStageCreateInfo> shaderstagesmodel;
+
 	VkPipelineVertexInputStateCreateInfo 	vertexinputinfo;
 	VkPipelineInputAssemblyStateCreateInfo 	inputassembly;
 	VkViewport 								viewport;
@@ -65,7 +72,9 @@ private:
 	VkPipelineRasterizationStateCreateInfo 	rasterizer;
 	VkPipelineColorBlendAttachmentState 	colorblendattachment;
 	VkPipelineMultisampleStateCreateInfo 	multisampling;
+	VkPipelineDepthStencilStateCreateInfo 	depthstencil;
 	VkPipelineLayout 						pipelinelayout;
+	VkPipelineLayout 						pipelinelayoutmodel;
 
 	std::unordered_map
 	<std::string,Material> 					materials;

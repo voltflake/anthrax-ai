@@ -47,7 +47,7 @@ void Engine::initimgui() {
 
 	ImGui_ImplVulkan_Init(&init_info, Builder.getrenderpass());
 
-	Builder.renderer.immediatesubmit([&](VkCommandBuffer cmd) {
+	Builder.renderer.submit([&](VkCommandBuffer cmd) {
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
 	});
 
@@ -189,6 +189,35 @@ void Engine::debugdraw() {
 
 }
 
+void Engine::debuglight()
+{
+	ImGuiStyle& stylem = ImGui::GetStyle();
+	stylem = EditorStyle;
+   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 2, base_pos.y + 40), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+	static bool active = true;
+	ImGui::Begin("Lighting", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings );
+    
+	ImGui::TextUnformatted("light position");
+	ImGui::SliderFloat("x", &camdata.lightpos.x, -5.0f, 5.0f, "%.2f"); 
+	ImGui::SliderFloat("y", &camdata.lightpos.y, -5.0f, 5.0f, "%.2f"); 
+	ImGui::SliderFloat("z", &camdata.lightpos.z, -5.0f, 5.0f, "%.2f");
+	ImGui::Separator();
+	
+	ImGui::TextUnformatted("light color");
+	ImGui::SliderFloat("r", &camdata.lightcolor.x, -5.0f, 5.0f, "%.2f");
+	ImGui::SliderFloat("g", &camdata.lightcolor.y, -5.0f, 5.0f, "%.2f");
+	ImGui::SliderFloat("b", &camdata.lightcolor.z, -5.0f, 5.0f, "%.2f");
+	ImGui::Separator();
+	ImGui::SliderFloat("ambient", &camdata.ambient, -5.0f, 5.0f, "%.2f");
+	ImGui::SliderFloat("specular", &camdata.specular, -5.0f, 5.0f, "%.2f");
+	ImGui::End();
+
+}
+
+
 void Engine::ui() {
         
 	if (checkupdate) {
@@ -253,6 +282,8 @@ void Engine::ui() {
 	checkuistate();
 
 	debugdraw();
+
+	debuglight();
 }
 
 void Engine::fpsoverlay() {

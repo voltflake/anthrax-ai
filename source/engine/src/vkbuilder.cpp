@@ -87,7 +87,9 @@ void VkBuilder::buildlinuxsurface(xcb_connection_t* connection, xcb_window_t& wi
 #endif
 
 void VkBuilder::resizewindow(bool& winprepared, VkExtent2D windowextendh, bool check) {
+
 	devicehandler.recreateswapchain(winprepared, windowextendh);
+	builddepthbuffer();
 	renderer.recreateframebuffer();
 	pipeline.recreatepipeline(check);
 }
@@ -145,7 +147,7 @@ bool VkBuilder::validationlayerssupport() {
 
 void VkBuilder::copycheck(uint32_t swapchainimageindex) {
 
-		renderer.immediatesubmit([&](VkCommandBuffer cmd) {
+		renderer.submit([&](VkCommandBuffer cmd) {
 		VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -178,7 +180,7 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
         );
 
 	});
-		renderer.immediatesubmit([&](VkCommandBuffer cmd) {
+		renderer.submit([&](VkCommandBuffer cmd) {
 		VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -212,7 +214,7 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
 
 	});
 			
-	renderer.immediatesubmit([&](VkCommandBuffer cmd){
+	renderer.submit([&](VkCommandBuffer cmd){
 
 	VkOffset3D blitSize;
 	blitSize.x = getswapchainextent().width;
@@ -235,7 +237,7 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
 		VK_FILTER_NEAREST);
 	});
 
-	renderer.immediatesubmit([&](VkCommandBuffer cmd) {
+	renderer.submit([&](VkCommandBuffer cmd) {
 	VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -268,7 +270,7 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
     );
 	});
 
-	renderer.immediatesubmit([&](VkCommandBuffer cmd) {
+	renderer.submit([&](VkCommandBuffer cmd) {
 	VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
@@ -301,5 +303,19 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
     );
 
 	});
+}
 
+VkRenderPassBeginInfo VkBuilder::beginrenderpass(ClearFlags flags, VkRenderPass& rp, VkExtent2D extent, VkFramebuffer framebuffer)
+{
+	VkRenderPassBeginInfo rpinfo = {};
+	rpinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	rpinfo.pNext = nullptr;
+
+	rpinfo.renderPass = rp;
+	rpinfo.renderArea.offset.x = 0;
+	rpinfo.renderArea.offset.y = 0;
+	rpinfo.renderArea.extent = extent;
+
+	rpinfo.framebuffer = framebuffer;
+	return rpinfo;
 }

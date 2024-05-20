@@ -69,7 +69,7 @@ void DescriptorBuilder::builddescriptors() {
 	VkDescriptorPoolCreateInfo poolinfo = {};
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolinfo.flags = 0;
-	poolinfo.maxSets = 10;
+	poolinfo.maxSets = 20;
 	poolinfo.poolSizeCount = (uint32_t)sizes.size();
 	poolinfo.pPoolSizes = sizes.data();
 

@@ -31,6 +31,7 @@ void Engine::initvulkan() {
 	Builder.buildcommandpool();
 
 	Builder.buildrenderpass();
+	Builder.builddepthbuffer();
 	Builder.builframebuffers();
 	
 	Builder.startsync();
@@ -46,7 +47,9 @@ void Engine::initvulkan() {
 
 	Builder.initmeshbuilder();
 	Builder.loadmeshes();
-
+	Builder.loadmeshfromobj("models/monkeytextured.obj", 0);
+	Builder.loadmeshfromobj("models/cube.obj", 1);
+	Builder.loadmeshfromobj("models/sphere.obj", 2);
 }
 
 void Engine::initengine(LevelManager &levels) {
@@ -66,16 +69,23 @@ void Engine::initscene() {
 		if (list.second.texturepath == "") {
             continue;
         }
-		Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
 
 		RenderObject tri;
-		tri.mesh = Builder.getmesh(list.first);
-		tri.material = Builder.getmaterial("defaultmesh");
 
+		if (list.first >= TYPE_MODEL) {
+			tri.model = true;
+			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
+			tri.material = Builder.getmaterial("monkey");
+		}
+		else {
+			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
+			tri.material = Builder.getmaterial("defaultmesh");
+		}
+		tri.pos = list.second.pos;
+		tri.mesh = Builder.getmesh(list.first);
 		tri.textureset = &Builder.getsamplerset()[i];
 		tri.debugcollision = list.second.debugcollision;
 		Builder.pushrenderobject(tri);
-
 		i++;
 	}
 }
@@ -104,8 +114,12 @@ void Engine::initresources()
 		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition(), Level.getplayer()->debugcollision, Level.getplayer()->animation}; // player has to be always second -- stupid
 	}
 	if (Level.getbackground().getpath() != "") {
-		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false, false}; // background for some reason should be always top, looks kinda broken
+		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), {0,0}, false, false}; // background for some reason should be always top, looks kinda broken
 	}
+
+	resources[TYPE_MODEL] = {"zeroone.png", {0, 0}, false, false}; 
+	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 0}, false, false}; 
+	resources[TYPE_MODEL + 2] = {"floor.jpg", {2, 0}, false, false}; 
 }
 
 void Engine::reloadresources() {
@@ -129,6 +143,9 @@ void Engine::reloadresources() {
 
 	Builder.initmeshbuilder();
 	Builder.loadmeshes(); // check why here are weird x,y pos for resource
+	Builder.loadmeshfromobj("models/monkeytextured.obj", 0);
+	Builder.loadmeshfromobj("models/cube.obj", 1);
+	Builder.loadmeshfromobj("models/sphere.obj", 2);
 
 	initscene();
 
@@ -156,7 +173,7 @@ void Engine::cleanup() {
 	Builder.clearframebuffers();
 	Builder.cleanall();
 	for (int i = 0; i < Level.getobject().size(); i++) {
-			delete Level.getobject()[i];
+		delete Level.getobject()[i];
 	}
 
     ImGui_ImplX11_Shutdown();

@@ -267,7 +267,6 @@ void DeviceBuilder::buildswapchain() {
 	
 	swapchainimgformatbuilder = surfaceFormat.format;
 	swapchainextentbuilder = extent;
-
 }
 
 void DeviceBuilder::buildimagesview() {
@@ -299,6 +298,10 @@ void DeviceBuilder::buildimagesview() {
 }
 
 void DeviceBuilder::cleanswapchain() {
+	vkDestroyImageView(logicaldevbuilder, depthimage.texture->imageview, nullptr);
+	vkDestroyImage(logicaldevbuilder, depthimage.texture->image, nullptr);
+	vkFreeMemory(logicaldevbuilder, depthimage.texture->memory, nullptr);
+	delete depthimage.texture;
 
 	vkDestroySwapchainKHR(logicaldevbuilder, swapchainbuilder, nullptr);
 
@@ -312,8 +315,9 @@ void DeviceBuilder::recreateswapchain(bool& winprepared, VkExtent2D windowextend
 	if (!winprepared) {
 		return;
 	}
-	windowextend = windowextendh;
 	winprepared = false;
+
+	windowextend = windowextendh;
 
 	vkDeviceWaitIdle(logicaldevbuilder);
 

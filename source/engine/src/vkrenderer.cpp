@@ -103,7 +103,7 @@ void RenderBuilder::buildcommandpool() {
 }
 
 
-void RenderBuilder::immediatesubmit(std::function<void(VkCommandBuffer cmd)>&& function)
+void RenderBuilder::submit(std::function<void(VkCommandBuffer cmd)>&& function)
 {
 	VkCommandBuffer cmd = uploadcontext.CommandBuffer;
 
@@ -141,6 +141,22 @@ void RenderBuilder::buildrenderpass() {
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+	VkAttachmentDescription depth_attachment = {};
+    // Depth attachment
+    depth_attachment.flags = 0;
+    depth_attachment.format = VK_FORMAT_D32_SFLOAT;
+    depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+    VkAttachmentReference depth_attachment_ref = {};
+    depth_attachment_ref.attachment = 1;
+    depth_attachment_ref.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
@@ -148,6 +164,7 @@ void RenderBuilder::buildrenderpass() {
 	subpass.pInputAttachments = nullptr;
 	subpass.pResolveAttachments = nullptr;
 	subpass.pColorAttachments = &colorAttachmentRef;
+	subpass.pDepthStencilAttachment = &depth_attachment_ref;
 
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -157,14 +174,26 @@ void RenderBuilder::buildrenderpass() {
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+	VkSubpassDependency depthdependency = {};
+	depthdependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	depthdependency.dstSubpass = 0;
+	depthdependency.srcAccessMask = 0;
+	depthdependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	depthdependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	depthdependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = 1;
-	renderPassInfo.pAttachments = &colorAttachment;
+	VkAttachmentDescription attachments[2] = { colorAttachment, depth_attachment };
+	renderPassInfo.attachmentCount = 2;
+	renderPassInfo.pAttachments = &attachments[0];
 	renderPassInfo.subpassCount = 1;
 	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
+	VkSubpassDependency dependencies[2] = { dependency, depthdependency };
+	renderPassInfo.dependencyCount = 2;
+	renderPassInfo.pDependencies = &dependencies[0];
+
 
 	VK_ASSERT(vkCreateRenderPass(devicehandler->getlogicaldevice(), &renderPassInfo, nullptr, &renderpass), "failder to create render pass !");
 
@@ -196,13 +225,14 @@ void RenderBuilder::builframebuffers() {
 	framebuffers = std::vector<VkFramebuffer>(swapchainimagecount);
 	std::vector<VkImageView> imageviews = devicehandler->getswapchainimageview();
 	for (int i = 0; i < swapchainimagecount; i++) {
-		fbinfo.pAttachments = &imageviews[i];
+		VkImageView attachments[2];
+		attachments[0] = imageviews[i];
+		attachments[1] = devicehandler->depthimage.texture->imageview;
+
+		fbinfo.pAttachments = attachments;
+		fbinfo.attachmentCount = 2;
 
 		VK_ASSERT(vkCreateFramebuffer(devicehandler->getlogicaldevice(), &fbinfo, nullptr, &framebuffers[i]), "faild to create frame buffer!");
-
-		// deletorhandler->pushfunction([=]() {
-		// 	vkDestroyFramebuffer(devicehandler->getlogicaldevice(), framebuffers[i], nullptr);
-		// });
 	}
 }
 

@@ -28,9 +28,9 @@ void Engine::initimgui() {
 	VK_ASSERT(vkCreateDescriptorPool(Builder.getdevice(), &pool_info, nullptr, &imguiPool), "failed to creat imgui descriptor set!");
 
 	ImGui::CreateContext();
-#if defined(OS_LINUX)
+#if defined(AAI_LINUX)
     ImGui_ImplX11_Init(connection, &window);
-#elif defined(OS_WINDOWS)
+#elif defined(AAI_WINDOWS)
 	ImGui_ImplWin32_Init(hwnd);
 #endif
 

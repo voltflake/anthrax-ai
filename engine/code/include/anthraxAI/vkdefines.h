@@ -25,7 +25,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#if defined(OS_LINUX)
+#if defined(AAI_LINUX)
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
 #include <xcb/xfixes.h>
@@ -40,7 +40,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 	return xcb_intern_atom_reply(conn, cookie, NULL);
 }
 
-#elif defined(OS_WINDOWS)
+#elif defined(AAI_WINDOWS)
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
 #include <backends/imgui_impl_win32.h>
@@ -77,10 +77,10 @@ do                                                              \
 	}                                                           \
 } while (0)
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 #define VK_USE_PLATFORM_XCB_KHR
 #define ESC_KEY 65307
 #define W_KEY 119
@@ -203,11 +203,11 @@ typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 const std::vector<const char*> instanceextensions = 
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 const std::vector<const char*> instanceextensions = 
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_xcb_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #endif

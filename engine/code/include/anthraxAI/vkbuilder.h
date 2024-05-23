@@ -63,18 +63,18 @@ public:
 	void buildinstance();
 
 	VkSurfaceKHR surface;
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	void buildwinsurface(HWND& hwnd, HINSTANCE& hinstance);
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	void buildlinuxsurface(xcb_connection_t* connection, xcb_window_t& window);
 #endif
 
 	DeviceBuilder devicehandler;
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	void initdevicebuilder(HWND& hwnd)	{ devicehandler.init(hwnd, instance, surface, &deletorhandler);};
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	void initdevicebuilder(VkExtent2D windowextend)	{ devicehandler.init(windowextend, instance, surface, &deletorhandler);};
 #endif
 	

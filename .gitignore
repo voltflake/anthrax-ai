@@ -1,0 +1,10 @@
+build/
+package/
+
+# Python output and compilation files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.py[cod]
+*$py.class

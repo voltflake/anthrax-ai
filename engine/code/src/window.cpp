@@ -3,7 +3,13 @@
 #include        <chrono>
 #include 		<ctime>
 
-#ifdef OS_WINDOWS
+void Engine::start() {
+	ASSERT(state != INIT_ENGINE, "How is it possible?");
+	init();
+	state = ENGINE_EDITOR;
+}
+
+#if defined(AAI_WINDOWS)
 void Engine::wininitwindow() {
 	
 	hwnd = nullptr;
@@ -89,7 +95,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 }
 #endif
 
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 
 void Engine::linuxinitwindow() {
 	uint32_t value_mask, value_list[32];

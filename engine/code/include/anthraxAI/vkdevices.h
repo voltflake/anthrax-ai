@@ -28,11 +28,11 @@ struct SwapChainSupportDetails {
 
 class DeviceBuilder {
 public:
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	void 						init(HWND& hwndh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
 								{ hwnd = hwndh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	void 						init(VkExtent2D windowextendh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
 								{ windowextend = windowextendh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
 #endif
@@ -67,7 +67,7 @@ public:
 	AllocatedImage 				depthimage;
 
 private:
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	HWND 						hwnd;
 #endif
 	DeletionQueue*				deletorhandler;

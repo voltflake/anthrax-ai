@@ -10,7 +10,7 @@
 
 #include "anthraxAI/vkdebug.h"
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
 
@@ -29,11 +29,11 @@ class Engine {
 
 public:
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	HWND						hwnd;
 	HINSTANCE					hinstance;
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	xcb_connection_t* 			connection;
 	xcb_window_t 				window;
 	xcb_screen_t* 				screen;
@@ -67,11 +67,11 @@ public:
 	int 						checkimg = 0;
 	bool 						checkupdate = false;
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	void 						wininitwindow();
 	void 						runwindows();
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	void 						linuxinitwindow();
 	void  						runlinux();
 	bool 						eventhandler(const xcb_generic_event_t *event);

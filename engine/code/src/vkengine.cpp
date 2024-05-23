@@ -1,17 +1,17 @@
 #include "anthraxAI/vkengine.h"
 
 void Engine::run() {
-#if defined(OS_LINUX)
+#if defined(AAI_LINUX)
 	runlinux();
-#elif defined(OS_WINDOWS)
+#elif defined(AAI_WINDOWS)
 	runwindows();
 #endif
 }
 
 void Engine::init() {
-#if defined(OS_LINUX)
+#if defined(AAI_LINUX)
 	linuxinitwindow();
-#elif defined(OS_WINDOWS)
+#elif defined(AAI_WINDOWS)
 	wininitwindow();
 #endif
 
@@ -26,11 +26,11 @@ void Engine::initvulkan() {
 
 	Builder.buildinstance();
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 	Builder.buildwinsurface(hwnd, hinstance);
 	Builder.initdevicebuilder(hwnd);
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 	Builder.buildlinuxsurface(connection, window);
 	Builder.initdevicebuilder(WindowExtend);
 #endif
@@ -190,9 +190,9 @@ void Engine::cleanup() {
 		delete Level.getobject()[i];
 	}
 
-#if defined(OS_LINUX)
+#if defined(AAI_LINUX)
     ImGui_ImplX11_Shutdown();
-#elif defined(OS_WINDOWS)
+#elif defined(AAI_WINDOWS)
 	ImGui_ImplWin32_Shutdown();
 #endif
     ImGui::DestroyContext();

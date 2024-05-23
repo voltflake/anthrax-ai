@@ -192,7 +192,7 @@ VkExtent2D DeviceBuilder::chooseswapextent(const VkSurfaceCapabilitiesKHR& capab
     {
         int width, height;
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
     	RECT rect;
 		if(GetWindowRect(hwnd, &rect))
 		{
@@ -200,7 +200,7 @@ VkExtent2D DeviceBuilder::chooseswapextent(const VkSurfaceCapabilitiesKHR& capab
 		  height = rect.bottom - rect.top;
 		}
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 		width = windowextend.width;
 		height = windowextend.height;
 #endif

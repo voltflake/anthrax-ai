@@ -53,7 +53,7 @@ void VkBuilder::buildinstance() {
 	
 }
 
-#ifdef OS_WINDOWS
+#if defined(AAI_WINDOWS)
 void VkBuilder::buildwinsurface(HWND& hwnd, HINSTANCE& hinstance)
 {
 	VkWin32SurfaceCreateInfoKHR createInfo{};
@@ -68,7 +68,7 @@ void VkBuilder::buildwinsurface(HWND& hwnd, HINSTANCE& hinstance)
 	});
 }
 #endif
-#ifdef OS_LINUX
+#ifdef AAI_LINUX
 void VkBuilder::buildlinuxsurface(xcb_connection_t* connection, xcb_window_t& window)
 {
 	VkXcbSurfaceCreateInfoKHR surfaceinfo = {};

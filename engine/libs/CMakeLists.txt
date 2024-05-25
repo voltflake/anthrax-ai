@@ -16,6 +16,18 @@ macro(make_library directory)
 	target_include_directories(${directory} PUBLIC ${_path}/${directory})
 endmacro(make_library)
 
+#===================================== X11 / XCB =====================================#
+
+if(aai_platform MATCHES "Linux")
+	find_package(X11 REQUIRED)
+	list(APPEND _libraries
+		X11::X11
+		X11::xcb
+		X11::xcb_keysyms
+		X11::xcb_xfixes
+	)
+endif()
+
 #======================================= vulkan ======================================#
 
 find_package(Vulkan REQUIRED)
@@ -24,15 +36,6 @@ include_directories(${Vulkan_INCLUDE_DIRS})
 link_directories(${Vulkan_LIBRARY_DIRS})
 link_libraries(${Vulkan_LIBRARIES})
 message(STATUS "Vulkan libraries: ${Vulkan_LIBRARIES}")
-
-#======================================== GLM ========================================#
-
-set(BUILD_STATIC_LIBS ON)
-set(BUILD_SHARED_LIBS OFF)
-option(GLM_ENABLE_CXX_20 "" ON)
-add_subdirectory(${_path}/glm)
-
-list(APPEND _libraries glm::glm)
 
 #======================================= imgui =======================================#
 
@@ -53,7 +56,19 @@ if (WIN32)
 	)
 endif()
 make_library(imgui)
+# imgui requires the Vulkan ans X11 libraries, so we need to link them here
+target_link_libraries(imgui PRIVATE ${_libraryes})
+
 list(APPEND _libraries lib::imgui)
+
+#======================================== GLM ========================================#
+
+set(BUILD_STATIC_LIBS ON)
+set(BUILD_SHARED_LIBS OFF)
+option(GLM_ENABLE_CXX_20 "" ON)
+add_subdirectory(${_path}/glm)
+
+list(APPEND _libraries glm::glm)
 
 #======================================== stb ========================================#
 
@@ -66,6 +81,8 @@ list(APPEND _includes ${_path}/tinyobjloader)
 
 #=====================================================================================#
 
+list(REMOVE_DUPLICATES _libraries)
+list(REMOVE_DUPLICATES _includes)
 
 add_library(libraries INTERFACE)
 add_library(anthrax::libraries ALIAS libraries)

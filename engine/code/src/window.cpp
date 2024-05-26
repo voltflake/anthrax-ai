@@ -326,7 +326,7 @@ void Engine::runlinux() {
 		std::chrono::duration<double, std::milli> delta = start - end;
 		calculateFPS(delta);
 
-		game_loop();
+		loop();
 
 		end = std::chrono::system_clock::now();
 	}

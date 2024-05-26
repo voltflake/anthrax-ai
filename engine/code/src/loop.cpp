@@ -1,6 +1,6 @@
 #include "anthraxAI/vkengine.h"
 
-void Engine::game_loop() {
+void Engine::loop() {
 	if (state & ENGINE_EDITOR) {
 		ui();
 		editor();

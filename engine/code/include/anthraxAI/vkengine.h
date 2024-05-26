@@ -95,7 +95,7 @@ private:
 	DeletionQueue 				Deletor;
 	int 						FrameIndex = 0;
 
-	void 						game_loop();
+	void 						loop();
 
 	void 						moveplayer();
 

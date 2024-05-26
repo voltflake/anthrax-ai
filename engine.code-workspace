@@ -1,0 +1,46 @@
+{
+	"folders": [
+		{ "path": "." }
+	],
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "[Linux][CMake] Launch",
+				"type": "cppdbg",
+				"MIMode": "gdb",
+				"miDebuggerPath": "/usr/bin/gdb",
+				"request": "launch",
+				"program": "${command:cmake.launchTargetPath}",
+				"cwd": "${workspaceFolder}/assets",
+				"stopAtEntry": false
+			},
+			{
+				"name": "[Windows][CMake] Launch",
+				"type": "cppvsdbg",
+				"request": "launch",
+				"program": "${command:cmake.launchTargetPath}",
+				"cwd": "${workspaceFolder}/assets",
+				"stopAtEntry": false
+			}
+		],
+		"compounds": []
+	},
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools-extension-pack",
+			"jeff-hykin.better-cpp-syntax",
+			"twxs.cmake",
+			"ms-vscode.cmake-tools",
+			"streetsidesoftware.code-spell-checker",
+			"visualstudioexptteam.vscodeintellicode",
+			"ibm.output-colorizer",
+			"sonarsource.sonarlint-vscode",
+			"shardulm94.trailing-spaces"
+		]
+	},
+	"settings": {
+		"cmake.configureOnOpen": false,
+		"sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json",
+	}
+}

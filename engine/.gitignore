@@ -1,0 +1,8 @@
+*.exe
+*.dbg
+*.obj
+*.spv
+
+bin/
+out/
+build/

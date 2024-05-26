@@ -13,7 +13,6 @@ struct Material {
 };
 
 struct MeshPushConstants {
-	//glm::vec4 data;
 	glm::mat4 render_matrix;
 	int debugcollision;
 };
@@ -26,6 +25,7 @@ public:
 
 	void 									setuppipeline();
 	void 									setuppipelinemodel();
+	void 									setuppipelinedebug();
 	void 									buildpipeline(bool check);
 	void 									clearpipeline();
 	void									recreatepipeline(bool check);
@@ -61,6 +61,7 @@ private:
 
 	VkPipeline pipelinesprite;
 	VkPipeline pipelinemodel;
+	VkPipeline pipelinedebug;
 
 	std::vector<VkPipelineShaderStageCreateInfo> shaderstages;
 	std::vector<VkPipelineShaderStageCreateInfo> shaderstagesmodel;
@@ -75,6 +76,7 @@ private:
 	VkPipelineDepthStencilStateCreateInfo 	depthstencil;
 	VkPipelineLayout 						pipelinelayout;
 	VkPipelineLayout 						pipelinelayoutmodel;
+	VkPipelineLayout 						pipelinelayoutdebug;
 
 	std::unordered_map
 	<std::string,Material> 					materials;

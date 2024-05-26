@@ -6,14 +6,26 @@
 		"version": "0.2.0",
 		"configurations": [
 			{
-				"name": "[Linux][CMake] Launch",
+				"name": "[gdb] Launch",
 				"type": "cppdbg",
-				"MIMode": "gdb",
-				"miDebuggerPath": "/usr/bin/gdb",
 				"request": "launch",
-				"program": "${command:cmake.launchTargetPath}",
+				"program": "${workspaceFolder}/build/demos/demo-models/anthraxAI-demo-models",
+				"stopAtEntry": false,
 				"cwd": "${workspaceFolder}/assets",
-				"stopAtEntry": false
+				"externalConsole": false,
+				"MIMode": "gdb",
+				"setupCommands": [
+					{
+						"description": "Enable pretty-printing for gdb",
+						"text": "-enable-pretty-printing",
+						"ignoreFailures": true
+					},
+					{
+						"description": "Set Disassembly Flavor to Intel",
+						"text": "-gdb-set disassembly-flavor intel",
+						"ignoreFailures": true
+					}
+				]
 			},
 			{
 				"name": "[Windows][CMake] Launch",
@@ -42,5 +54,11 @@
 	"settings": {
 		"cmake.configureOnOpen": false,
 		"sonarlint.pathToCompileCommands": "${workspaceFolder}/build/compile_commands.json",
+		"files.associations": {
+			"*.f": "cpp",
+			"*.v": "cpp",
+			"*.comp": "cpp",
+			"format": "cpp"
+		},
 	}
 }

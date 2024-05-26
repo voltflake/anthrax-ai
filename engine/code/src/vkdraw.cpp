@@ -1,15 +1,9 @@
 #include "anthraxAI/vkengine.h"
 
 void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
-	glm::vec3 camPos =  { 0.f,0.f,-20.f + zoomtest};
-	glm::mat4 view = glm::translate(glm::mat4(1.f), camPos);
-	static float f = 0;
-	f += 0.2f;
-	glm::mat4 modelm = glm::rotate(glm::mat4{ 1.0f },  glm::radians(f + 45.0f), glm::vec3(0, 1, 0));
-	glm::mat4 projection = glm::perspective(glm::radians(60.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.1f, 200.0f);
+	glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
+	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
 	projection[1][1] *= -1;
-
-	// glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 	glm::mat4 modell = glm::mat4(1.0f);
 	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
 	modell = glm::scale(modell, glm::vec3(0.2f));
@@ -18,7 +12,7 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	camdata.proj = projection;
 	camdata.view = view;
 	camdata.viewproj = projection * view;
-	camdata.viewpos = glm::vec4(camPos.x, camPos.y, camPos.z, 1.0);
+	camdata.viewpos = glm::vec4(0, 0, 0, 1.0);
 	camdata.pos = {mousepos.x, mousepos.y, 0, 0};
 	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
 
@@ -62,11 +56,11 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 			}
-			camPos =  { 0.f + object.pos.x ,0.f + object.pos.y ,-20.f + zoomtest};
-			view = glm::translate(glm::mat4(1.f), camPos);
-			glm::mat4 model = object.transformmatrix;
+
+			glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(object.pos.x, object.pos.y, -10.0f));
 			MeshPushConstants constants;
-			constants.render_matrix = projection * view * modelm;
+			constants.render_matrix = projection * view * model;
 			constants.debugcollision = static_cast<int>(object.debugcollision);
 
 			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
@@ -96,14 +90,19 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 
 			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
-			if (object.mesh != lastMesh) {
+			if (object.mesh != lastMesh && !object.debug) {
 				VkDeviceSize offset = {0};
 				vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
 				vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 				lastMesh = object.mesh;
 			}
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-			vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);
+			if (!object.debug) {
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+				vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);	
+			}
+			else {
+				vkCmdDraw(cmd, 6, 1, 0, 0);
+			}
 		}
 	}
 }
@@ -153,14 +152,6 @@ void Engine::draw() {
 
 	vkCmdBeginRenderPass(cmd, &rpinfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	// VkViewport viewport;
-	// viewport.x = 0.0f;
-	// viewport.y = 0.0f;
-	// viewport.width = (float)Builder.devicehandler.getswapchainextent().width;
-	// viewport.height = (float)Builder.devicehandler.getswapchainextent().height;
-	// viewport.minDepth = 0.0f;
-	// viewport.maxDepth = 1.0f;
-	// vkCmdSetViewport(cmd, 0, 1, &viewport);
 	drawobjects(cmd, Builder.getrenderqueue().data(), Builder.getrenderqueue().size());
 
  	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

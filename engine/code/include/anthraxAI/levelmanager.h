@@ -1,6 +1,6 @@
-#include "anthraxAI/vkdefines.h"
-#include "anthraxAI/animator.h"
-#include "anthraxAI/parser.h"
+#include "vkdefines.h"
+#include "animator.h"
+#include "parser.h"
 #include <map>
 
 const std::string playerinfo =
@@ -141,14 +141,14 @@ public:
 private:
 };
 
-class Camera {
+class CameraRes {
 public:
 	int 	ID = 0;
 	bool 	follow = 0;
 
 
-	Camera() {};
-	Camera(const Camera& cam) {
+	CameraRes() {};
+	CameraRes(const CameraRes& cam) {
 		ID = cam.ID;
 		follow = cam.follow;
 	};
@@ -169,13 +169,13 @@ public:
 	bool check2 = false;
 
 	Player* 				getplayer() {return &player; };
-	Camera& 				getcamera() {return camera; };
+	CameraRes& 				getcamera() {return camera; };
 	Resources& 				getbackground() {return background; };
 	std::vector<Resources>& gettrigger() {return trigger; };
 	std::vector<Resources*>& getobject() {return object; };
 
 	void 					setplayer(const Player& pl) { player = pl; };
-	void 					setcamera(const Camera& cam) { camera = cam; };
+	void 					setcamera(const CameraRes& cam) { camera = cam; };
 	void 					setbackground(const Resources& bg) { background = bg; };
 	void 					setobject(const std::vector<Resources*>& obj);
 	void 					settrigger(const std::vector<Resources>& tr);
@@ -184,7 +184,7 @@ public:
 
 private:
 	Player player;
-	Camera camera;
+	CameraRes camera;
 	
 	Resources background;
 	std::vector<Resources> trigger;

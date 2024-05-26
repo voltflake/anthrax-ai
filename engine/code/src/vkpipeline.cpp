@@ -65,12 +65,15 @@ void PipelineBuilder::clearpipeline() {
 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinesprite, nullptr);
 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayoutmodel, nullptr);
 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinemodel, nullptr);
+	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayoutdebug, nullptr);
+	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinedebug, nullptr);
 }
 
 void PipelineBuilder::buildpipeline(bool check) {
 
 	VkShaderModule fragshader;
 	VkShaderModule fragshadermodel;
+	VkShaderModule fragshaderdebug;
 
 	std::string fragshaderstr;
 	if (check) {
@@ -81,7 +84,7 @@ void PipelineBuilder::buildpipeline(bool check) {
 		fragshaderstr = "./shaders/sprite.frag.spv";
 	}
 
-	if (!loadshader(fragshaderstr.c_str(), &fragshader) || !loadshader("./shaders/model.frag.spv", &fragshadermodel)) {
+	if (!loadshader(fragshaderstr.c_str(), &fragshader) || !loadshader("./shaders/model.frag.spv", &fragshadermodel)  || !loadshader("./shaders/debug.frag.spv", &fragshaderdebug)) {
 		std::cout << "Error: fragment shader module" << std::endl;
 	}
 	else {
@@ -90,7 +93,9 @@ void PipelineBuilder::buildpipeline(bool check) {
 
 	VkShaderModule vertexshader;
 	VkShaderModule vertexshadermodel;
-	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel)) {
+	VkShaderModule vertexshaderdebug;
+
+	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel) || !loadshader("./shaders/debug.vert.spv", &vertexshaderdebug)) {
 		std::cout << "Error: vertex shader module" << std::endl;
 	}
 	else {
@@ -145,9 +150,8 @@ void PipelineBuilder::buildpipeline(bool check) {
 	setuppipeline();
 	creatematerial(pipelinesprite, pipelinelayout, "defaultmesh");
 	
-	shaderstages.clear();
-
 // model pipeline
+	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadermodel));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadermodel));
 
@@ -156,10 +160,30 @@ void PipelineBuilder::buildpipeline(bool check) {
 	setuppipelinemodel();
 	creatematerial(pipelinemodel, pipelinelayoutmodel, "monkey");
 
+// debug pipeline
+	shaderstages.clear();
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderdebug));
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshaderdebug));
+
+	VkPipelineLayoutCreateInfo pipelinelayoutinfodebug = pipelinelayoutcreateinfo();
+	pipelinelayoutinfodebug.pPushConstantRanges = &push_constant;
+	pipelinelayoutinfodebug.pushConstantRangeCount = 1;	
+
+	VkDescriptorSetLayout setLayoutsdebug[] = { descriptors->getgloballayout() };
+	pipelinelayoutinfodebug.setLayoutCount = 1;
+	pipelinelayoutinfodebug.pSetLayouts = setLayoutsdebug;
+
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfodebug, nullptr, &pipelinelayoutdebug), "failed to create pipeline layput!");
+
+	setuppipelinedebug();
+	creatematerial(pipelinedebug, pipelinelayoutdebug, "debug");
+
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadermodel, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshadermodel, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshaderdebug, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshaderdebug, nullptr);
 }
 
 void PipelineBuilder::setuppipeline() {
@@ -262,6 +286,53 @@ void PipelineBuilder::setuppipelinemodel() {
 	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
 	
 	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinemodel) != VK_SUCCESS) {
+		std::cout << "failed to create pipeline\n";
+	}
+}
+
+void PipelineBuilder::setuppipelinedebug() {
+
+	VkPipelineViewportStateCreateInfo viewportstate = {};
+	viewportstate.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportstate.pNext = nullptr;
+
+	viewportstate.viewportCount = 1;
+	viewportstate.pViewports = &viewport;
+	viewportstate.scissorCount = 1;
+	viewportstate.pScissors = &scissor;
+
+	VkPipelineColorBlendStateCreateInfo colorblending = {};
+	colorblending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorblending.pNext = nullptr;
+
+	colorblending.logicOpEnable = VK_FALSE;
+	colorblending.logicOp = VK_LOGIC_OP_COPY;
+	colorblending.attachmentCount = 1;
+	colorblending.pAttachments = &colorblendattachment;
+	colorblending.blendConstants[0] = 1.f;
+	colorblending.blendConstants[1] = 1.f;
+	colorblending.blendConstants[2] = 1.f;
+	colorblending.blendConstants[3] = 1.f;
+
+	VkGraphicsPipelineCreateInfo pipelineinfo = {};
+	pipelineinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineinfo.pNext = nullptr;
+
+	pipelineinfo.stageCount = shaderstages.size();
+	pipelineinfo.pStages = shaderstages.data();
+	pipelineinfo.pVertexInputState = &vertexinputinfo;
+	pipelineinfo.pInputAssemblyState = &inputassembly;
+	pipelineinfo.pViewportState = &viewportstate;
+	pipelineinfo.pRasterizationState = &rasterizer;
+	pipelineinfo.pMultisampleState = &multisampling;
+	pipelineinfo.pColorBlendState = &colorblending;
+	pipelineinfo.pDepthStencilState = &depthstencil;
+	pipelineinfo.layout = pipelinelayoutdebug;
+	pipelineinfo.renderPass = renderer.getrenderpass();
+	pipelineinfo.subpass = 0;
+	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
+	
+	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinedebug) != VK_SUCCESS) {
 		std::cout << "failed to create pipeline\n";
 	}
 }

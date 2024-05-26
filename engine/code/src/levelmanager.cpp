@@ -14,7 +14,7 @@ bool LevelManager::newlevel() {
 
 	Player playertmp = *getplayer();
 	Resources bgtmp =  getbackground();
-	Camera camtmp = getcamera();
+	CameraRes camtmp = getcamera();
 	std::vector<Resources> trigtmp = gettrigger();
 	std::vector<Resources*> objtmp = getobject();
 
@@ -354,7 +354,7 @@ void LevelManager::savelevel() {
 
     for (const auto & entry : std::filesystem::directory_iterator(path)) {
     	if (entry.path() != ""){
-       		files.push_back(entry.path().string());
+       		files.push_back(entry.path());
     	}
     }
 

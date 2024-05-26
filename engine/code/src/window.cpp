@@ -186,15 +186,15 @@ void Engine::linuxinitwindow() {
 	KeySyms = xcb_key_symbols_alloc(connection);
 }
 
-bool Engine::eventhandler(const xcb_generic_event_t *event)
+bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 {
 	switch (event->response_type & ~0x80) {
 		case XCB_KEY_PRESS: {
 			xcb_key_press_event_t *e = (xcb_key_press_event_t *)event;
         	xcb_keysym_t k = xcb_key_press_lookup_keysym(KeySyms, e, 0);
-        	// if (k == ENTER_KEY && checkimg < checkimgs.size() - 1) {
-        	// 	checkupdate = true;
-        	// }
+
+			EditorCamera.checkmovement(k, delta);
+
 			if (k == PLUS_KEY) {
 				zoomtest += 1;
 			}
@@ -230,6 +230,12 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 			if (mousestate == MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
+				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
+			}
+			if (mousestate == MOUSE_PRESSED && mousestate != MOUSE_MOVE) {
+				mousepos.x = motion->event_x;
+            	mousepos.y = motion->event_y;
+				EditorCamera.checkdirection(mousepos);
 				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
 			return true;
@@ -292,11 +298,11 @@ bool Engine::eventhandler(const xcb_generic_event_t *event)
 	return false;
 }
 
-void Engine::checkstate() {
+void Engine::checkstate(float delta) {
 	xcb_generic_event_t *event;
 	while ((event = xcb_poll_for_event(connection))) {
 		ImGui_ImplX11_Event(event);
-		eventhandler(event);
+		eventhandler(event, delta);
 		free(event);
 	}
 }
@@ -307,10 +313,12 @@ void Engine::runlinux() {
 
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	std::chrono::duration<double, std::milli> delta;
+
 	state |= ENGINE_EDITOR;
 
 	while (running) {
-		checkstate();
+		checkstate(static_cast<float>(delta.count()));
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplX11_NewFrame();
@@ -323,7 +331,7 @@ void Engine::runlinux() {
 		}
 
 		start = std::chrono::system_clock::now();
-		std::chrono::duration<double, std::milli> delta = start - end;
+		delta = start - end;
 		calculateFPS(delta);
 
 		loop();

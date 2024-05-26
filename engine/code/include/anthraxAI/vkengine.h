@@ -7,6 +7,7 @@
 #include "anthraxAI/vkpipeline.h"
 
 #include "anthraxAI/levelmanager.h"
+#include "anthraxAI/camera.h"
 
 #include "anthraxAI/vkdebug.h"
 
@@ -44,12 +45,13 @@ public:
 	int							state = INIT_ENGINE;
 
 	void 						start();
-	void 						checkstate();
+	void 						checkstate(float delta);
 	void 						checkuistate();
 	void 						initengine(LevelManager &levels);
 
 	VkBuilder 					Builder;
 	LevelManager				Level;
+	Camera 						EditorCamera;
 
 	std::unordered_map<int, Data> resources;
 
@@ -74,7 +76,7 @@ public:
 #ifdef AAI_LINUX
 	void 						linuxinitwindow();
 	void  						runlinux();
-	bool 						eventhandler(const xcb_generic_event_t *event);
+	bool 						eventhandler(const xcb_generic_event_t *event, float delta);
 #endif
 
 	bool 						running = true;

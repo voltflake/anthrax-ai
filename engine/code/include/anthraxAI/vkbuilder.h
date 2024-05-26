@@ -23,7 +23,8 @@ struct RenderObject {
 	Positions pos;
 	glm::mat4 transformmatrix;
 	bool debugcollision;
-	bool model = false;;
+	bool model = false;
+	bool debug = false;
 };
 
 class VkBuilder {

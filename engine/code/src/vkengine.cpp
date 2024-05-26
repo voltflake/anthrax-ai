@@ -67,6 +67,8 @@ void Engine::initvulkan() {
 }
 
 void Engine::initengine(LevelManager &levels) {
+	EditorCamera.setposition({ 0.f, 0.f, 3.0f});
+	EditorCamera.setdirections();
 
 	Level.getbackground().setposition({0, 0});
 	Level.getbackground().setpath("placeholder.jpg");
@@ -102,6 +104,11 @@ void Engine::initscene() {
 		Builder.pushrenderobject(tri);
 		i++;
 	}
+
+	RenderObject debug;
+	debug.material = Builder.getmaterial("debug");
+	debug.debug = true;
+	Builder.pushrenderobject(debug);
 }
 
 void Engine::initresources()
@@ -132,7 +139,7 @@ void Engine::initresources()
 	}
 
 	resources[TYPE_MODEL] = {"zeroone.png", {0, 0}, false, false}; 
-	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 0}, false, false}; 
+	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 5}, false, false}; 
 	resources[TYPE_MODEL + 2] = {"floor.jpg", {2, 0}, false, false}; 
 }
 

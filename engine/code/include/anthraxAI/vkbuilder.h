@@ -19,11 +19,13 @@ struct RenderObject {
 	Mesh* mesh;
 	Material* material;
 	VkDescriptorSet* textureset;
+	VkDescriptorSet* texturesetread;
 	
 	Positions pos;
 	glm::mat4 transformmatrix;
 	bool debugcollision;
 	bool model = false;
+	bool selected = false;
 	bool debug = false;
 };
 
@@ -46,9 +48,11 @@ public:
 	VkRenderPass& 				getrenderpass() { return renderer.getrenderpass();};
 	std::vector<VkFramebuffer>& getframebuffers() { return renderer.getframebuffers();};
 	FrameArray&					getframes() { return renderer.getframedata();};
-	VkPipeline&					getpipeline() { return pipeline.getpipelinesprite();};
+	VkPipeline&					getreadpipeline() { return pipeline.getreadpipeline();};
+	VkPipelineLayout&			getreadpipelayout() { return pipeline.getreadpipelayout();};
 
-	std::vector<VkDescriptorSet>&  			getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
+	std::vector<VkDescriptorSet>& getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
+	VkDescriptorSet&			getattachmentset() { return descriptors.getattachmentdescriptor(); };
 
 	std::vector<VkDescriptorSet>& 			getdescriptorset() { return descriptors.getdescriptorset();};
 	UboArray& 								getcamerabuffer() { return descriptors.getcamerabuffer();};			
@@ -91,7 +95,7 @@ public:
 	void initrenderbuilder()	{ renderer.init(&devicehandler, &deletorhandler);};
 	void buildcommandpool()		{ renderer.buildcommandpool();		};
 	void buildrenderpass() 		{ renderer.buildrenderpass();		};
-	void builframebuffers() 	{ renderer.builframebuffers();		};
+	void builframebuffers() 	{ renderer.builframebuffers(devicehandler);	};
 	void clearframebuffers() 	{ renderer.clearframebuffers();		};
 	void startsync() 			{ renderer.sync();					};
 
@@ -100,9 +104,10 @@ public:
 	void loadimages() 		{ texturehandler.loadimages();	};
 	void clearimages() 		{ texturehandler.clearimages();	};
 	void builddepthbuffer() { texturehandler.createdepthbuffer(devicehandler); };
+	void buildmainimage() 	{ texturehandler.createmainimage(&devicehandler); };
 
 	DescriptorBuilder descriptors;
-	void initdescriptors() 		{ descriptors.init(renderer, &deletorhandler, texturehandler); };
+	void initdescriptors() 		{ descriptors.init(devicehandler, renderer, &deletorhandler, texturehandler); };
 	void builddescriptors()		{ descriptors.builddescriptors();				};
 	void cleartextureset() 		{ descriptors.cleartextureset();};
 

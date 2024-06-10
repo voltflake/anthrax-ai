@@ -64,7 +64,9 @@ public:
 	VkExtent2D&					getwindowxtent()			{ return windowextend;			};
 
 	size_t 						minuniformbufferoffsetalignment;
+
 	AllocatedImage 				depthimage;
+	AllocatedImage 				mainrendertarget;
 
 private:
 #if defined(AAI_WINDOWS)

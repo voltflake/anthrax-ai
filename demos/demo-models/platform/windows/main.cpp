@@ -4,7 +4,7 @@ int main(int argc, char **argv) {
 	Engine engine;
 	engine.start();
 	engine.run();
-	engine.cleanup();
+	//engine.cleanup();
 	return 0;
 }
 

@@ -5,12 +5,12 @@ void Engine::loop() {
 		ui();
 		editor();
 		update();
-		draw();
+		render();
 	}
 	if (state & PLAY_GAME) {
 		move();
 		update();
-		draw();
+		render();
 	}
 	if (state & EXIT) {
 		cleanup();

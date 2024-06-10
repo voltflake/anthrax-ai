@@ -189,5 +189,4 @@ private:
 	Resources background;
 	std::vector<Resources> trigger;
 	std::vector<Resources*> object;
-
 };

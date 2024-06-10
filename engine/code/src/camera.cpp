@@ -11,10 +11,11 @@
     Up = glm::cross(Direction, Right);
 }
 
+#ifdef AAI_LINUX
 void Camera::checkmovement(xcb_keysym_t k, float delta)
 {
-    const float cameraSpeed = 10.0f * delta;
-	if (k == W_KEY) {
+    const float cameraSpeed = 15.0f * delta;	
+    if (k == W_KEY) {
         Position += cameraSpeed * Front;
     }
     if (k == S_KEY) {
@@ -27,7 +28,24 @@ void Camera::checkmovement(xcb_keysym_t k, float delta)
         Position += glm::normalize(glm::cross(Front, Up)) * cameraSpeed;
     }
 }
-
+#else
+void Camera::checkmovement(float delta)
+{
+    const float cameraSpeed = 1.0f * delta;
+	if (GetAsyncKeyState(W_KEY) < 0) {
+        Position += cameraSpeed * Front;
+    }
+	if (GetAsyncKeyState(S_KEY) < 0) {
+        Position -= cameraSpeed * Front;
+    }
+	if (GetAsyncKeyState(A_KEY) < 0) {
+        Position -= glm::normalize(glm::cross(Front, Up)) * cameraSpeed;
+    }
+	if (GetAsyncKeyState(D_KEY) < 0) {
+        Position += glm::normalize(glm::cross(Front, Up)) * cameraSpeed;
+    }
+}
+#endif
 void Camera::checkdirection(Positions mousepos)
 {
     static float lastx = mousepos.x;

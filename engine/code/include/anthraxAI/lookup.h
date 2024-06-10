@@ -50,35 +50,36 @@ typedef enum
   ANIM_TYPE_SIZE
 } AnimationType;
 
-static const char* LOOKUP_NAME[TYPE_SIZE] =
-{
-  #define X(name) [name] = #name,
-    TRIGGER_TYPE_LIST
-  #undef X
-};
-
-static const char* LOOKUP_ANIM[ANIM_TYPE_SIZE] =
-{
-  #define X(name) [name] = #name,
-    ANIM_TYPE_LIST
-  #undef X
-};
-
 template <typename T>
 inline T GetKey(std::string str) {
 	if (typeid(TriggerType) == typeid(T)) {
-		for (int i = TYPE_NONE; i < TYPE_SIZE; ++i) {
-			if (str == LOOKUP_NAME[i]) {
-				return static_cast<T>(i);
-			}
-		}
+		if (str == "TYPE_NONE")
+			return static_cast<T>(TYPE_NONE);
+		if (str ==  "TYPE_TEXT")
+			return static_cast<T>(TYPE_TEXT);
+		if (str ==  "TYPE_ACTION")
+			return static_cast<T>(TYPE_ACTION);
 	}
 	if (typeid(T) == typeid(AnimationType)) {
-		for (int i = ANIM_TYPE_NONE; i < ANIM_TYPE_SIZE; ++i) {
-			if (str == LOOKUP_ANIM[i]) {
-				return static_cast<T>(i);
-			}
-		}
+		if (str ==  "ANIM_TYPE_NONE")
+			return static_cast<T>(ANIM_TYPE_NONE);
+		if (str == "ANIM_TYPE_IDLE")
+			return static_cast<T>(ANIM_TYPE_IDLE);
+		if (str == "ANIM_TYPE_JUMP")
+			return static_cast<T>(ANIM_TYPE_JUMP);
 	}
 	return static_cast<T>(TYPE_NONE);
+}
+
+template <typename T>
+inline const char* GetValue(T key) {
+		switch(key) {
+			case static_cast<T>(TYPE_NONE):
+				return "TYPE_NONE";
+			case static_cast<T>(TYPE_TEXT):
+				return "TYPE_TEXT";
+			case static_cast<T>(TYPE_ACTION):
+				return "TYPE_ACTION";
+		}
+	return "";
 }

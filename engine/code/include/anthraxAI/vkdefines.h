@@ -77,19 +77,26 @@ do                                                              \
 	}                                                           \
 } while (0)
 
-#if defined(AAI_WINDOWS)
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
 #ifdef AAI_LINUX
-#define VK_USE_PLATFORM_XCB_KHR
-#define ESC_KEY 65307
-#define W_KEY 119
-#define D_KEY 100
-#define A_KEY 97
-#define S_KEY 115
-#define ENTER_KEY 65293
-#define PLUS_KEY  61
-#define MINUS_KEY 45
+	#define VK_USE_PLATFORM_XCB_KHR
+	#define ESC_KEY 65307
+	#define W_KEY 119
+	#define D_KEY 100
+	#define A_KEY 97
+	#define S_KEY 115
+	#define ENTER_KEY 65293
+	#define PLUS_KEY  61
+	#define MINUS_KEY 45
+#else
+#define VK_USE_PLATFORM_WIN32_KHR
+	#define ESC_KEY 0x1B
+	#define W_KEY 0x57
+	#define D_KEY 0x44
+	#define A_KEY 0x41
+	#define S_KEY 0x53
+	#define ENTER_KEY 0x0D
+	#define PLUS_KEY  0xBB
+	#define MINUS_KEY 0xBD
 #endif
 
 #define _USE_MATH_DEFINE
@@ -122,6 +129,7 @@ struct Texture {
 	VkDeviceMemory memory;
 
 	VkSampler sampler;
+	VkFormat format;
 	float w;
 	float h;
 };

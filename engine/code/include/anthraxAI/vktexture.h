@@ -8,9 +8,13 @@ namespace ImageHelper
 {
 	void createimage(VkImageCreateInfo imginfo, DeviceBuilder& device, AllocatedImage* img);
 	void createimageview(VkImageViewCreateInfo viewinfo, DeviceBuilder& device, AllocatedImage* img);
-	void memorybarrier(VkCommandBuffer cmd, VkImage image, VkFormat format, VkImageLayout oldlayout, VkImageLayout newlayout); 
+	void memorybarrier(VkCommandBuffer cmd, VkImage image, VkImageLayout oldlayout, VkImageLayout newlayout);
+	void memorybarrierall(VkCommandBuffer cmd, VkImage image, VkImageLayout oldlayout, VkImageLayout newlayout); 
 	void copy(VkCommandBuffer cmd, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 
+	void copytoimage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
+
+	VkImageSubresourceRange subresrange(VkImageAspectFlags aspectMask);
 	VkImageCreateInfo imagecreateinfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent);
 	VkImageViewCreateInfo imageviewcreateinfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
 }
@@ -29,6 +33,7 @@ public:
 
 	void cleartextures();
 
+	void createmainimage(DeviceBuilder* device);
 	void createdepthbuffer(DeviceBuilder& device);
 
 	Texture* gettexture(std::string name) { auto it = loadedtextures.find(name);
@@ -40,7 +45,6 @@ public:
 												}
 											}
 	std::unordered_map<int, Data> resources;
-
 
 private:
 	RenderBuilder 	renderer;

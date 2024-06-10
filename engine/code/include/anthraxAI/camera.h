@@ -11,7 +11,11 @@ public:
     glm::vec3 getfront() const { return Front; }
     glm::vec3 getup() const { return Up; }
 
+#ifdef AAI_LINUX
     void checkmovement(xcb_keysym_t k, float delta);
+#else
+    void checkmovement(float delta);
+#endif
     void checkdirection(Positions mousepos);
 
 private:

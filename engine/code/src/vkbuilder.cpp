@@ -90,8 +90,12 @@ void VkBuilder::resizewindow(bool& winprepared, VkExtent2D windowextendh, bool c
 
 	devicehandler.recreateswapchain(winprepared, windowextendh);
 	builddepthbuffer();
-	renderer.recreateframebuffer();
+	buildmainimage();
+	renderer.recreateframebuffer(devicehandler);
 	pipeline.recreatepipeline(check);
+
+	descriptors.updateattachmentdescriptors(devicehandler);
+
 }
 
 bool VkBuilder::instanceextensionssupport()

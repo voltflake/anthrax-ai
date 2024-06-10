@@ -43,10 +43,10 @@ Material* PipelineBuilder::getmaterial(const std::string& name)
 }
 
 
-Material* PipelineBuilder::creatematerial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
+Material* PipelineBuilder::creatematerial(VkPipeline pipelinew, VkPipelineLayout layout, const std::string& name)
 {
 	Material mat;
-	mat.pipeline = pipeline;
+	mat.pipelinewrite = pipelinew;
 	mat.pipelinelayout = layout;
 	materials[name] = mat;
 	return &materials[name];
@@ -61,17 +61,19 @@ void PipelineBuilder::recreatepipeline(bool check) {
 }
 
 void PipelineBuilder::clearpipeline() {
-	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayout, nullptr);
-	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinesprite, nullptr);
-	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayoutmodel, nullptr);
-	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinemodel, nullptr);
-	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelinelayoutdebug, nullptr);
-	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelinedebug, nullptr);
+	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayoutsread, nullptr);
+	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineread, nullptr);
+	
+	for (int i = 0; i < 3; ++i) {
+		vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayouts[i], nullptr);
+		vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineswrite[i], nullptr);
+	}
 }
 
 void PipelineBuilder::buildpipeline(bool check) {
 
 	VkShaderModule fragshader;
+	VkShaderModule fragshadercopy;
 	VkShaderModule fragshadermodel;
 	VkShaderModule fragshaderdebug;
 
@@ -84,7 +86,7 @@ void PipelineBuilder::buildpipeline(bool check) {
 		fragshaderstr = "./shaders/sprite.frag.spv";
 	}
 
-	if (!loadshader(fragshaderstr.c_str(), &fragshader) || !loadshader("./shaders/model.frag.spv", &fragshadermodel)  || !loadshader("./shaders/debug.frag.spv", &fragshaderdebug)) {
+	if (!loadshader(fragshaderstr.c_str(), &fragshader) || !loadshader("./shaders/model.frag.spv", &fragshadermodel) || !loadshader("./shaders/copy.frag.spv", &fragshadercopy) || !loadshader("./shaders/debug.frag.spv", &fragshaderdebug)) {
 		std::cout << "Error: fragment shader module" << std::endl;
 	}
 	else {
@@ -92,10 +94,11 @@ void PipelineBuilder::buildpipeline(bool check) {
 	}
 
 	VkShaderModule vertexshader;
+	VkShaderModule vertexshadercopy;
 	VkShaderModule vertexshadermodel;
 	VkShaderModule vertexshaderdebug;
 
-	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel) || !loadshader("./shaders/debug.vert.spv", &vertexshaderdebug)) {
+	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel)|| !loadshader("./shaders/copy.vert.spv", &vertexshadercopy) || !loadshader("./shaders/debug.vert.spv", &vertexshaderdebug)) {
 		std::cout << "Error: vertex shader module" << std::endl;
 	}
 	else {
@@ -119,7 +122,8 @@ void PipelineBuilder::buildpipeline(bool check) {
 	pipelinelayoutinfo.setLayoutCount = 2;
 	pipelinelayoutinfo.pSetLayouts = setLayouts;
 
-	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayout), "failed to create pipeline layput!");
+	int ind = 0;
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelayouts[ind]), "failed to create pipeline layput!");
 
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
@@ -147,20 +151,22 @@ void PipelineBuilder::buildpipeline(bool check) {
 	
 	depthstencil = depthstencilcreateinfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
 	
-	setuppipeline();
-	creatematerial(pipelinesprite, pipelinelayout, "defaultmesh");
+	setuppipeline(ind);
+	creatematerial(pipelineswrite[ind], pipelayouts[ind], "defaultmesh");
 	
 // model pipeline
+	ind = 1;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadermodel));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadermodel));
 
-	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelinelayoutmodel), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelayouts[ind]), "failed to create pipeline layput!");
 
-	setuppipelinemodel();
-	creatematerial(pipelinemodel, pipelinelayoutmodel, "monkey");
+	setuppipeline(ind);
+	creatematerial(pipelineswrite[ind], pipelayouts[ind], "monkey");
 
 // debug pipeline
+	ind = 2;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderdebug));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshaderdebug));
@@ -169,24 +175,37 @@ void PipelineBuilder::buildpipeline(bool check) {
 	pipelinelayoutinfodebug.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfodebug.pushConstantRangeCount = 1;	
 
-	VkDescriptorSetLayout setLayoutsdebug[] = { descriptors->getgloballayout() };
-	pipelinelayoutinfodebug.setLayoutCount = 1;
+	VkDescriptorSetLayout setLayoutsdebug[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout() };
+	pipelinelayoutinfodebug.setLayoutCount = 2;
 	pipelinelayoutinfodebug.pSetLayouts = setLayoutsdebug;
 
-	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfodebug, nullptr, &pipelinelayoutdebug), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfodebug, nullptr, &pipelayouts[ind]), "failed to create pipeline layput!");
 
-	setuppipelinedebug();
-	creatematerial(pipelinedebug, pipelinelayoutdebug, "debug");
+	setuppipeline(ind);
+	creatematerial(pipelineswrite[ind], pipelayouts[ind], "debug");
+
+// subpass 2
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelayoutsread), "failed to create pipeline layput!");
+
+	shaderstages.clear();
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadercopy));
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadercopy));
+	setuppipelineread();
+//---------------------
 
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadermodel, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadercopy, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshadermodel, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshaderdebug, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshaderdebug, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshadercopy, nullptr);
 }
 
-void PipelineBuilder::setuppipeline() {
+void PipelineBuilder::setuppipeline(int ind) {
+
+// Pipeline for subpass 0
 
 	VkPipelineViewportStateCreateInfo viewportstate = {};
 	viewportstate.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -223,74 +242,17 @@ void PipelineBuilder::setuppipeline() {
 	pipelineinfo.pMultisampleState = &multisampling;
 	pipelineinfo.pColorBlendState = &colorblending;
 	pipelineinfo.pDepthStencilState = &depthstencil;
-	pipelineinfo.layout = pipelinelayout;
+	pipelineinfo.layout = pipelayouts[ind];
 	pipelineinfo.renderPass = renderer.getrenderpass();
 	pipelineinfo.subpass = 0;
-	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
-	
-	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinesprite) != VK_SUCCESS) {
-		std::cout << "failed to create pipeline\n";
-	}
+
+	VK_ASSERT(vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelineswrite[ind]), "failed to create write pipeline\n");
 }
 
-void PipelineBuilder::setuppipelinemodel() {
 
-	VkPipelineViewportStateCreateInfo viewportstate = {};
-	viewportstate.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportstate.pNext = nullptr;
+void PipelineBuilder::setuppipelineread() {
 
-	viewportstate.viewportCount = 1;
-	viewportstate.pViewports = &viewport;
-	viewportstate.scissorCount = 1;
-	viewportstate.pScissors = &scissor;
-
-	VkPipelineColorBlendStateCreateInfo colorblending = {};
-	colorblending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorblending.pNext = nullptr;
-
-	colorblending.logicOpEnable = VK_FALSE;
-	colorblending.logicOp = VK_LOGIC_OP_COPY;
-	colorblending.attachmentCount = 1;
-	colorblending.pAttachments = &colorblendattachment;
-	colorblending.blendConstants[0] = 1.f;
-	colorblending.blendConstants[1] = 1.f;
-	colorblending.blendConstants[2] = 1.f;
-	colorblending.blendConstants[3] = 1.f;
-
-	std::vector<VkDynamicState> dynamicStates = {
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
-	};
-	VkPipelineDynamicStateCreateInfo dynamicstate{};
-	dynamicstate.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicstate.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-	dynamicstate.pDynamicStates = dynamicStates.data();
-
-	VkGraphicsPipelineCreateInfo pipelineinfo = {};
-	pipelineinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineinfo.pNext = nullptr;
-
-	pipelineinfo.stageCount = shaderstages.size();
-	pipelineinfo.pStages = shaderstages.data();
-	pipelineinfo.pVertexInputState = &vertexinputinfo;
-	pipelineinfo.pInputAssemblyState = &inputassembly;
-	pipelineinfo.pViewportState = &viewportstate;
-	pipelineinfo.pRasterizationState = &rasterizer;
-	pipelineinfo.pMultisampleState = &multisampling;
-	pipelineinfo.pColorBlendState = &colorblending;
-	pipelineinfo.pDepthStencilState = &depthstencil;
-	pipelineinfo.pDynamicState = &dynamicstate;
-	pipelineinfo.layout = pipelinelayout;
-	pipelineinfo.renderPass = renderer.getrenderpass();
-	pipelineinfo.subpass = 0;
-	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
-	
-	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinemodel) != VK_SUCCESS) {
-		std::cout << "failed to create pipeline\n";
-	}
-}
-
-void PipelineBuilder::setuppipelinedebug() {
+// Pipeline for subpass 1
 
 	VkPipelineViewportStateCreateInfo viewportstate = {};
 	viewportstate.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -327,14 +289,11 @@ void PipelineBuilder::setuppipelinedebug() {
 	pipelineinfo.pMultisampleState = &multisampling;
 	pipelineinfo.pColorBlendState = &colorblending;
 	pipelineinfo.pDepthStencilState = &depthstencil;
-	pipelineinfo.layout = pipelinelayoutdebug;
 	pipelineinfo.renderPass = renderer.getrenderpass();
-	pipelineinfo.subpass = 0;
-	pipelineinfo.basePipelineHandle = VK_NULL_HANDLE;
+	pipelineinfo.layout = pipelayoutsread;
+	pipelineinfo.subpass = 1;
 	
-	if (vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelinedebug) != VK_SUCCESS) {
-		std::cout << "failed to create pipeline\n";
-	}
+	VK_ASSERT(vkCreateGraphicsPipelines(devicehandler->getlogicaldevice(), VK_NULL_HANDLE, 1, &pipelineinfo, nullptr, &pipelineread), "failed to create read pipeline\n");
 }
 
 VkPipelineLayoutCreateInfo PipelineBuilder::pipelinelayoutcreateinfo() {

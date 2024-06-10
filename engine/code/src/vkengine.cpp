@@ -44,8 +44,10 @@ void Engine::initvulkan() {
 	Builder.initrenderbuilder();
 	Builder.buildcommandpool();
 
-	Builder.buildrenderpass();
 	Builder.builddepthbuffer();
+	Builder.buildmainimage();
+	Builder.buildrenderpass();
+
 	Builder.builframebuffers();
 	
 	Builder.startsync();
@@ -97,6 +99,7 @@ void Engine::initscene() {
 			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
 			tri.material = Builder.getmaterial("defaultmesh");
 		}
+
 		tri.pos = list.second.pos;
 		tri.mesh = Builder.getmesh(list.first);
 		tri.textureset = &Builder.getsamplerset()[i];

@@ -4,14 +4,48 @@
 
 void TextureBuilder::createdepthbuffer(DeviceBuilder& device)
 {
+	if (device.depthimage.texture) {
+		vkDestroyImageView(device.getlogicaldevice(), device.depthimage.texture->imageview, nullptr);
+		vkDestroyImage(device.getlogicaldevice(),device.depthimage.texture->image, nullptr);
+		vkFreeMemory(device.getlogicaldevice(),device.depthimage.texture->memory, nullptr);
+		delete device.depthimage.texture;
+	}
     VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
 	device.depthimage.texture = new Texture;
+	device.depthimage.texture->format = depthformat;
     ImageHelper::createimage(
-		ImageHelper::imagecreateinfo(depthformat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, { static_cast<uint32_t>(device.getswapchainextent().width), static_cast<uint32_t>(device.getswapchainextent().height), 1 }),
+		ImageHelper::imagecreateinfo(depthformat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT, { static_cast<uint32_t>(device.getswapchainextent().width), static_cast<uint32_t>(device.getswapchainextent().height), 1 }),
 		device, &device.depthimage);
 	ImageHelper::createimageview(ImageHelper::imageviewcreateinfo(depthformat, device.depthimage.texture->image, VK_IMAGE_ASPECT_DEPTH_BIT),
 	device, &device.depthimage);
+	std::cout << "created depth image\n";
+
 }
+
+void TextureBuilder::createmainimage(DeviceBuilder* device)
+{
+	if (device->mainrendertarget.texture) {
+		vkDestroyImageView(device->getlogicaldevice(), device->mainrendertarget.texture->imageview, nullptr);
+		vkDestroyImage(device->getlogicaldevice(), device->mainrendertarget.texture->image, nullptr);
+		vkFreeMemory(device->getlogicaldevice(), device->mainrendertarget.texture->memory, nullptr);
+		delete device->mainrendertarget.texture;
+	}
+	device->mainrendertarget.texture = new Texture;
+	device->mainrendertarget.texture->format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	VkImageUsageFlags imgusage{};
+	imgusage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+	imgusage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	imgusage |= VK_IMAGE_USAGE_STORAGE_BIT;
+	imgusage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	imgusage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+    ImageHelper::createimage(
+        ImageHelper::imagecreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, imgusage, { static_cast<uint32_t>(device->getswapchainextent().width), static_cast<uint32_t>(device->getswapchainextent().height), 1 }),
+        *device, &device->mainrendertarget);
+	ImageHelper::createimageview(ImageHelper::imageviewcreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, device->mainrendertarget.texture->image, VK_IMAGE_ASPECT_COLOR_BIT),
+	*device, &device->mainrendertarget);
+	std::cout << "created main image\n";
+}
+
 
 void TextureBuilder::loadimages() {
 	for (auto& list : resources) {
@@ -71,13 +105,13 @@ void TextureBuilder::createtexture(const std::string& texturepath) {
         ImageHelper::imagecreateinfo(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, { static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1 }),
         devicehandler, &imgtmp);
 	renderer.submit([&](VkCommandBuffer cmd) {
-        ImageHelper::memorybarrier(cmd, texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        ImageHelper::memorybarrier(cmd, texture.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 	});
 	renderer.submit([&](VkCommandBuffer cmd){
         ImageHelper::copy(cmd, stagingbuffer.buffer, texture.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 	});
 	renderer.submit([&](VkCommandBuffer cmd) {
-		ImageHelper::memorybarrier(cmd, texture.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		ImageHelper::memorybarrier(cmd, texture.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	});
     vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), stagingbuffer.buffer, nullptr);
     vkFreeMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, nullptr);

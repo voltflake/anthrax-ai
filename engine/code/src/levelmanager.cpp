@@ -93,7 +93,12 @@ bool LevelManager::newlevel() {
 					ImGui::Columns(1);
 					
 					static int item = trigtmp[i].gettriggertype();
-					ImGui::Combo("trigger type", &item, LOOKUP_NAME, IM_ARRAYSIZE(LOOKUP_NAME));
+					static const char* triggerarr[] = {
+						GetValue(TYPE_NONE),
+						GetValue(TYPE_TEXT),
+						GetValue(TYPE_ACTION),
+					};
+					ImGui::Combo("trigger type", &item, triggerarr, IM_ARRAYSIZE(triggerarr));
 					if (static_cast<TriggerType>(item) != trigtmp[i].gettriggertype()) {
 						trigtmp[i].settriggertype(static_cast<TriggerType>(item));
 					}
@@ -352,9 +357,9 @@ void LevelManager::savelevel() {
 
     std::vector<std::string> files;
 
-    for (const auto & entry : std::filesystem::directory_iterator(path)) {
+    for (auto& entry : std::filesystem::directory_iterator(path)) {
     	if (entry.path() != ""){
-       		files.push_back(entry.path());
+       		files.push_back(entry.path().generic_string());
     	}
     }
 
@@ -439,7 +444,7 @@ void LevelManager::savelevel() {
 			std::getline(infile, currline);
 			info += currline + std::to_string(gettrigger()[triggerind].animation) + "\n";
 			std::getline(infile, currline);
-			info += currline + LOOKUP_NAME[gettrigger()[triggerind].gettriggertype()] + "\n";
+			info += currline + GetValue(gettrigger()[triggerind].gettriggertype()) + "\n";
 			triggerind++;
 		}
 		if (currline == "Object:") {

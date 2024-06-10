@@ -4,15 +4,17 @@
 #include "anthraxAI/vkrenderer.h"
 #include "anthraxAI/vkbuffer.h"
 #include "anthraxAI/vktexture.h"
+#include "anthraxAI/vkdevices.h"
 
 class DescriptorBuilder {
 public:
-	void init(RenderBuilder& rendererh, DeletionQueue* deletor, TextureBuilder& texture) { deletorhandler = deletor; renderer = rendererh; texturehandler = texture;};
+	void init(DeviceBuilder& deviceh, RenderBuilder& rendererh, DeletionQueue* deletor, TextureBuilder& texture) { device = deviceh; deletorhandler = deletor; renderer = rendererh; texturehandler = texture;};
 
 	void builddescriptors();
 
 	void updatesamplerdescriptors(std::string texture);
-void updatesamplerdescriptors2(std::string texture,std::string texture2);
+	void updateattachmentdescriptors(DeviceBuilder& dev);
+	void updatesamplerdescriptors2(std::string texture,std::string texture2);
 
 	size_t paduniformbuffersize(size_t originalsize);
 
@@ -20,8 +22,9 @@ void updatesamplerdescriptors2(std::string texture,std::string texture2);
 	VkDescriptorSetLayout& getsamplerlayout() { return singletexturesetlayout; };
 
 	std::vector<VkDescriptorSet>& getmainsamplerdescriptor() { return textureset;};
-	void cleartextureset();
+	VkDescriptorSet& getattachmentdescriptor() { return attachmentset;};
 
+	void cleartextureset();
 
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
 
@@ -34,6 +37,8 @@ private:
 	VkDescriptorSetLayout singletexturesetlayout;
 	std::vector<VkDescriptorSet> textureset;
 
+	VkDescriptorSet attachmentset;
+
 	VkDescriptorPool descriptorpool;
 	std::vector<VkDescriptorSet> descriptorsets;
 
@@ -43,5 +48,5 @@ private:
 
 	DeletionQueue*	deletorhandler;
 	RenderBuilder renderer;
-
+	DeviceBuilder device;
 };

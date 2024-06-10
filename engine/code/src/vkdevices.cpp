@@ -13,7 +13,7 @@ void DeviceBuilder::findphysicaldevice() {
 	for (const auto &devs : devices) {
 		if (isdevisesuitable(devs)) {
 			physicaldevbuilder = devs;
-			//break;
+			break;
 		}
 	}
 
@@ -298,11 +298,6 @@ void DeviceBuilder::buildimagesview() {
 }
 
 void DeviceBuilder::cleanswapchain() {
-	vkDestroyImageView(logicaldevbuilder, depthimage.texture->imageview, nullptr);
-	vkDestroyImage(logicaldevbuilder, depthimage.texture->image, nullptr);
-	vkFreeMemory(logicaldevbuilder, depthimage.texture->memory, nullptr);
-	delete depthimage.texture;
-
 	vkDestroySwapchainKHR(logicaldevbuilder, swapchainbuilder, nullptr);
 
 	for (size_t i = 0; i < swapchainimgbuilder.size(); i++) {

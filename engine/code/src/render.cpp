@@ -1,6 +1,6 @@
 #include "anthraxAI/vkengine.h"
 
-void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
+void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
 	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
 	projection[1][1] *= -1;
@@ -30,35 +30,27 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
+
+//  ----------------------------------------------------------------------------------------
+// 	SUBPASS 0: WRITE TO SHADER
+//  ----------------------------------------------------------------------------------------
 	for (int i = 0; i < rqsize; i++)
 	{
 		RenderObject& object = first[i];
 
 		if (object.model) {
 			if (object.material != lastMaterial) {
-
-				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
-				VkViewport viewport{};
-				viewport.x = 0.0f;
-				viewport.y = 0.0f;
-				viewport.width = (float) Builder.getswapchainextent().width;
-				viewport.height = (float) Builder.getswapchainextent().height;
-				viewport.minDepth = 0.0f;
-				viewport.maxDepth = 1.0f;
-				vkCmdSetViewport(cmd, 0, 1, &viewport);
-				VkRect2D scissor{};
-				scissor.offset = {0, 0};
-				scissor.extent = Builder.getswapchainextent();
-				vkCmdSetScissor(cmd, 0, 1, &scissor);
-
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 				lastMaterial = object.material;
-				
 				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 			}
 
 			glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(object.pos.x, object.pos.y, -10.0f));
+
+			glm::vec3 objpos = glm::vec3(object.pos.x, object.pos.y, -10.0f);
+            
+            model = glm::translate(model, objpos);
 			MeshPushConstants constants;
 			constants.render_matrix = projection * view * model;
 			constants.debugcollision = static_cast<int>(object.debugcollision);
@@ -77,17 +69,14 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 		else {
 			if (object.material != lastMaterial) {
 
-				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipeline);
+				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 				lastMaterial = object.material;
 				
 				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 			}
-			glm::mat4 model = object.transformmatrix;
 			MeshPushConstants constants;
-			constants.render_matrix = projection * view * glm::mat4{ 1.0f } ;
-			constants.debugcollision = static_cast<int>(object.debugcollision);
-
+			
 			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
 			if (object.mesh != lastMesh && !object.debug) {
@@ -105,9 +94,17 @@ void Engine::drawobjects(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 			}
 		}
 	}
+//  ----------------------------------------------------------------------------------------
+// 	SUBPASS 1: WRITE TO SHADER
+//  ----------------------------------------------------------------------------------------
+	vkCmdNextSubpass(cmd, VK_SUBPASS_CONTENTS_INLINE);
+	
+	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, Builder.getreadpipeline());
+	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, Builder.getreadpipelayout(), 1, 1, &Builder.getattachmentset(), 0, nullptr);
+	vkCmdDraw(cmd, 6, 1, 0, 0);
 }
 
-void Engine::draw() {
+void Engine::render() {
 
 	ImGui::Render();
 
@@ -117,18 +114,14 @@ void Engine::draw() {
 	}
 
 	VK_ASSERT(vkWaitForFences(Builder.getdevice(), 1, &Builder.getframes()[FrameIndex].RenderFence, true, 1000000000), "vkWaitForFences failed !");
-	
 	uint32_t swapchainimageindex;
-	VkResult e = vkAcquireNextImageKHR(Builder.getdevice(), Builder.getswapchain(), 1000000000, Builder.getframes()[FrameIndex].PresentSemaphore, nullptr, &swapchainimageindex);
+	VkResult e = vkAcquireNextImageKHR(Builder.getdevice(), Builder.getswapchain(), 1000000000, Builder.getframes()[FrameIndex].PresentSemaphore, VK_NULL_HANDLE, &swapchainimageindex);
 	if (e == VK_ERROR_OUT_OF_DATE_KHR) {
         winprepared = true;
 		return ;
 	}
-
 	VK_ASSERT(vkResetFences(Builder.getdevice(), 1, &Builder.getframes()[FrameIndex].RenderFence), "vkResetFences failed !");
-
 	VK_ASSERT(vkResetCommandBuffer(Builder.getframes()[FrameIndex].MainCommandBuffer, 0), "vkResetCommandBuffer failed!");
-
 
 	VkCommandBuffer cmd = Builder.getframes()[FrameIndex].MainCommandBuffer;
 
@@ -141,18 +134,21 @@ void Engine::draw() {
 
 	VK_ASSERT(vkBeginCommandBuffer(cmd, &cmdbegininfo), "failed to begin a command buffer!");
 
+//--------------------------------------------------------------
 	VkClearValue clearValue;
 	clearValue.color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 	VkClearValue depthClear;
 	depthClear.depthStencil = {1.0f, 0};
-	VkClearValue clearValues[] = { clearValue, depthClear };
+	VkClearValue clearValues[] = { clearValue, clearValue, depthClear };
+
 	VkRenderPassBeginInfo rpinfo = Builder.beginrenderpass(static_cast<ClearFlags>(CLEAR_COLOR | CLEAR_DEPTH), Builder.getrenderpass(), Builder.getswapchainextent(), Builder.getframebuffers()[swapchainimageindex]);
-	rpinfo.clearValueCount = 2;
+	rpinfo.clearValueCount = 3;
 	rpinfo.pClearValues = &clearValues[0];
+//--------------------------------------------------------------
 
 	vkCmdBeginRenderPass(cmd, &rpinfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	drawobjects(cmd, Builder.getrenderqueue().data(), Builder.getrenderqueue().size());
+	renderscene(cmd, Builder.getrenderqueue().data(), Builder.getrenderqueue().size());
 
  	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
@@ -190,14 +186,6 @@ void Engine::draw() {
 	}
 
 	FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-	
-	static int countt = 0;
-	if (Level.check2 && !Level.check) {
-		countt++;
-		if (countt > 5){
-			Builder.copycheck(swapchainimageindex);
-		}
-	}
 }
 
 void Engine::loadmylevel() {

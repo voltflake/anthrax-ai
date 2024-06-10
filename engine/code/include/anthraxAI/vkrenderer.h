@@ -3,6 +3,12 @@
 #include "anthraxAI/vkdefines.h"
 #include "anthraxAI/vkdevices.h"
 
+namespace QueueHelper {
+	VkSemaphoreSubmitInfo semaphoresubmitinfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+	VkCommandBufferSubmitInfo commandbuffersubmitinfo(VkCommandBuffer cmd);
+	VkSubmitInfo2 submitinfo(VkCommandBufferSubmitInfo* cmd, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo);
+}
+
 class RenderBuilder {
 public:
 	void 							init(DeviceBuilder* device, DeletionQueue* deletor) 
@@ -13,17 +19,14 @@ public:
 	VkCommandBuffer& 				getcommandbuffers() 	{ return commandbuffers;};
 	VkRenderPass& 					getrenderpass() 		{ return renderpass;};
 	std::vector<VkFramebuffer>& 	getframebuffers() 		{ return framebuffers;};
-	VkSemaphore& 					getrendersemaphore() 	{ return rendersemaphore; };
-	VkSemaphore& 					getpresentsemaphore() 	{ return presentsemaphore; };
-	VkFence& 						getrenderfence()		{ return renderfence; };
 
 	FrameArray& 					getframedata()			{ return frames; };
 	DeviceBuilder*					getdevice() 			{ return devicehandler ;};
 	
 	void 							buildrenderpass();
-	void 							builframebuffers();
+	void 							builframebuffers(DeviceBuilder& device);
 	void							clearframebuffers();
-	void 							recreateframebuffer();
+	void 							recreateframebuffer(DeviceBuilder& device);
 	void 							sync();
 
 	void 							submit(std::function<void(VkCommandBuffer cmd)>&& function);
@@ -36,8 +39,6 @@ private:
 	VkCommandBuffer					commandbuffers;
 	VkRenderPass 					renderpass;
 	std::vector<VkFramebuffer> 		framebuffers;
-	VkSemaphore 					presentsemaphore, rendersemaphore;
-	VkFence 						renderfence;
 	FrameArray  					frames;
 
 	UploadContext 					uploadcontext;

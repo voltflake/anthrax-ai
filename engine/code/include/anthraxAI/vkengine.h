@@ -56,12 +56,14 @@ public:
 	std::unordered_map<int, Data> resources;
 
 	CameraData 					camdata;
-	VkExtent2D 					WindowExtend = {800, 800};
+	VkExtent2D 					WindowExtend = {1200, 800};
 	bool 						winprepared = false;
 	bool						freemove = false;
+	bool						test = false;
 
 	Positions 					playerpos = {0, 0};
 	Positions 					mousepos = {0, 0};
+	Positions 					mousepostest = {0, 0};
 	Positions 					mousebegin = {0, 0};
 	MouseState					mousestate = MOUSE_IDLE;
 
@@ -69,9 +71,10 @@ public:
 	int 						checkimg = 0;
 	bool 						checkupdate = false;
 
-#if defined(AAI_WINDOWS)
+#if defined(AAI_WINDOWS)	
 	void 						wininitwindow();
 	void 						runwindows();
+	void 						eventhandler(float delta);
 #endif
 #ifdef AAI_LINUX
 	void 						linuxinitwindow();
@@ -118,8 +121,8 @@ private:
 
 	void 						move();
 	void 						update();
-	void 						draw();
-	void 						drawobjects(VkCommandBuffer cmd,RenderObject* first, int count);
+	void 						render();
+	void 						renderscene(VkCommandBuffer cmd,RenderObject* first, int count);
 	
 	void  						ui();
 	void 						debuglight();
@@ -135,3 +138,4 @@ private:
 
 	void 						loadmylevel();
 };
+

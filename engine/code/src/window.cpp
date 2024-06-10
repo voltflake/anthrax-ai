@@ -20,15 +20,13 @@ void Engine::wininitwindow() {
 	wcex.style =  CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = WndProc;
 	wcex.hInstance = hinstance;
-	// wcex.hIcon = LoadIcon(hinstance, MAKEINTRESOURCE(IDI_SLIDESHOW));
-	// wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SLIDESHOW_SM));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszClassName = TEXT("MyTestClass");
 
 	ASSERT(!RegisterClassEx(&wcex), "Can't register winClass!");
 	
-	hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"),WS_OVERLAPPEDWINDOW | WS_VISIBLE ,
+	hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"),WS_OVERLAPPEDWINDOW | WS_VISIBLE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED ,
             CW_USEDEFAULT, CW_USEDEFAULT,
             WindowExtend.width, WindowExtend.height,
             nullptr,
@@ -38,6 +36,42 @@ void Engine::wininitwindow() {
 	ASSERT(!hwnd, "Can't create window!");
 }
 
+void Engine::eventhandler(float delta)
+{
+	EditorCamera.checkmovement(delta);
+
+	if (GetKeyState(1) == 1) {
+		POINT p;
+		if (GetCursorPos(&p))
+		{
+			mousepos = {p.x, p.y};
+			EditorCamera.checkdirection(mousepos);
+		}
+	}
+
+	if (GetAsyncKeyState(ENTER_KEY) < 0) {
+		processtextind();
+	}
+	if (GetAsyncKeyState(ESC_KEY) < 0) {
+		state ^= PLAY_GAME;
+		state |= ENGINE_EDITOR;
+	}
+	if (GetAsyncKeyState(D_KEY) < 0) {
+		Level.getplayer()->state |= MOVE_RIGHT;
+	}
+	if (GetAsyncKeyState(W_KEY) < 0) {
+		Level.getplayer()->state |= MOVE_UP;
+	}
+	if (GetAsyncKeyState(A_KEY) < 0) {
+		Level.getplayer()->state |= MOVE_LEFT;
+	}
+	if (GetAsyncKeyState(S_KEY) < 0) {
+		Level.getplayer()->state |= MOVE_DOWN;
+	}
+
+}
+
+VkExtent2D winext;
 void Engine::runwindows() {
 	using delta_duration = std::chrono::duration<double, std::milli>;
 	using clock = std::chrono::system_clock;
@@ -45,7 +79,10 @@ void Engine::runwindows() {
 	ShowWindow(hwnd, SW_SHOWNORMAL);
 	MSG msg = {};
 
-	auto end{ std::chrono::system_clock::now() };
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	std::chrono::duration<double, std::milli> delta;
+
 	state |= ENGINE_EDITOR;
 
 	while (running) {
@@ -56,6 +93,13 @@ void Engine::runwindows() {
 			if (msg.message == WM_QUIT)
 				break ;
 		}
+		eventhandler(static_cast<float>(delta.count()));
+		
+		if (winext.width != WindowExtend.width || winext.height != WindowExtend.height ) {
+			WindowExtend = winext;
+			Builder.resizewindow(winprepared, WindowExtend, Level.check);
+			std::cout << "window w: " << WindowExtend.width << " && h: " << WindowExtend.height << '\n';
+		}
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -63,29 +107,40 @@ void Engine::runwindows() {
 
 		fpsoverlay();
 
-		auto delta{ std::chrono::duration_cast<delta_duration>(clock::now() - end) };
+		start = std::chrono::system_clock::now();
+		delta = start - end;
 		calculateFPS(delta);
 
-		game_loop();
+		loop();
 
-		end = std::chrono::system_clock::now();
+		end = std::chrono::system_clock::now();		
 	}
 }
-
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+        return true;
 	switch (message) {
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			break ;
 		case WM_SIZE: {
-			const auto width{ LOWORD(lParam) };
-			const auto height{ HIWORD(lParam) };
-			if (width == SIZE_MINIMIZED || height == SIZE_MINIMIZED) {
-				ShowWindow(hWnd, SW_HIDE);
+			HWND groupControl;
+			RECT rcClient;//screen size
+			GetClientRect(hWnd, &rcClient);
+			int width, height;
+			groupControl = GetDlgItem(hWnd,0);//get the id of control
+			SetWindowPos(groupControl, NULL, rcClient.right-50, 
+			rcClient.bottom-50, 20, 20,
+			SWP_NOZORDER);
+			RECT rect;
+			if(GetWindowRect(hWnd, &rect))
+			{
+				winext.width = rect.right - rect.left;
+				winext.height = rect.bottom - rect.top;
 			}
-			return EXIT_SUCCESS;
+			break;
 		}
-
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 			break;
@@ -96,7 +151,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 #endif
 
 #ifdef AAI_LINUX
-
 void Engine::linuxinitwindow() {
 	uint32_t value_mask, value_list[32];
 
@@ -195,12 +249,6 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 
 			EditorCamera.checkmovement(k, delta);
 
-			if (k == PLUS_KEY) {
-				zoomtest += 1;
-			}
-			if (k == MINUS_KEY) {
-				zoomtest -= 1;
-			}
 			if (k == ENTER_KEY) {
 				processtextind();
 			}
@@ -220,6 +268,9 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
         	if (k == S_KEY) {
 				Level.getplayer()->state |= MOVE_DOWN;
         	}
+			if (k == MINUS_KEY) {
+				test = true;
+        	}
 			return true;
 		}
 		case XCB_KEY_RELEASE: {
@@ -235,6 +286,8 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 			if (mousestate == MOUSE_PRESSED && mousestate != MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
+				mousepostest.x += (mousebegin.x - motion->event_x);
+            	mousepostest.y += (mousebegin.y - motion->event_y);
 				EditorCamera.checkdirection(mousepos);
 				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}

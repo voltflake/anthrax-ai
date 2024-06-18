@@ -5,13 +5,22 @@ layout (location = 3) in vec2 incoord;
 
 layout (location = 0) out vec4 outfragcolor;
 
+layout( push_constant ) uniform constants
+{
+    mat4 rendermatrix;
+
+    int objectID;
+    int debug;
+} pushconstants;
+
+
 layout(set = 0, binding = 0) uniform  CameraBuffer {
     mat4 model;
     mat4 view;
     mat4 proj;
     mat4 viewproj;
 	vec4 viewpos;
-    vec4 pos;
+    vec4 mousepos;
     vec4 viewport;
 
     vec4 lightcolor;

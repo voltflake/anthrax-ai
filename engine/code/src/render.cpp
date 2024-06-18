@@ -1,32 +1,7 @@
 #include "anthraxAI/vkengine.h"
 
 void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
-	glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
-	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
-	projection[1][1] *= -1;
-	glm::mat4 modell = glm::mat4(1.0f);
-	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
-	modell = glm::scale(modell, glm::vec3(0.2f));
-
-	camdata.model = modell;
-	camdata.proj = projection;
-	camdata.view = view;
-	camdata.viewproj = projection * view;
-	camdata.viewpos = glm::vec4(0, 0, 0, 1.0);
-	camdata.pos = {mousepos.x, mousepos.y, 0, 0};
-	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
-
-	char* datadst;
-   	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
-
-  	vkMapMemory(Builder.getdevice(), Builder.descriptors.getcamerabuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize, 0, (void**)&datadst);
-   	
-   	int frameIndex = FrameIndex % MAX_FRAMES_IN_FLIGHT;
-
-	datadst += Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * frameIndex;
-
-    memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
-  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getcamerabuffer()[FrameIndex].devicememory);
+	preparecamerabuffer();
 
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
@@ -37,25 +12,27 @@ void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	for (int i = 0; i < rqsize; i++)
 	{
 		RenderObject& object = first[i];
-
-		if (object.model) {
+		
+		if (object.type == TYPE_GIZMO || object.type == TYPE_MODEL) {
+			if (object.type == TYPE_GIZMO && !gizmomove.visible) continue;
 			if (object.material != lastMaterial) {
 				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 				lastMaterial = object.material;
-				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
+				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+			
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
 			}
 
-			glm::mat4 model = glm::mat4(1.0f);
-
-			glm::vec3 objpos = glm::vec3(object.pos.x, object.pos.y, -10.0f);
-            
-            model = glm::translate(model, objpos);
 			MeshPushConstants constants;
-			constants.render_matrix = projection * view * model;
-			constants.debugcollision = static_cast<int>(object.debugcollision);
+			constants.objectID = object.ID;
+			constants.debug = object.selected && gizmomove.visible ? 1 : 0;
 
-			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+			glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(object.pos.x, object.pos.y, object.pos.z));
+			constants.rendermatrix = camdata.proj * camdata.view * model;
+			
+			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
 			if (object.mesh != lastMesh) {
 				VkDeviceSize offset = {0};
@@ -72,12 +49,11 @@ void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 				lastMaterial = object.material;
 				
-				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData))  * frameIndex;
+				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 			}
 			MeshPushConstants constants;
-			
-			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants), &constants);
+			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
 			if (object.mesh != lastMesh && !object.debug) {
 				VkDeviceSize offset = {0};
@@ -102,6 +78,12 @@ void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, Builder.getreadpipeline());
 	vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, Builder.getreadpipelayout(), 1, 1, &Builder.getattachmentset(), 0, nullptr);
 	vkCmdDraw(cmd, 6, 1, 0, 0);
+
+//  ----------------------------------------------------------------------------------------
+//  OBJECT SELECTION
+//  ----------------------------------------------------------------------------------------
+	mousepicking();
+
 }
 
 void Engine::render() {
@@ -202,10 +184,10 @@ void Engine::loadmylevel() {
 
 	Builder.renderqueue.clear();
 
-	resources[TYPE_BACKGROUND] = {"check/back.jpg", {0,0}};
+	resources[TYPE_BACKGROUND] = {"check/back.jpg", {0,0,0}};
 	std::string checkstr = "check/" + checkimgs[checkimg];
 	std::cout << checkstr << '\n';
-	resources[TYPE_OBJECT] = {checkstr, {0,0}};
+	resources[TYPE_OBJECT] = {checkstr, {0,0,0}};
 
 	Builder.inittexture(resources);
 	Builder.loadimages();
@@ -236,5 +218,4 @@ void Engine::loadmylevel() {
 
 	Level.check = false;
 	Level.check2 = true;
-
 }

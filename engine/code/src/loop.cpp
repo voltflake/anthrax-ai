@@ -5,6 +5,7 @@ void Engine::loop() {
 		ui();
 		editor();
 		update();
+		update3d();
 		render();
 	}
 	if (state & PLAY_GAME) {

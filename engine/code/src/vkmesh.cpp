@@ -79,7 +79,7 @@ bool MeshBuilder::loadmeshfromobj(const char* filename, int id)
 	}
 	
 	updatemesh(model);
-	meshes[TYPE_MODEL + id] = model;
+	meshes[id] = model;
 	std::cout << "mesh name: monkey loaded succesfully" << "\n";
 
     return true;

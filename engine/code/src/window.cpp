@@ -268,9 +268,6 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
         	if (k == S_KEY) {
 				Level.getplayer()->state |= MOVE_DOWN;
         	}
-			if (k == MINUS_KEY) {
-				test = true;
-        	}
 			return true;
 		}
 		case XCB_KEY_RELEASE: {
@@ -278,17 +275,22 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 		}
 		case XCB_MOTION_NOTIFY: {
 			xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
+			mousepos.x = motion->event_x;
+            	mousepos.y = motion->event_y;
 			if (mousestate == MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
 				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
-			if (mousestate == MOUSE_PRESSED && mousestate != MOUSE_MOVE) {
+			if (mousestate == MOUSE_PRESSED || mousestate == MOUSE_SELECTED) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
-				mousepostest.x += (mousebegin.x - motion->event_x);
-            	mousepostest.y += (mousebegin.y - motion->event_y);
-				EditorCamera.checkdirection(mousepos);
+				mouseposdelta.x = (mousebegin.x - motion->event_x );
+            	mouseposdelta.y = (mousebegin.y - motion->event_y);
+				mousebegin = mousepos;
+				if (state & PLAY_GAME) {
+					EditorCamera.checkdirection(mousepos);
+				}
 				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
 			return true;
@@ -314,6 +316,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 				mousepos.x = e->event_x;
             	mousepos.y = e->event_y;
 				mousestate = MOUSE_RELEASED;
+				gizmomove.axis = AXIS_UNDEF; 
             	std::cout <<  mousepos.x << "|release|"<< mousepos.y << '\n';
 			}
            	return true;

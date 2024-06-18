@@ -11,17 +11,27 @@ enum Physics {
 };
 
 enum DataTypes {
+	TYPE_UNDEFINED = -1,
 	TYPE_PLAYER = 0,
 	TYPE_BACKGROUND,
 	TYPE_OBJECT,
 	TYPE_MODEL = 100,
+	TYPE_GIZMO = 200,
 };
 
 enum MouseState {
 	MOUSE_IDLE = 0,
 	MOUSE_PRESSED,
 	MOUSE_MOVE,
-	MOUSE_RELEASED
+	MOUSE_RELEASED,
+	MOUSE_SELECTED
+};
+
+enum GizmoAxis {
+	AXIS_UNDEF = -1,
+	AXIS_Z = TYPE_GIZMO + 0,
+	AXIS_Y = TYPE_GIZMO + 1,
+	AXIS_X = TYPE_GIZMO + 2,
 };
 
 #define ANIM_TYPE_LIST   \

@@ -108,13 +108,11 @@ void PipelineBuilder::buildpipeline(bool check) {
 // sprite pipeline
 
 	VkPipelineLayoutCreateInfo pipelinelayoutinfo = pipelinelayoutcreateinfo();
-	VkPushConstantRange push_constant;
-
-	push_constant.offset = 0;
 	
+	VkPushConstantRange push_constant;
+	push_constant.offset = 0;
 	push_constant.size = sizeof(MeshPushConstants);
-	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
+	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
 
@@ -155,6 +153,10 @@ void PipelineBuilder::buildpipeline(bool check) {
 	creatematerial(pipelineswrite[ind], pipelayouts[ind], "defaultmesh");
 	
 // model pipeline
+	VkDescriptorSetLayout setLayoutsmodel[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout(), descriptors->getstoragelayout() };
+	pipelinelayoutinfo.setLayoutCount = 3;
+	pipelinelayoutinfo.pSetLayouts = setLayoutsmodel;
+	
 	ind = 1;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadermodel));

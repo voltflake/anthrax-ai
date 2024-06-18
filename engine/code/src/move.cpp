@@ -1,5 +1,115 @@
 #include "anthraxAI/vkengine.h"
 
+void Engine::preparecamerabuffer() {
+    glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
+	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
+	projection[1][1] *= -1;
+	glm::mat4 modell = glm::mat4(1.0f);
+	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
+	modell = glm::scale(modell, glm::vec3(0.2f));
+
+	camdata.model = modell;
+	camdata.proj = projection;
+	camdata.view = view;
+	camdata.viewproj = projection * view;
+	camdata.viewpos = glm::vec4(0, 0, 0, 1.0);
+	camdata.mousepos = {mousepos.x, mousepos.y, 0, 0};
+	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
+
+	char* datadst;
+   	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
+  	vkMapMemory(Builder.getdevice(), Builder.descriptors.getcamerabuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize, 0, (void**)&datadst);
+   	int frameind = FrameIndex % MAX_FRAMES_IN_FLIGHT;
+	datadst += Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * frameind;
+    memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
+  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getcamerabuffer()[FrameIndex].devicememory);
+}
+
+
+void Engine::mousepicking() {
+    if (mousestate != MOUSE_PRESSED) {
+        return;
+    }
+    
+    void* storagetmp;
+    VkDeviceSize storagesize = sizeof(StorageData);
+    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, storagesize, 0, (void**)&storagetmp);
+    uint* u = static_cast<uint*>(storagetmp);
+
+    int selectedID = -1;
+    for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
+        if (u[i] != 0) {
+            selectedID = u[i];
+            mousestate = MOUSE_SELECTED;
+            break;
+        }
+    }
+    std::memset(storagetmp, 0, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
+    vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
+
+    bool selected = false;
+    RenderObject* rq = Builder.getrenderqueue().data();
+    for (int i = 0; i < Builder.getrenderqueue().size(); i++)
+    {
+        RenderObject& object = rq[i];
+
+        if (object.type == TYPE_MODEL || object.type == TYPE_GIZMO) {
+            if (object.ID == selectedID) {
+                object.selected = true;
+                selected = true;
+                if (object.type != TYPE_GIZMO) {
+                    gizmomove.objecthandler = selectedID;
+                    gizmomove.visible = true;
+                }
+                else {
+                    gizmomove.axis = static_cast<GizmoAxis>(object.ID);
+                }
+            }
+            else {
+                object.selected = false;
+            }
+        }
+    }
+    if (!selected) {
+        gizmomove.visible = false;
+    }
+}
+
+void Engine::update3d() {
+	   
+    std::vector<RenderObject>& rq = Builder.getrenderqueue();
+    
+    std::vector<RenderObject>::iterator gizmo_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.type == TYPE_GIZMO; } );
+    if (gizmo_it == rq.end()) {
+        return;
+    }
+    std::vector<RenderObject>::iterator model_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == gizmomove.objecthandler && val.type == TYPE_MODEL; } );;
+    if (model_it == rq.end()) {
+        return;
+    }
+
+    if (gizmomove.axis == AXIS_X) {
+        model_it->pos.x -= mouseposdelta.x * 0.2;	
+    }
+    if (gizmomove.axis == AXIS_Y) {
+        model_it->pos.y += mouseposdelta.y * 0.2;
+    }
+    if (gizmomove.axis == AXIS_Z) {
+        model_it->pos.z -= mouseposdelta.x * 0.2;
+    }
+    model_it->selected = true;
+    
+    gizmo_it->pos = model_it->pos;
+    gizmo_it->pos.y += GIZMO_HEIGHT;
+    ++gizmo_it;
+    gizmo_it->pos = model_it->pos;
+    gizmo_it->pos.y += GIZMO_HEIGHT;
+    ++gizmo_it;
+    gizmo_it->pos = model_it->pos;
+    gizmo_it->pos.y += GIZMO_HEIGHT;
+
+}
+
 void Engine::update() {
     for (int i = 0; i < Level.getobject().size(); i++) {
         if (!Level.getobject()[i]->update) {

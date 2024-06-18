@@ -63,9 +63,6 @@ void Engine::initvulkan() {
 
 	Builder.initmeshbuilder();
 	Builder.loadmeshes();
-	Builder.loadmeshfromobj("models/monkeytextured.obj", 0);
-	Builder.loadmeshfromobj("models/cube.obj", 1);
-	Builder.loadmeshfromobj("models/sphere.obj", 2);
 }
 
 void Engine::initengine(LevelManager &levels) {
@@ -77,12 +74,13 @@ void Engine::initengine(LevelManager &levels) {
 	Level.gettrigger().reserve(10);
 	Level.getobject().reserve(10);
 
-	resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), Level.getbackground().getposition(), false};
+	resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), { 0, 0, 0 }, false};
 }
 
 void Engine::initscene() {
 
 	int i = 0;
+	int objcounter = 1;
 	for (auto& list : resources) {
 		if (list.second.texturepath == "") {
             continue;
@@ -91,7 +89,13 @@ void Engine::initscene() {
 		RenderObject tri;
 
 		if (list.first >= TYPE_MODEL) {
-			tri.model = true;
+			tri.ID = objcounter;
+			tri.type = TYPE_MODEL;
+			objcounter++;
+			if (list.first >= TYPE_GIZMO) {
+				tri.type = TYPE_GIZMO;
+				tri.ID = list.first;
+			}
 			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
 			tri.material = Builder.getmaterial("monkey");
 		}
@@ -121,7 +125,9 @@ void Engine::initresources()
 	int k = 0;
 	for (int i = 0; i < objectsize; i++) {
 		if (Level.getobject()[i]->getpath() != "") {
-			resources[TYPE_OBJECT + k] = {Level.getobject()[i]->getpath(), Level.getobject()[i]->getposition(), Level.getobject()[i]->collision, Level.getobject()[i]->animation};
+			resources[TYPE_OBJECT + k] = 	{Level.getobject()[i]->getpath(), 
+											{Level.getobject()[i]->getposition().x, Level.getobject()[i]->getposition().y, 0}, 
+											 Level.getobject()[i]->collision, Level.getobject()[i]->animation};
 			Level.getobject()[i]->ID = k;
 			k++;
 		}
@@ -130,20 +136,29 @@ void Engine::initresources()
 	// should be here ause i don't handle move/catch code for triggers yet
 	for (int i = 0; i < triggersize; i++) {
 		if (Level.gettrigger()[i].getpath() != "") {
-			resources[TYPE_OBJECT + k] = { Level.gettrigger()[i].getpath(), Level.gettrigger()[i].getposition(), Level.gettrigger()[i].collision, Level.gettrigger()[i].animation};
+			resources[TYPE_OBJECT + k] = 	{Level.gettrigger()[i].getpath(), 
+											{Level.gettrigger()[i].getposition().x, Level.gettrigger()[i].getposition().y, 0},
+											 Level.gettrigger()[i].collision, Level.gettrigger()[i].animation};
 			k++;
 		}
 	}
 	if (Level.getplayer()->getpath() != "") {
-		resources[TYPE_PLAYER] = {Level.getplayer()->getpath(), Level.getplayer()->getposition(), Level.getplayer()->debugcollision, Level.getplayer()->animation}; // player has to be always second -- stupid
+		resources[TYPE_PLAYER] = 	{Level.getplayer()->getpath(), 
+									{Level.getplayer()->getposition().x, Level.getplayer()->getposition().y, 0},
+									 Level.getplayer()->debugcollision, Level.getplayer()->animation}; // player has to be always second -- stupid
 	}
 	if (Level.getbackground().getpath() != "") {
-		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), {0,0}, false, false}; // background for some reason should be always top, looks kinda broken
+		resources[TYPE_BACKGROUND] = {Level.getbackground().getpath(), {0, 0, 0}, false, false}; // background for some reason should be always top, looks kinda broken
 	}
 
-	resources[TYPE_MODEL] = {"zeroone.png", {0, 0}, false, false}; 
-	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 5}, false, false}; 
-	resources[TYPE_MODEL + 2] = {"floor.jpg", {2, 0}, false, false}; 
+	resources[TYPE_MODEL] = {"zeroone.png", {0, 0, -10}, false, false}; 
+	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 5, -10}, false, false}; 
+	resources[TYPE_MODEL + 2] = {"floor.jpg", {2, 0, -10}, false, false};
+	//gizmo
+	resources[TYPE_GIZMO + 0] = {"dummy.png", {0, 0, 0}, false, false};
+	resources[TYPE_GIZMO + 1] = {"dummy.png", {0, 0, 0}, false, false};
+	resources[TYPE_GIZMO + 2] = {"dummy.png", {0, 0, 0}, false, false};
+
 }
 
 void Engine::reloadresources() {
@@ -167,9 +182,13 @@ void Engine::reloadresources() {
 
 	Builder.initmeshbuilder();
 	Builder.loadmeshes(); // check why here are weird x,y pos for resource
-	Builder.loadmeshfromobj("models/monkeytextured.obj", 0);
-	Builder.loadmeshfromobj("models/cube.obj", 1);
-	Builder.loadmeshfromobj("models/sphere.obj", 2);
+	Builder.loadmeshfromobj("models/monkeytextured.obj", TYPE_MODEL + 0);
+	Builder.loadmeshfromobj("models/cube.obj", TYPE_MODEL + 1);
+	Builder.loadmeshfromobj("models/sphere.obj", TYPE_MODEL + 2);
+
+	Builder.loadmeshfromobj("models/gizmox.obj", TYPE_GIZMO + 0);
+	Builder.loadmeshfromobj("models/gizmoy.obj", TYPE_GIZMO + 1);
+	Builder.loadmeshfromobj("models/gizmoz.obj", TYPE_GIZMO + 2);
 
 	initscene();
 

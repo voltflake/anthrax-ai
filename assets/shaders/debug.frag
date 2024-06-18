@@ -13,7 +13,7 @@ layout(set = 0, binding = 0) uniform  CameraBuffer {
     mat4 proj;
     mat4 viewproj;
 	vec4 viewpos;
-    vec4 pos;
+    vec4 mousepos;
     vec4 viewport;
 
     vec4 lightcolor;
@@ -62,11 +62,5 @@ void main()
     outfragcolor.rgba = (grid(clippos, 1, 1, vec3(0.6, 0.6, 0.6))).rgba;
     outfragcolor.rgba += (grid(clippos, 10, 0.2, vec3(0.005, 0.005, 0.005))).rgba;
     outfragcolor.a *= fading;
-   
-    //2 lod
-   // if (lineardepth * 0.1 >= 0.04) {
-   // outfragcolor.rgba += (grid(clippos, 10, 1, vec3(0.005, 0.005, 0.005))).rgba;
-   // outfragcolor.a *= fading;
 
-  //  }
 }

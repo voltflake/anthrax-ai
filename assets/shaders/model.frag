@@ -2,6 +2,13 @@
 
 #include "fragdef.h"
 
+#define DEPTH_ARRAY_SCALE 64
+
+layout(set = 2, binding = 0) buffer writeonly StorageArray
+{
+    uint data[DEPTH_ARRAY_SCALE];
+} storagedata;
+
 void main()
 {
     vec3 norm = normalize(innormal.xyz);
@@ -23,5 +30,15 @@ void main()
 
     vec3 result = (ambient + diffuse + specular) * color;
 
+    uint zIndex = uint(gl_FragCoord.z * DEPTH_ARRAY_SCALE);
+
+    if( length( cameradata.mousepos.xy - gl_FragCoord.xy) < 1)
+    {
+        storagedata.data[zIndex] = pushconstants.objectID;
+    }
+    if (pushconstants.debug == 1) {
+        result += vec3(0.2,0,0);
+        clamp(result.r, 0, 1);
+    }
 	outfragcolor = vec4(result,1.0f);
 }

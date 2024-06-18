@@ -5,12 +5,12 @@
 bool LevelManager::newlevel() {
 	bool open = true;
 
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 390), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(500, 450), 0);
+	// const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    // const ImVec2 base_pos = viewport->Pos;
+    // ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 390), ImGuiCond_Once);
+	// ImGui::SetNextWindowSize(ImVec2(500, 450), 0);
 
-    ImGui::Begin("NewLevel", &open, ImGuiWindowFlags_NoResize);
+    // ImGui::Begin("NewLevel", &open, ImGuiWindowFlags_NoResize);
 
 	Player playertmp = *getplayer();
 	Resources bgtmp =  getbackground();
@@ -177,7 +177,7 @@ bool LevelManager::newlevel() {
     	savelevel();
     }
 
-	ImGui::End();
+//	ImGui::End();
 
 	if (!open) { return false; };
 
@@ -189,12 +189,12 @@ bool LevelManager::loadlevel() {
 	static char filename[64] = "";
 	bool open = true;
 
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-	ImGui::SetNextWindowSize(ImVec2(500, 80), 0);
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 300), ImGuiCond_Once);
+    // const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    // const ImVec2 base_pos = viewport->Pos;
+	// ImGui::SetNextWindowSize(ImVec2(500, 80), 0);
+    // ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 300), ImGuiCond_Once);
 
-    ImGui::Begin("LoadLevel", &open, ImGuiWindowFlags_NoResize);
+    // ImGui::Begin("LoadLevel", &open, ImGuiWindowFlags_NoResize);
 
 	ImGui::InputText("Level:", filename, 64);
 
@@ -202,7 +202,7 @@ bool LevelManager::loadlevel() {
     ff += std::string(filename);
 	std::string test = filename;
 	if (test.empty()) {
-    	ImGui::End();
+    	//ImGui::End();
 		return true;
 	}
     std::string modify;
@@ -345,7 +345,7 @@ bool LevelManager::loadlevel() {
 	    }
     }
 
-    ImGui::End();
+   // ImGui::End();
 
 	if (!open) { return false; };
 	return true;

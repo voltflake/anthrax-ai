@@ -76,7 +76,12 @@ void BufferBuilder::crearetexturebuffer(RenderBuilder& renderer, BufferHandler& 
     vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), bufferhandler.devicememory);
 }
 
-void BufferBuilder::createuniformbuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkDeviceSize buffersize) {
-
-   allocbuffer(renderer, bufferhandler, buffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+void BufferBuilder::createbuffer(RenderBuilder& renderer, BufferHandler& bufferhandler, VkDeviceSize buffersize, VkBufferUsageFlagBits usage) {
+    
+    if (usage == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
+        allocbuffer(renderer, bufferhandler, buffersize, usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    }
+    else {
+        allocbuffer(renderer, bufferhandler, buffersize, usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    }
 }

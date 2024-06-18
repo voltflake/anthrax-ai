@@ -13,8 +13,10 @@ struct Material {
 };
 
 struct MeshPushConstants {
-	glm::mat4 render_matrix;
-	int debugcollision;
+	glm::mat4 rendermatrix;
+
+	int objectID;
+	int debug = 0;
 };
 
 class PipelineBuilder {

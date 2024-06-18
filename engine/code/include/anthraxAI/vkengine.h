@@ -23,7 +23,9 @@ enum EngineState {
 	LOAD_LEVEL 		= 1 << 4,	/* 0001 0000 */
 	PLAY_GAME 		= 1 << 5,	/* 0010 0000 */
 	PAUSE_GAME  	= 1 << 6,	/* 0100 0000 */
-	EXIT  			= 1 << 7	/* 1000 0000 */
+	EXIT  			= 1 << 7,	/* 1000 0000 */
+	MODE_2D  		= 1 << 8,	/* 1000 0000 0 */
+	MODE_3D  		= 1 << 9,	/* 1000 0000 00*/
 };
 
 class Engine {
@@ -56,14 +58,17 @@ public:
 	std::unordered_map<int, Data> resources;
 
 	CameraData 					camdata;
+	StorageData 				storagedata;
+
 	VkExtent2D 					WindowExtend = {1200, 800};
 	bool 						winprepared = false;
 	bool						freemove = false;
-	bool						test = false;
+
+	Gizmo						gizmomove;
 
 	Positions 					playerpos = {0, 0};
 	Positions 					mousepos = {0, 0};
-	Positions 					mousepostest = {0, 0};
+	Positions 					mouseposdelta = {0, 0};
 	Positions 					mousebegin = {0, 0};
 	MouseState					mousestate = MOUSE_IDLE;
 
@@ -121,12 +126,17 @@ private:
 
 	void 						move();
 	void 						update();
+	void 						update3d();
+	void 						preparecamerabuffer();
+	void 						mousepicking();
 	void 						render();
 	void 						renderscene(VkCommandBuffer cmd,RenderObject* first, int count);
 	
 	void  						ui();
 	void 						debuglight();
-	void 						debugdraw();
+	void 						debug2d(bool* active);
+	void 						debug3d(bool* active);
+	void 						debugmouse();
 	void  						fpsoverlay();
 
 	void 						initscene();

@@ -62,6 +62,13 @@ void TextureBuilder::loadimages() {
 
 		loadedtextures[list.second.texturepath] = texture;
 	}
+
+	std::string path = "./textures/";
+	path += "dummy.png";
+	createtexture(path);
+	createsampler();
+
+	loadedtextures["dummy.png"] = texture;
 }
 
 void TextureBuilder::cleartextures() {

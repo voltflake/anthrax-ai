@@ -21,10 +21,12 @@ struct RenderObject {
 	VkDescriptorSet* textureset;
 	VkDescriptorSet* texturesetread;
 	
-	Positions pos;
+	Positions3 pos;
 	glm::mat4 transformmatrix;
+
+	int ID = -1;
+	DataTypes type = TYPE_UNDEFINED;
 	bool debugcollision;
-	bool model = false;
 	bool selected = false;
 	bool debug = false;
 };
@@ -54,6 +56,7 @@ public:
 	std::vector<VkDescriptorSet>& getsamplerset() { return descriptors.getmainsamplerdescriptor(); };
 	VkDescriptorSet&			getattachmentset() { return descriptors.getattachmentdescriptor(); };
 
+	std::vector<VkDescriptorSet>& 			getstorageset() { return descriptors.getstorageset();};
 	std::vector<VkDescriptorSet>& 			getdescriptorset() { return descriptors.getdescriptorset();};
 	UboArray& 								getcamerabuffer() { return descriptors.getcamerabuffer();};			
 

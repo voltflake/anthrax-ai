@@ -48,7 +48,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 
 #include "anthraxAI/lookup.h"
 
-#define MAX_FPS 60
+#define MAX_FPS 120
 #define FPS_SAMPLER 100
 
 #define VK_ASSERT(x, s)                                         \
@@ -151,7 +151,6 @@ struct Vertex {
     glm::vec3 normal;
     glm::vec3 color;
 	glm::vec2 uv;
-    //static VertexInputDescription getvertexdescription();
 };
 
 struct CameraData {
@@ -160,7 +159,7 @@ struct CameraData {
 	glm::mat4 proj;
 	glm::mat4 viewproj;
 	glm::vec4 viewpos;
-	glm::vec4 pos;
+	glm::vec4 mousepos;
 	glm::vec4 viewport;
 
 	glm::vec4 lightcolor = glm::vec4(0.63f, 0.82f, 0.48f, 1);
@@ -168,6 +167,11 @@ struct CameraData {
 	float ambient = 0.1;
 	float diffuse = 0.5;
 	float specular = 0.5;
+};
+
+#define DEPTH_ARRAY_SCALE 64
+struct StorageData {
+	uint data[DEPTH_ARRAY_SCALE] = {0};
 };
 
 struct FrameData {
@@ -198,9 +202,27 @@ struct Positions {
 	Positions(int tmpx, int tmpy) { x = tmpx; y = tmpy; };
 };
 
+struct Positions3 {
+	int x;
+	int y;
+	int z;
+
+	Positions3() {};
+	Positions3(const Positions3& tmp) { x = tmp.x; y = tmp.y; z = tmp.z; };
+	Positions3(int tmpx, int tmpy, int tmpz) { x = tmpx; y = tmpy; z = tmpz; };
+};
+
+#define GIZMO_HEIGHT 3
+struct Gizmo {
+	Positions3 		pos = {0, 0, 0};
+	bool 			visible = false;
+	int 			objecthandler = 0;
+	GizmoAxis 		axis = AXIS_UNDEF;
+};
+
 struct Data {
 	std::string texturepath;
-	Positions pos;
+	Positions3 pos;
 	bool debugcollision;
 	bool animation;
 };
@@ -208,6 +230,7 @@ struct Data {
 const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
+typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> StorageArray;
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

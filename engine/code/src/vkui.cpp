@@ -148,7 +148,7 @@ void Engine::initimgui() {
 void Engine::animator() {
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 2, base_pos.y + 40), 0);
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
 	ImGui::SetNextWindowSize(ImVec2(500, 800), ImGuiCond_FirstUseEver);
 	
 	ImGui::Begin("Vulkan Texture Test");
@@ -162,7 +162,13 @@ void Engine::animator() {
 }
 
 void Engine::checkuistate() {
-
+	bool active = true;
+	if (state & MODE_2D) {
+		debug2d(&active);
+	}
+	if (state & MODE_3D) {
+		debug3d(&active);
+	}
 	if (state & NEW_LEVEL) {
 		Level.newlevel();
 	}
@@ -174,23 +180,66 @@ void Engine::checkuistate() {
 	}
 }
 
-void Engine::debugdraw() {
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 170), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 120), ImGuiCond_FirstUseEver);
-    bool active = true;
-
-	ImGui::Begin("Debug", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-      ImGui::Checkbox("Free Move", &freemove);
+void Engine::debug2d(bool* active) {
+	ImGui::Columns(4, "enginebuttons", false);
+	if (ImGui::Button("New Level")) {
+        state |= NEW_LEVEL;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Load Level")) {
+        state |= LOAD_LEVEL;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Play")) {
+		*active = false;
+		state |= PLAY_GAME;
+		state ^= ENGINE_EDITOR;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Close")) {
+       	state |= EXIT;
+	}
+	ImGui::NextColumn();
+	ImGui::Columns(1);
+	ImGui::Separator();
+	
+    ImGui::Checkbox("Free Move", &freemove);
 
 	static bool anim = false;
 	ImGui::Checkbox("Animator", &anim);
 	if (anim) {
 		animator();
 	}
-    ImGui::End();
+}
 
+void Engine::debug3d(bool* active) {
+	ImGui::Columns(4, "engine3dbuttons", false);
+	if (ImGui::Button("New Level")) {
+        state |= NEW_LEVEL;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Load Level")) {
+        state |= LOAD_LEVEL;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Play")) {
+		*active = false;
+		state |= PLAY_GAME;
+		state ^= ENGINE_EDITOR;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("Close")) {
+       	state |= EXIT;
+	}
+	ImGui::NextColumn();
+	ImGui::Columns(1);
+	ImGui::Separator();
+	static bool light = false;
+
+	ImGui::Checkbox("Lighting", &light);
+	if (light) {
+		debuglight();
+	}
 }
 
 void Engine::debuglight()
@@ -199,7 +248,7 @@ void Engine::debuglight()
 	stylem = EditorStyle;
    	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x / 2, base_pos.y + 40), 0);
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
 	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
 	static bool active = true;
 	ImGui::Begin("Lighting", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings );
@@ -221,6 +270,37 @@ void Engine::debuglight()
 
 }
 
+void Engine::debugmouse()
+{
+	static bool active = true;
+
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, 0), 0);
+    flags |= ImGuiWindowFlags_NoMove;
+  	ImGui::Begin("Mouse state", &active, flags);
+	std::string state = "IDLE";
+	if (mousestate == MOUSE_IDLE) {
+		state = "MOUSE_IDLE";
+	}
+	if (mousestate == MOUSE_MOVE) {
+		state = "MOUSE_MOVE";		
+	}
+	if (mousestate == MOUSE_PRESSED) {
+		state = "MOUSE_PRESSED";
+	}
+	if (mousestate == MOUSE_RELEASED) {
+		state = "MOUSE_RELEASED";	
+	}
+	if (mousestate == MOUSE_SELECTED) {
+		state = "MOUSE_SELECTED";		
+	}
+	ImGui::Text("mouse state: %s", state.c_str());
+	ImGui::Separator();
+    ImGui::End();
+}
 
 void Engine::ui() {
         
@@ -237,7 +317,6 @@ void Engine::ui() {
 
     // ImGui::ShowDemoWindow();
 
-	active = true;
 	if (state & PLAY_GAME) {
 		active = false ;
 	}
@@ -249,45 +328,36 @@ void Engine::ui() {
    	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 40), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 120), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(400, viewport->Size.y - 40), ImGuiCond_FirstUseEver);
 
 	ImGui::Begin("Engine ;p", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     
-	ImGui::Columns(4, "enginebuttons", false);
-	if (ImGui::Button("New Level")) {
-        state |= NEW_LEVEL;
-	}
-	ImGui::NextColumn();
-	if (ImGui::Button("Load Level")) {
-        state |= LOAD_LEVEL;
-	}
-	ImGui::NextColumn();
-	if (ImGui::Button("Play")) {
-		active = false;
-		state |= PLAY_GAME;
-		state ^= ENGINE_EDITOR;
-	}
-	ImGui::NextColumn();
-	if (ImGui::Button("Close")) {
-       	active = false;
-	}
-	ImGui::NextColumn();
-
-	ImGui::Columns(1);
 	ImGuiStyle& style = EditorStyle;
 	float alpha = style.Colors[ImGuiCol_WindowBg].w;
     ImGui::SliderFloat("Editor Alpha", &alpha, 0.0, 1.0, "%.1f");
 	if (style.Colors[ImGuiCol_WindowBg].w != alpha) {
 		style.Colors[ImGuiCol_WindowBg].w = alpha;
 	}
-	// ImGui::Separator();
-    ImGui::End();
-
+	ImGui::Separator();
+	ImGui::Columns(2, "modes");
+	if (ImGui::Button("2d")) {
+		state &= ~MODE_3D;
+		state |= MODE_2D;
+	}
+	ImGui::NextColumn();
+	if (ImGui::Button("3d")) {
+		state &= ~MODE_2D;
+		state |= MODE_3D;
+	}
+	ImGui::Separator();
+	ImGui::NextColumn();
+	ImGui::Columns(1);
 	checkuistate();
 
-	debugdraw();
+    ImGui::End();
 
-	debuglight();
+
+	debugmouse();
 }
 
 void Engine::fpsoverlay() {

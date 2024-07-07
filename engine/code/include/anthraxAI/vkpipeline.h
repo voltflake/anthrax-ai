@@ -16,7 +16,9 @@ struct MeshPushConstants {
 	glm::mat4 rendermatrix;
 
 	int objectID;
+    int boneind = -1;
 	int debug = 0;
+	int debugbones = 0;
 };
 
 class PipelineBuilder {

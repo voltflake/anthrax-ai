@@ -9,6 +9,8 @@ void Engine::loop() {
 		render();
 	}
 	if (state & PLAY_GAME) {
+			// animator.Update(deltatime.count());
+
 		move();
 		update();
 		render();

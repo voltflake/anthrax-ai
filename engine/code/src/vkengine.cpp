@@ -97,15 +97,25 @@ void Engine::initscene() {
 				tri.ID = list.first;
 			}
 			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
+			if (animator.hasanimation(list.first)) {
+				tri.material = Builder.getmaterial("animated");
+				tri.animated = true;
+				tri.ID = list.first;
+			}
+			else {
 			tri.material = Builder.getmaterial("monkey");
+
+			}
+			tri.model = Builder.getmodel(list.first);
 		}
 		else {
 			Builder.descriptors.updatesamplerdescriptors(list.second.texturepath);
 			tri.material = Builder.getmaterial("defaultmesh");
+			tri.mesh = Builder.getmesh(list.first);
+
 		}
 
 		tri.pos = list.second.pos;
-		tri.mesh = Builder.getmesh(list.first);
 		tri.textureset = &Builder.getsamplerset()[i];
 		tri.debugcollision = list.second.debugcollision;
 		Builder.pushrenderobject(tri);
@@ -152,8 +162,10 @@ void Engine::initresources()
 	}
 
 	resources[TYPE_MODEL] = {"zeroone.png", {0, 0, -10}, false, false}; 
-	resources[TYPE_MODEL + 1] = {"bg2.png", {5, 5, -10}, false, false}; 
+	resources[TYPE_MODEL + 1] = {"bg2.png", {-2, 5, -10}, false, false}; 
 	resources[TYPE_MODEL + 2] = {"floor.jpg", {2, 0, -10}, false, false};
+	resources[TYPE_MODEL + 3] = {"human.png", {5, 0, -10}, false, false};
+	// resources[TYPE_MODEL + 4] = {"human.png", {2, 0, -10}, false, false};
 	//gizmo
 	resources[TYPE_GIZMO + 0] = {"dummy.png", {0, 0, 0}, false, false};
 	resources[TYPE_GIZMO + 1] = {"dummy.png", {0, 0, 0}, false, false};
@@ -181,14 +193,31 @@ void Engine::reloadresources() {
 	Builder.builddescriptors();
 
 	Builder.initmeshbuilder();
-	Builder.loadmeshes(); // check why here are weird x,y pos for resource
-	Builder.loadmeshfromobj("models/monkeytextured.obj", TYPE_MODEL + 0);
-	Builder.loadmeshfromobj("models/cube.obj", TYPE_MODEL + 1);
-	Builder.loadmeshfromobj("models/sphere.obj", TYPE_MODEL + 2);
+	Builder.loadmeshes();
 
-	Builder.loadmeshfromobj("models/gizmox.obj", TYPE_GIZMO + 0);
-	Builder.loadmeshfromobj("models/gizmoy.obj", TYPE_GIZMO + 1);
-	Builder.loadmeshfromobj("models/gizmoz.obj", TYPE_GIZMO + 2);
+	Builder.loadmodel("models/monkeytextured.obj", deltatime.count(), TYPE_MODEL + 0);
+	Builder.loadmodel("models/cube.obj",deltatime.count(),  TYPE_MODEL + 1);
+	Builder.loadmodel("models/sphere.obj",deltatime.count(),  TYPE_MODEL + 2);
+
+	Builder.loadmodel("models/gizmox.obj",deltatime.count(),  TYPE_GIZMO + 0);
+	Builder.loadmodel("models/gizmoy.obj",deltatime.count(),  TYPE_GIZMO + 1);
+	Builder.loadmodel("models/gizmoz.obj",deltatime.count(),  TYPE_GIZMO + 2);
+	
+	startms = getcurtime();
+	// Builder.loadmodel("models/forgiving-mesh-anim.dae", deltatime.count(), TYPE_MODEL + 3);
+	// animator.init({"models/forgiving-mesh-anim.dae", "models/body-jab-cross.dae", "models/double-kick-anim.dae"} , TYPE_MODEL + 3);
+	
+	Builder.loadmodel("models/Walking-mesh-anim.dae", deltatime.count(), TYPE_MODEL + 3);
+	animator.init({"models/Walking-mesh-anim.dae", "models/Dying-anim.dae"} , TYPE_MODEL + 3);
+
+	animprepared = true;
+	
+	for (int i = TYPE_MODEL; i < TYPE_MODEL + 4; i++) {
+		Builder.updatemodel(Builder.getmodel(i));
+	}
+	for (int i = TYPE_GIZMO; i < TYPE_GIZMO + 3; i++) {
+		Builder.updatemodel(Builder.getmodel(i));
+	}
 
 	initscene();
 
@@ -207,6 +236,7 @@ void Engine::cleanup() {
 
 	Builder.cleartextureset();
 	Builder.clearimages();
+	Builder.clearattachments();
 	Builder.clearmeshes();
 	resources.clear();
 	Builder.renderqueue.clear();

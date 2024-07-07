@@ -1,5 +1,21 @@
 #include "anthraxAI/vkengine.h"
 
+void Engine::updatebones(int id) {
+    if (animprepared) {
+        float timesec = (float)((double)getcurtime() - (double)startms) / 1000.0f;
+		std::vector<glm::mat4> vec = animator.getbonestransform(Builder.getmodel(id), id, timesec * animspeed);
+
+        for(int i = 0; (i < vec.size() ); i++) {
+            storagedata.bonesmatrices[i] = vec[i];
+        }
+
+        char* storagetmp;
+        vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, sizeof(glm::mat4 )* MAX_BONES, 0, (void**)&storagetmp);
+        memcpy( storagetmp, &storagedata, (size_t)sizeof(glm::mat4)  * MAX_BONES);
+        vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
+    }
+}
+
 void Engine::preparecamerabuffer() {
     glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
 	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
@@ -23,17 +39,29 @@ void Engine::preparecamerabuffer() {
 	datadst += Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * frameind;
     memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
   	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getcamerabuffer()[FrameIndex].devicememory);
+
 }
 
 
 void Engine::mousepicking() {
+
     if (mousestate != MOUSE_PRESSED) {
         return;
     }
     
+    if ( state & PLAY_GAME) {
+        std::vector<RenderObject>& rq = Builder.getrenderqueue();
+        std::vector<RenderObject>::iterator model_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.selected == true && val.type == TYPE_MODEL; } );;
+        if (model_it != rq.end()) {
+            model_it->selected = false;;
+            gizmomove.visible = false;
+        }
+        return;
+    }
+
     void* storagetmp;
-    VkDeviceSize storagesize = sizeof(StorageData);
-    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, storagesize, 0, (void**)&storagetmp);
+    VkDeviceSize storagesize = sizeof(uint )* DEPTH_ARRAY_SCALE;
+    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, sizeof(glm::mat4)* MAX_BONES, storagesize, 0, (void**)&storagetmp);
     uint* u = static_cast<uint*>(storagetmp);
 
     int selectedID = -1;
@@ -43,6 +71,7 @@ void Engine::mousepicking() {
             mousestate = MOUSE_SELECTED;
             break;
         }
+
     }
     std::memset(storagetmp, 0, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
     vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
@@ -88,14 +117,14 @@ void Engine::update3d() {
         return;
     }
 
-    if (gizmomove.axis == AXIS_X) {
-        model_it->pos.x -= mouseposdelta.x * 0.2;	
+    if ((mouseposdelta.x < -1 || mouseposdelta.x > 1) && gizmomove.axis == AXIS_X) {
+        model_it->pos.x -= 0.06 *  mouseposdelta.x ;
     }
-    if (gizmomove.axis == AXIS_Y) {
-        model_it->pos.y += mouseposdelta.y * 0.2;
+    if ((mouseposdelta.y < -1 || mouseposdelta.y > 1) && gizmomove.axis == AXIS_Y) {
+        model_it->pos.y += 0.06 *  mouseposdelta.y ;
     }
-    if (gizmomove.axis == AXIS_Z) {
-        model_it->pos.z -= mouseposdelta.x * 0.2;
+    if ((mouseposdelta.y < -1 || mouseposdelta.y > 1) && gizmomove.axis == AXIS_Z) {
+        model_it->pos.z += 0.06 *  mouseposdelta.y;
     }
     model_it->selected = true;
     

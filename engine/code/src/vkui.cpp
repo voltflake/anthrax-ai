@@ -107,45 +107,45 @@ void Engine::initimgui() {
 
 	TextDisplayStyle = EditorStyle;
 
-	    TextDisplayStyle.Alpha = 1.0f;
-        TextDisplayStyle.FrameRounding = 3.0f;
-        TextDisplayStyle.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_WindowBg]              = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
-        TextDisplayStyle.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-        TextDisplayStyle.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
-        TextDisplayStyle.Colors[ImGuiCol_BorderShadow]          = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
-        TextDisplayStyle.Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-        TextDisplayStyle.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-        TextDisplayStyle.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-        TextDisplayStyle.Colors[ImGuiCol_TitleBg]               = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
-        TextDisplayStyle.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
-        TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_CheckMark]             = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_Button]                = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-        TextDisplayStyle.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_Header]                = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-        TextDisplayStyle.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-        TextDisplayStyle.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_ResizeGrip]            = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
-        TextDisplayStyle.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-        TextDisplayStyle.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-        TextDisplayStyle.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-        TextDisplayStyle.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	TextDisplayStyle.Alpha = 1.0f;
+	TextDisplayStyle.FrameRounding = 3.0f;
+	TextDisplayStyle.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_WindowBg]              = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
+	TextDisplayStyle.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+	TextDisplayStyle.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
+	TextDisplayStyle.Colors[ImGuiCol_BorderShadow]          = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
+	TextDisplayStyle.Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+	TextDisplayStyle.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	TextDisplayStyle.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	TextDisplayStyle.Colors[ImGuiCol_TitleBg]               = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
+	TextDisplayStyle.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
+	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_CheckMark]             = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_Button]                = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	TextDisplayStyle.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_Header]                = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	TextDisplayStyle.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	TextDisplayStyle.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_ResizeGrip]            = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
+	TextDisplayStyle.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	TextDisplayStyle.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	TextDisplayStyle.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	TextDisplayStyle.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 }
 
-void Engine::animator() {
+void Engine::animator2d() {
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
     ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
@@ -172,12 +172,7 @@ void Engine::checkuistate() {
 	if (state & NEW_LEVEL) {
 		Level.newlevel();
 	}
-	if (state & LOAD_LEVEL && Level.loaded  == false) {
-		Level.loadlevel();
-		if (Level.initres && !Level.check) {
-        	state |= NEW_LEVEL;
-		}
-	}
+
 }
 
 void Engine::debug2d(bool* active) {
@@ -202,13 +197,19 @@ void Engine::debug2d(bool* active) {
 	ImGui::NextColumn();
 	ImGui::Columns(1);
 	ImGui::Separator();
-	
+	if (state & LOAD_LEVEL && Level.loaded  == false) {
+		Level.loadlevel();
+		if (Level.initres && !Level.check) {
+        	state |= NEW_LEVEL;
+		}
+	}
+	ImGui::Separator();
     ImGui::Checkbox("Free Move", &freemove);
 
 	static bool anim = false;
-	ImGui::Checkbox("Animator", &anim);
+	ImGui::Checkbox("Animator 2d", &anim);
 	if (anim) {
-		animator();
+		animator2d();
 	}
 }
 
@@ -234,12 +235,26 @@ void Engine::debug3d(bool* active) {
 	ImGui::NextColumn();
 	ImGui::Columns(1);
 	ImGui::Separator();
+	if (state & LOAD_LEVEL && Level.loaded  == false) {
+		Level.loadlevel();
+		if (Level.initres && !Level.check) {
+        	state |= NEW_LEVEL;
+		}
+	}
+	ImGui::Separator();
 	static bool light = false;
-
 	ImGui::Checkbox("Lighting", &light);
 	if (light) {
 		debuglight();
 	}
+
+	ImGui::Separator();
+	static bool anim = false;
+	ImGui::Checkbox("Animation", &anim);
+	if (anim) {
+		debuganim();
+	}
+	ImGui::Separator();
 }
 
 void Engine::debuglight()
@@ -267,7 +282,41 @@ void Engine::debuglight()
 	ImGui::SliderFloat("ambient", &camdata.ambient, -5.0f, 5.0f, "%.2f");
 	ImGui::SliderFloat("specular", &camdata.specular, -5.0f, 5.0f, "%.2f");
 	ImGui::End();
+}
 
+void Engine::debuganim()
+{
+	ImGuiStyle& stylem = ImGui::GetStyle();
+	stylem = EditorStyle;
+   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 base_pos = viewport->Pos;
+    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
+	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
+	static bool active = true;
+	ImGui::Begin("Animation", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings );
+    
+	ImGui::SliderFloat("anim speed", &animspeed, 0.0f, 2.0f, "%.2f");
+	ImGui::Checkbox("debug bones", &debugbones);
+	ImGui::TextUnformatted(std::string("Bone id: " + std::to_string(debugboneID)).c_str());
+
+	for (auto& animation : animator.animations) {
+		ImGui::TextUnformatted(std::string("Object id: " + std::to_string(animation.first)).c_str());
+		const char* preview = animation.second.selectedpath.c_str();
+		if (ImGui::BeginCombo(std::string("##c" +  std::to_string(animation.first) + "animation").c_str(), preview)) {
+			for (int i = 0; i < animation.second.animpaths.size(); ++i) {
+				const bool isSelected = (animation.second.pathindex == i);
+				if (ImGui::Selectable(animation.second.animpaths[i].c_str(), isSelected)) {
+					animation.second.pathindex = i;
+					animator.reload(animation.first);
+				}
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+    		ImGui::EndCombo();
+		}
+	}
+	ImGui::End();
 }
 
 void Engine::debugmouse()

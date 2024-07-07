@@ -94,7 +94,7 @@ void DescriptorBuilder::builddescriptors() {
 	setinfo.pBindings = &bindings;
 	vkCreateDescriptorSetLayout(device.getlogicaldevice(), &setinfo, nullptr, &globalsetlayout);
 
-	VkDescriptorSetLayoutBinding storagebinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	VkDescriptorSetLayoutBinding storagebinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
 	VkDescriptorSetLayoutBinding storagebindings = { storagebinding };
 	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	setinfo.pNext = nullptr;

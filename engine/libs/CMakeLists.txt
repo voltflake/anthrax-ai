@@ -81,6 +81,13 @@ list(APPEND _includes ${_path}/tinyobjloader)
 
 #=====================================================================================#
 
+#=================================== assimp ===================================#
+
+add_subdirectory(${_path}/assimp)
+list(APPEND _libraries assimp::assimp)
+
+#=====================================================================================#
+
 list(REMOVE_DUPLICATES _libraries)
 list(REMOVE_DUPLICATES _includes)
 

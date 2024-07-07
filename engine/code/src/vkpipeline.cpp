@@ -94,11 +94,12 @@ void PipelineBuilder::buildpipeline(bool check) {
 	}
 
 	VkShaderModule vertexshader;
+	VkShaderModule vertexshaderanimated;
 	VkShaderModule vertexshadercopy;
 	VkShaderModule vertexshadermodel;
 	VkShaderModule vertexshaderdebug;
 
-	if (!loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel)|| !loadshader("./shaders/copy.vert.spv", &vertexshadercopy) || !loadshader("./shaders/debug.vert.spv", &vertexshaderdebug)) {
+	if (!loadshader("./shaders/animmodel.vert.spv", &vertexshaderanimated) || !loadshader("./shaders/sprite.vert.spv", &vertexshader)|| !loadshader("./shaders/model.vert.spv", &vertexshadermodel)|| !loadshader("./shaders/copy.vert.spv", &vertexshadercopy) || !loadshader("./shaders/debug.vert.spv", &vertexshaderdebug)) {
 		std::cout << "Error: vertex shader module" << std::endl;
 	}
 	else {
@@ -167,8 +168,19 @@ void PipelineBuilder::buildpipeline(bool check) {
 	setuppipeline(ind);
 	creatematerial(pipelineswrite[ind], pipelayouts[ind], "monkey");
 
-// debug pipeline
+// animated model pipeline
 	ind = 2;
+	shaderstages.clear();
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderanimated));
+	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadermodel));
+
+	VK_ASSERT(vkCreatePipelineLayout(devicehandler->getlogicaldevice(), &pipelinelayoutinfo, nullptr, &pipelayouts[ind]), "failed to create pipeline layput!");
+
+	setuppipeline(ind);
+	creatematerial(pipelineswrite[ind], pipelayouts[ind], "animated");
+
+// debug pipeline
+	ind = 3;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderdebug));
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshaderdebug));
@@ -196,6 +208,7 @@ void PipelineBuilder::buildpipeline(bool check) {
 //---------------------
 
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshader, nullptr);
+	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshaderanimated, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), fragshader, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadermodel, nullptr);
 	vkDestroyShaderModule(devicehandler->getlogicaldevice(), vertexshadercopy, nullptr);
@@ -339,11 +352,24 @@ void PipelineBuilder::getvertexdescription()
     uvattr.format = VK_FORMAT_R32G32_SFLOAT;
     uvattr.offset = offsetof(Vertex, uv);
 
+	VkVertexInputAttributeDescription weightattr = {};
+	weightattr.binding = 0;
+	weightattr.location = 4;
+	weightattr.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+	weightattr.offset = offsetof(Vertex, weights);
+
+	VkVertexInputAttributeDescription boneattr = {};
+	boneattr.binding = 0;
+	boneattr.location = 5;
+	boneattr.format =  VK_FORMAT_R32G32B32A32_SINT;
+	boneattr.offset = offsetof(Vertex, boneID);
+
 	vertexdescription.attributes.push_back(positionAttribute);
 	vertexdescription.attributes.push_back(normalAttribute);
 	vertexdescription.attributes.push_back(colorAttribute);
 	vertexdescription.attributes.push_back(uvattr);
-	
+	vertexdescription.attributes.push_back(weightattr);
+	vertexdescription.attributes.push_back(boneattr);
 
 }
 

@@ -25,6 +25,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <assimp/Importer.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 #if defined(AAI_LINUX)
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
@@ -116,6 +119,41 @@ struct DeletionQueue {
 	}
 };
 
+static inline glm::mat4 mat2glm(aiMatrix4x4 from)
+{
+	glm::mat4 to;
+	//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+	to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+	to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+	to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+	to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+	return to;
+}
+
+static inline glm::mat3 mat2glm(aiMatrix3x3 from)
+{
+	glm::mat3 to;
+	//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+	to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3;
+	to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3;
+	to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3;
+	return to;
+}
+
+static inline glm::quat quat2glm(const aiQuaternion& pOrientation)
+	{
+		return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+	}
+
+static inline glm::vec3 vec2glm(aiVector3D vec) 
+{
+	glm::vec3 v;
+	v.x = vec.x; 
+	v.y = vec.y;
+	v.z = vec.z;
+	return v;
+}
+
 struct BufferHandler {
 	VkBuffer buffer;
 	VkDeviceMemory devicememory;
@@ -146,14 +184,19 @@ struct VertexInputDescription {
 	VkPipelineVertexInputStateCreateFlags flags = 0;
 };
 
+#define BONE_INFLUENCE 4
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec3 color;
 	glm::vec2 uv;
+
+	int boneID[4];
+	float weights[4];
 };
 
 struct CameraData {
+
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 proj;
@@ -169,9 +212,13 @@ struct CameraData {
 	float specular = 0.5;
 };
 
-#define DEPTH_ARRAY_SCALE 64
+#define DEPTH_ARRAY_SCALE 512
+#define MAX_BONES 400
 struct StorageData {
+    glm::mat4 bonesmatrices[MAX_BONES];
+
 	uint data[DEPTH_ARRAY_SCALE] = {0};
+
 };
 
 struct FrameData {
@@ -203,9 +250,9 @@ struct Positions {
 };
 
 struct Positions3 {
-	int x;
-	int y;
-	int z;
+	float x;
+	float y;
+	float z;
 
 	Positions3() {};
 	Positions3(const Positions3& tmp) { x = tmp.x; y = tmp.y; z = tmp.z; };

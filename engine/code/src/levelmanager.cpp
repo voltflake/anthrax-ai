@@ -189,12 +189,6 @@ bool LevelManager::loadlevel() {
 	static char filename[64] = "";
 	bool open = true;
 
-    // const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    // const ImVec2 base_pos = viewport->Pos;
-	// ImGui::SetNextWindowSize(ImVec2(500, 80), 0);
-    // ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 300), ImGuiCond_Once);
-
-    // ImGui::Begin("LoadLevel", &open, ImGuiWindowFlags_NoResize);
 
 	ImGui::InputText("Level:", filename, 64);
 
@@ -202,14 +196,13 @@ bool LevelManager::loadlevel() {
     ff += std::string(filename);
 	std::string test = filename;
 	if (test.empty()) {
-    	//ImGui::End();
 		return true;
 	}
     std::string modify;
 
 	int triggerind = 0;
 	int objectind = 0;
-
+	ImGui::SameLine();
 	if (ImGui::Button("Load")){
 
 		gettrigger().clear();
@@ -250,7 +243,7 @@ bool LevelManager::loadlevel() {
 			getplayer()->setposition(pos);
 			if (parser.GetElement("\tanimation:")) {
 				getplayer()->animation = 1;
-				Animator anim;
+				Animator2d anim;
 				anim.ID = parser.GetElement<int>(PARSE_ID);
 				anim.setpath(parser.GetElement<std::string>(PARSE_PATH));
 				Positions sizes;
@@ -313,7 +306,7 @@ bool LevelManager::loadlevel() {
 
 				if (parser.GetElement("\tanimation: 1")) {
 					tmp->animation = 1;
-					Animator anim;
+					Animator2d anim;
 					anim.ID = parser.GetElement<int>(PARSE_ID);
 					anim.setpath(parser.GetElement<std::string>(PARSE_PATH));
 					Positions sizes;

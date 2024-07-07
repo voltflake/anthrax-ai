@@ -101,8 +101,8 @@ public:
 	Positions gettextposition() { return textpos; };
 	int gettextind() { return textind; };
 
-	std::vector<Animator>& getanimator() { return animations; }
-	void pushanimator(Animator& anim) { animations.push_back(anim); }
+	std::vector<Animator2d>& getanimator() { return animations; }
+	void pushanimator(Animator2d& anim) { animations.push_back(anim); }
 
 private:
 	TriggerType triggertype;
@@ -114,7 +114,7 @@ private:
 	int textind = 0;
 	std::string textpath = "text-output-scheme";
 
-	std::vector<Animator> animations;
+	std::vector<Animator2d> animations;
 };
 
 class Player : public Resources {

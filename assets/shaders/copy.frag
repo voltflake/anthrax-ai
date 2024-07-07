@@ -7,10 +7,12 @@ layout (location = 3) in vec2 incoord;
 layout (location = 0) out vec4 outfragcolor;
 
 layout(set = 0, binding = 0) uniform  CameraBuffer {
+
     mat4 model;
     mat4 view;
     mat4 proj;
     mat4 viewproj;
+
 	vec4 viewpos;
     vec4 mousepos;
     vec4 viewport;

@@ -6,6 +6,7 @@
 #include "anthraxAI/vkrenderer.h"
 #include "anthraxAI/vkpipeline.h"
 
+#include "anthraxAI/animator.h"
 #include "anthraxAI/levelmanager.h"
 #include "anthraxAI/camera.h"
 
@@ -75,6 +76,13 @@ public:
 	std::vector<std::string> 	checkimgs = {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
 	int 						checkimg = 0;
 	bool 						checkupdate = false;
+	
+	std::chrono::duration<double, std::milli> deltatime;
+	long long startms;
+	Animator animator;
+	bool animprepared = false;
+	bool debugbones = false;
+ 	float animspeed = 1.0;
 
 #if defined(AAI_WINDOWS)	
 	void 						wininitwindow();
@@ -91,9 +99,13 @@ public:
 	float 						fps = 0;
 	void 						calculateFPS(std::chrono::duration<double, std::milli>& delta);
 
+	long long 						getcurtime();
+
 	void 						run();
 	void 						init();
 	void 						cleanup();
+
+	int debugboneID = 0;
 
 	ImGuiStyle 					EditorStyle;
 	ImGuiStyle 					TextDisplayStyle;
@@ -116,7 +128,7 @@ private:
 	void 						processtext();
 	void 						processtextind();
 
-	void 						animator();
+	void 						animator2d();
 
 	void 						editor();
 	void 						catchobject();
@@ -128,12 +140,15 @@ private:
 	void 						update();
 	void 						update3d();
 	void 						preparecamerabuffer();
+	void 						updatebones(int id);
+
 	void 						mousepicking();
 	void 						render();
 	void 						renderscene(VkCommandBuffer cmd,RenderObject* first, int count);
 	
 	void  						ui();
 	void 						debuglight();
+	void 						debuganim();
 	void 						debug2d(bool* active);
 	void 						debug3d(bool* active);
 	void 						debugmouse();

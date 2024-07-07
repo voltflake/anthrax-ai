@@ -13,6 +13,55 @@ Mesh* MeshBuilder::getmesh(int id)
 	}
 }
 
+
+void MeshBuilder::setvertexbonedefaultdata(Vertex& vertex)
+{
+    for (int i = 0; i < BONE_INFLUENCE; i++)
+    {
+        vertex.boneID[i] = -1;
+        vertex.weights[i] = 0.0f;
+    }
+}
+
+Mesh MeshBuilder::loadmeshassimp(aiMesh *mesh)
+{
+	Mesh model;
+
+	for(int i = 0; i < mesh->mNumVertices; i++) {
+        Vertex vertex;
+        //setvertexbonedefaultdata(vertex);
+		glm::vec3 data; 
+		data.x = mesh->mVertices[i].x;
+		data.y = mesh->mVertices[i].y;
+		data.z = mesh->mVertices[i].z; 
+		vertex.position = data;
+
+		data.x = mesh->mNormals[i].x;
+		data.y = mesh->mNormals[i].y;
+		data.z = mesh->mNormals[i].z;
+		vertex.normal = data;
+		if(mesh->mTextureCoords[0]) {
+			glm::vec2 vec;
+			vec.x = mesh->mTextureCoords[0][i].x; 
+			vec.y = mesh->mTextureCoords[0][i].y;
+			vertex.uv = vec;
+		}
+		else {
+			vertex.uv = glm::vec2(0);
+		}
+		vertex.color = {1.0f, 1.0f, 1.0f};
+        vertex.color = vertex.normal;
+		model.vertices.push_back(vertex);
+    }
+	for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
+		aiFace face = mesh->mFaces[i];
+		for(unsigned int j = 0; j < face.mNumIndices; j++) {
+			model.aiindices.push_back(face.mIndices[j]);
+		}
+	}
+	return model;
+}
+
 bool MeshBuilder::loadmeshfromobj(const char* filename, int id)
 {
 	tinyobj::attrib_t attrib;
@@ -124,6 +173,13 @@ void MeshBuilder::loadmeshes(){
 	}
 }
 
+void MeshBuilder::updatemodel(Model* model)
+{
+	for (int i = 0; i < model->meshes.size(); i++) {
+		updatemesh(*model->meshes[i]);
+	}
+}
+
 void MeshBuilder::updatemesh(Mesh* mesh, Positions size, Positions pos) {
 	float w, h;
 	
@@ -147,7 +203,12 @@ void MeshBuilder::updatemesh(Mesh& mesh){
 	buffer.createbuffer(pipelinehandler.getrenderer(), mesh.vertexbuffer, flags, sizeof(mesh.vertices[0]) * mesh.vertices.size(), mesh.vertices.data());
 
 	VkBufferUsageFlags flags2[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT};
-	buffer.createbuffer(pipelinehandler.getrenderer(), mesh.indexbuffer, flags2, sizeof(mesh.indices[0]) * mesh.indices.size(), mesh.indices.data());
+	if (mesh.aiindices.empty()) {
+		buffer.createbuffer(pipelinehandler.getrenderer(), mesh.indexbuffer, flags2, sizeof(mesh.indices[0]) * mesh.indices.size(), mesh.indices.data());
+	}
+	else {
+		buffer.createbuffer(pipelinehandler.getrenderer(), mesh.indexbuffer, flags2, sizeof(mesh.aiindices[0]) * mesh.aiindices.size(), mesh.aiindices.data());
+	}
 
 	deletorhandler->pushfunction([=]() {
        vkDestroyBuffer(pipelinehandler.getdevice()->getlogicaldevice(), mesh.vertexbuffer.buffer, nullptr);

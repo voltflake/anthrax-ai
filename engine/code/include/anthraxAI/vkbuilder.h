@@ -6,6 +6,7 @@
 #include "anthraxAI/vkrenderer.h"
 #include "anthraxAI/vkpipeline.h"
 #include "anthraxAI/vkmesh.h"
+#include "anthraxAI/vkmodel.h"
 #include "anthraxAI/vkbuffer.h"
 #include "anthraxAI/vkdescriptors.h"
 #include "anthraxAI/vktexture.h"
@@ -16,6 +17,8 @@ enum ClearFlags {
 };
 
 struct RenderObject {
+	Model* model;
+	
 	Mesh* mesh;
 	Material* material;
 	VkDescriptorSet* textureset;
@@ -29,6 +32,7 @@ struct RenderObject {
 	bool debugcollision;
 	bool selected = false;
 	bool debug = false;
+	bool animated = false;
 };
 
 class VkBuilder {
@@ -106,8 +110,9 @@ public:
 	void inittexture(std::unordered_map<int, Data>& resources) { texturehandler.init(renderer, devicehandler, &deletorhandler, resources);};
 	void loadimages() 		{ texturehandler.loadimages();	};
 	void clearimages() 		{ texturehandler.clearimages();	};
+	void clearattachments() { texturehandler.clearattachments(devicehandler); }
 	void builddepthbuffer() { texturehandler.createdepthbuffer(devicehandler); };
-	void buildmainimage() 	{ texturehandler.createmainimage(&devicehandler); };
+	void buildmainimage() 	{ texturehandler.createmainimage(devicehandler); };
 
 	DescriptorBuilder descriptors;
 	void initdescriptors() 		{ descriptors.init(devicehandler, renderer, &deletorhandler, texturehandler); };
@@ -120,14 +125,18 @@ public:
 	void clearpipeline()		{ pipeline.clearpipeline();			};
 
 	MeshBuilder meshhandler;
-	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, &deletorhandler);		};
+	ModelBuilder modelhandler;
+	void initmeshbuilder()		{ meshhandler.init(pipeline, texturehandler, &deletorhandler); modelhandler.init(&deletorhandler);};
 	void loadmeshes()			{ meshhandler.loadmeshes();			};
 	void loadmeshfromobj(const char* filename, int id)			{ meshhandler.loadmeshfromobj(filename, id);			};
 	void clearmeshes()			{ meshhandler.clearmeshes();			};
 
 	void updatemesh(Mesh* mesh, Positions size, Positions newpos) 		{ meshhandler.updatemesh(mesh, size, newpos);	};
-	//void updateanimation(Mesh* mesh, int id) 					{ meshhandler.updateanimation(mesh, id);	};
+	void updatemodel(Model* model) 		{ meshhandler.updatemodel(model);	};
 
+	void loadmodel(std::string path, float time, int id) { modelhandler.loadmodel(path, time, id); }
+
+	Model* 		getmodel(int id) 								{ return modelhandler.getmodel(id); }
 	Material* 	getmaterial(const std::string& name)			{ return pipeline.getmaterial(name);};
 	Mesh* 		getmesh(int id) 								{ return meshhandler.getmesh(id);};
 	Texture* 	gettexture(const std::string& name) 			{ return texturehandler.gettexture(name);};

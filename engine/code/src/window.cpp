@@ -151,6 +151,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 #endif
 
 #ifdef AAI_LINUX
+
+long long Engine::getcurtime() {
+    timeval t;
+    gettimeofday(&t, NULL);
+    long long tim = t.tv_sec * 1000 + t.tv_usec / 1000;
+
+	return (tim);
+}
+
 void Engine::linuxinitwindow() {
 	uint32_t value_mask, value_list[32];
 
@@ -268,6 +277,12 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
         	if (k == S_KEY) {
 				Level.getplayer()->state |= MOVE_DOWN;
         	}
+			if (k == MINUS_KEY) {
+				debugboneID = debugboneID < 0 ? 0 : debugboneID - 1;
+			}
+			if (k == PLUS_KEY) {
+				debugboneID = debugboneID > 100 ? 100 : debugboneID + 1;
+			}
 			return true;
 		}
 		case XCB_KEY_RELEASE: {
@@ -275,8 +290,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 		}
 		case XCB_MOTION_NOTIFY: {
 			xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
-			mousepos.x = motion->event_x;
-            	mousepos.y = motion->event_y;
+
 			if (mousestate == MOUSE_MOVE) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
@@ -285,13 +299,13 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 			if (mousestate == MOUSE_PRESSED || mousestate == MOUSE_SELECTED) {
 				mousepos.x = motion->event_x;
             	mousepos.y = motion->event_y;
-				mouseposdelta.x = (mousebegin.x - motion->event_x );
+				mouseposdelta.x = (mousebegin.x - motion->event_x);
             	mouseposdelta.y = (mousebegin.y - motion->event_y);
 				mousebegin = mousepos;
 				if (state & PLAY_GAME) {
 					EditorCamera.checkdirection(mousepos);
 				}
-				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
+				//printf ("Mouse delta: %d | %d |\n", mouseposdelta.x, mouseposdelta.y );
 			}
 			return true;
 		}
@@ -388,6 +402,7 @@ void Engine::runlinux() {
 
 		start = std::chrono::system_clock::now();
 		delta = start - end;
+		deltatime = delta;
 		calculateFPS(delta);
 
 		loop();

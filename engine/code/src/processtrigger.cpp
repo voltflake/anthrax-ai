@@ -20,6 +20,7 @@ void Engine::processtext() {
     if (Level.gettrigger().empty()) {
         return ;
     }
+
     ImGuiStyle& style = ImGui::GetStyle();
 	style = TextDisplayStyle;
 
@@ -28,11 +29,11 @@ void Engine::processtext() {
         if (Level.gettrigger()[i].display) {
             active = true;
             if (active) {
-                float oldscale = ImGui::GetFont()->Scale;
-                ImGui::GetFont()->Scale *= 1.2;
-                ImGui::PushFont(ImGui::GetFont());
+                // float oldscale = ImGui::GetFont()->Scale;
+                // ImGui::GetFont()->Scale *= 1.2;
+                // ImGui::PushFont(ImGui::GetFont());
 
-                const ImGuiViewport* viewport = ImGui::GetMainViewport();
+                // const ImGuiViewport* viewport = ImGui::GetMainViewport();
                 ImGui::SetNextWindowPos(ImVec2(Level.gettrigger()[i].gettextposition().x, Level.gettrigger()[i].gettextposition().y), 0);
                 ImGui::SetNextWindowSize(ImVec2(500, 100), ImGuiCond_FirstUseEver);
                
@@ -42,7 +43,7 @@ void Engine::processtext() {
                     Level.gettrigger()[i].settextind(0);
 
                     std::ifstream read;
-                    read.open("texts/" + Level.gettrigger()[i].gettextpath());
+                    read.open("./texts/" + Level.gettrigger()[i].gettextpath());
                     std::string modify;
                     std::map<int, std::vector<std::string>> list;
                     int ind = 0;
@@ -60,8 +61,8 @@ void Engine::processtext() {
                 for (std::string& item : Level.gettrigger()[i].gettextlist()[Level.gettrigger()[i].gettextind()]) {
                     ImGui::TextUnformatted(item.c_str());
                 }
-                ImGui::GetFont()->Scale = oldscale;
-                ImGui::PopFont();
+                // ImGui::GetFont()->Scale = oldscale;
+                // ImGui::PopFont();
                 ImGui::End();
                 return ;
             }

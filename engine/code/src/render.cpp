@@ -1,7 +1,9 @@
 #include "anthraxAI/vkengine.h"
 
 void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
+
 	preparecamerabuffer();
+		//animator.Update(deltatime.count());
 
 	Mesh* lastMesh = nullptr;
 	Material* lastMaterial = nullptr;
@@ -14,7 +16,13 @@ void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 		RenderObject& object = first[i];
 		
 		if (object.type == TYPE_GIZMO || object.type == TYPE_MODEL) {
+			for (int i = 0; i < object.model->meshes.size(); i++) {
 			if (object.type == TYPE_GIZMO && !gizmomove.visible) continue;
+
+			if (object.animated) {
+				updatebones(object.ID);
+			}
+
 			if (object.material != lastMaterial) {
 				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 				lastMaterial = object.material;
@@ -23,25 +31,29 @@ void Engine::renderscene(VkCommandBuffer cmd, RenderObject* first, int rqsize) {
 			
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
 			}
+			
 
 			MeshPushConstants constants;
+			constants.debugbones = debugbones;			
+			constants.boneind = debugboneID;
 			constants.objectID = object.ID;
 			constants.debug = object.selected && gizmomove.visible ? 1 : 0;
 
 			glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(object.pos.x, object.pos.y, object.pos.z));
+            model = ((glm::translate(model, glm::vec3(object.pos.x, object.pos.y, object.pos.z))));
+
 			constants.rendermatrix = camdata.proj * camdata.view * model;
-			
 			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
 			
-			if (object.mesh != lastMesh) {
+			if (object.model->meshes[i] != lastMesh) {
 				VkDeviceSize offset = {0};
-				vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
-				lastMesh = object.mesh;
+				vkCmdBindVertexBuffers(cmd, 0, 1, &object.model->meshes[i]->vertexbuffer.buffer, &offset);
+				vkCmdBindIndexBuffer(cmd, object.model->meshes[i]->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+				lastMesh = object.model->meshes[i];
 			}
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-		
-			vkCmdDraw(cmd, object.mesh->vertices.size(), 1, 0, 0);
+			vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.model->meshes[i]->aiindices.size()), 1, 0, 0, 0);
+			}
 		}
 		else {
 			if (object.material != lastMaterial) {

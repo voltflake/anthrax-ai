@@ -33,8 +33,10 @@ public:
 
 	void cleartextures();
 
-	void createmainimage(DeviceBuilder* device);
+	void createmainimage(DeviceBuilder& device);
 	void createdepthbuffer(DeviceBuilder& device);
+
+	void clearattachments(DeviceBuilder& device);
 
 	Texture* gettexture(std::string name) { auto it = loadedtextures.find(name);
 												if (it == loadedtextures.end()) {

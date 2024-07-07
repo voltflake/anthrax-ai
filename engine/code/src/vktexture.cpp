@@ -2,6 +2,23 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+void TextureBuilder::clearattachments(DeviceBuilder& device)
+{
+	if (device.depthimage.texture) {
+		vkDestroyImageView(device.getlogicaldevice(), device.depthimage.texture->imageview, nullptr);
+		vkDestroyImage(device.getlogicaldevice(),device.depthimage.texture->image, nullptr);
+		vkFreeMemory(device.getlogicaldevice(),device.depthimage.texture->memory, nullptr);
+		delete device.depthimage.texture;
+	}
+
+	if (device.mainrendertarget.texture) {
+		vkDestroyImageView(device.getlogicaldevice(), device.mainrendertarget.texture->imageview, nullptr);
+		vkDestroyImage(device.getlogicaldevice(), device.mainrendertarget.texture->image, nullptr);
+		vkFreeMemory(device.getlogicaldevice(), device.mainrendertarget.texture->memory, nullptr);
+		delete device.mainrendertarget.texture;
+	}
+}
+
 void TextureBuilder::createdepthbuffer(DeviceBuilder& device)
 {
 	if (device.depthimage.texture) {
@@ -22,16 +39,16 @@ void TextureBuilder::createdepthbuffer(DeviceBuilder& device)
 
 }
 
-void TextureBuilder::createmainimage(DeviceBuilder* device)
+void TextureBuilder::createmainimage(DeviceBuilder& device)
 {
-	if (device->mainrendertarget.texture) {
-		vkDestroyImageView(device->getlogicaldevice(), device->mainrendertarget.texture->imageview, nullptr);
-		vkDestroyImage(device->getlogicaldevice(), device->mainrendertarget.texture->image, nullptr);
-		vkFreeMemory(device->getlogicaldevice(), device->mainrendertarget.texture->memory, nullptr);
-		delete device->mainrendertarget.texture;
+	if (device.mainrendertarget.texture) {
+		vkDestroyImageView(device.getlogicaldevice(), device.mainrendertarget.texture->imageview, nullptr);
+		vkDestroyImage(device.getlogicaldevice(), device.mainrendertarget.texture->image, nullptr);
+		vkFreeMemory(device.getlogicaldevice(), device.mainrendertarget.texture->memory, nullptr);
+		delete device.mainrendertarget.texture;
 	}
-	device->mainrendertarget.texture = new Texture;
-	device->mainrendertarget.texture->format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	device.mainrendertarget.texture = new Texture;
+	device.mainrendertarget.texture->format = VK_FORMAT_R16G16B16A16_SFLOAT;
 	VkImageUsageFlags imgusage{};
 	imgusage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	imgusage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -39,17 +56,19 @@ void TextureBuilder::createmainimage(DeviceBuilder* device)
 	imgusage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	imgusage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
     ImageHelper::createimage(
-        ImageHelper::imagecreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, imgusage, { static_cast<uint32_t>(device->getswapchainextent().width), static_cast<uint32_t>(device->getswapchainextent().height), 1 }),
-        *device, &device->mainrendertarget);
-	ImageHelper::createimageview(ImageHelper::imageviewcreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, device->mainrendertarget.texture->image, VK_IMAGE_ASPECT_COLOR_BIT),
-	*device, &device->mainrendertarget);
+        ImageHelper::imagecreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, imgusage, { static_cast<uint32_t>(device.getswapchainextent().width), static_cast<uint32_t>(device.getswapchainextent().height), 1 }),
+        device, &device.mainrendertarget);
+	ImageHelper::createimageview(ImageHelper::imageviewcreateinfo(VK_FORMAT_R16G16B16A16_SFLOAT, device.mainrendertarget.texture->image, VK_IMAGE_ASPECT_COLOR_BIT),
+	device, &device.mainrendertarget);
 	std::cout << "created main image\n";
 }
 
 
 void TextureBuilder::loadimages() {
+
 	for (auto& list : resources) {
-        if (list.second.texturepath == "") {
+		auto it = loadedtextures.find(list.second.texturepath);
+        if (list.second.texturepath == "" || it != loadedtextures.end()) {
             continue;
         }
 		std::string path = "./textures/";
@@ -65,6 +84,10 @@ void TextureBuilder::loadimages() {
 
 	std::string path = "./textures/";
 	path += "dummy.png";
+	auto it = loadedtextures.find("dummy.png");
+	if (it != loadedtextures.end()) {
+		return ;
+	}
 	createtexture(path);
 	createsampler();
 

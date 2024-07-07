@@ -1,11 +1,15 @@
 #version 450
 
 #include "fragdef.h"
+layout (location = 4) in vec4 inweight;
+layout (location = 5) flat in ivec4 inboneid;
 
-#define DEPTH_ARRAY_SCALE 64
+#define DEPTH_ARRAY_SCALE 512
+const int MAX_BONES = 400;
 
 layout(set = 2, binding = 0) buffer writeonly StorageArray
 {
+    mat4 bonesmatrices[MAX_BONES];
     uint data[DEPTH_ARRAY_SCALE];
 } storagedata;
 
@@ -39,6 +43,21 @@ void main()
     if (pushconstants.debug == 1) {
         result += vec3(0.2,0,0);
         clamp(result.r, 0, 1);
+    }
+    if (pushconstants.debugbones == 1) {
+        for (int i = 0; i < 4; i++) {
+          if (pushconstants.boneind == inboneid[i]) {
+                if (inweight[i] >= 0.7) {
+                    result = vec3(1, 0, 0) * inweight[i];
+                }
+                else if (inweight[i] >= 0.4 && inweight[i] <= 0.6) {
+                    result = vec3(0, 1, 0) * inweight[i];
+                }
+                else if (inweight[i] >= 0.1) {
+                    result = vec3(1, 1, 0) * inweight[i];
+                }
+          }
+        }
     }
 	outfragcolor = vec4(result,1.0f);
 }

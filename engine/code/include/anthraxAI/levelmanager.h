@@ -168,6 +168,9 @@ public:
 	bool check = false;
 	bool check2 = false;
 
+	bool 						test3d = false;
+
+
 	Player* 				getplayer() {return &player; };
 	CameraRes& 				getcamera() {return camera; };
 	Resources& 				getbackground() {return background; };

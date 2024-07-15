@@ -140,6 +140,8 @@ void Engine::update3d() {
 }
 
 void Engine::update() {
+    if (Level.test3d) return;
+
     for (int i = 0; i < Level.getobject().size(); i++) {
         if (!Level.getobject()[i]->update) {
             continue;
@@ -169,6 +171,7 @@ void Engine::update() {
 }
 
 void Engine::move() {
+    if (Level.test3d) return;
     processanimation();
     processtrigger();
     moveplayer();

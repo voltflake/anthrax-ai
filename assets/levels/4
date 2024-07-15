@@ -1,0 +1,11 @@
+Player:
+	ID: 0
+	path: 
+	collision: 1
+	x: 0
+	y: 0
+0
+Background:
+	ID: 0
+	path: 
+

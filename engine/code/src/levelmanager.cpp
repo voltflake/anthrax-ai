@@ -198,6 +198,13 @@ bool LevelManager::loadlevel() {
 	if (test.empty()) {
 		return true;
 	}
+
+	if (test == "3") {
+		test3d = true;
+	}
+	else {
+		test3d = false;
+	}
     std::string modify;
 
 	int triggerind = 0;

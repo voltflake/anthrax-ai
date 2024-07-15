@@ -8,6 +8,9 @@
 
 #include "anthraxAI/animator.h"
 #include "anthraxAI/levelmanager.h"
+#include "anthraxAI/resourcemanager.h"
+#include "anthraxAI/vkcmdhandler.h"
+
 #include "anthraxAI/camera.h"
 
 #include "anthraxAI/vkdebug.h"
@@ -15,19 +18,6 @@
 #if defined(AAI_WINDOWS)
 	LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
-
-enum EngineState {
-	INIT_ENGINE 	= 1 << 0,	/* 0000 0001 */
-	ENGINE_EDITOR 	= 1 << 1, 	/* 0000 0010 */
-	HANDLE_EVENT 	= 1 << 2,	/* 0000 0100 */
-	NEW_LEVEL 		= 1 << 3,	/* 0000 1000 */
-	LOAD_LEVEL 		= 1 << 4,	/* 0001 0000 */
-	PLAY_GAME 		= 1 << 5,	/* 0010 0000 */
-	PAUSE_GAME  	= 1 << 6,	/* 0100 0000 */
-	EXIT  			= 1 << 7,	/* 1000 0000 */
-	MODE_2D  		= 1 << 8,	/* 1000 0000 0 */
-	MODE_3D  		= 1 << 9,	/* 1000 0000 00*/
-};
 
 class Engine {
 
@@ -45,14 +35,20 @@ public:
 	xcb_atom_t 					wmDeleteWin;
 	xcb_key_symbols_t   		*KeySyms;
 #endif
-	int							state = INIT_ENGINE;
+	int					state = INIT_ENGINE;
 
 	void 						start();
 	void 						checkstate(float delta);
 	void 						checkuistate();
 	void 						initengine(LevelManager &levels);
 
+	void load2dresources();
+	void load3dresources();
+
+
 	VkBuilder 					Builder;
+	CmdHandler 					Cmd;
+	ResourceManager				Resources;
 	LevelManager				Level;
 	Camera 						EditorCamera;
 
@@ -99,7 +95,7 @@ public:
 	float 						fps = 0;
 	void 						calculateFPS(std::chrono::duration<double, std::milli>& delta);
 
-	long long 						getcurtime();
+	long long 					getcurtime();
 
 	void 						run();
 	void 						init();
@@ -144,7 +140,9 @@ private:
 
 	void 						mousepicking();
 	void 						render();
-	void 						renderscene(VkCommandBuffer cmd,RenderObject* first, int count);
+	void 						render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial);
+	void 						render2d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial);
+	void 						renderscene(VkCommandBuffer cmd);
 	
 	void  						ui();
 	void 						debuglight();
@@ -159,8 +157,7 @@ private:
 	void 						initimgui();
 
 	void 						initresources();
+	void 						initmeshes();
 	void 						reloadresources();
-
-	void 						loadmylevel();
 };
 

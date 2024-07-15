@@ -172,7 +172,10 @@ void Engine::checkuistate() {
 	if (state & NEW_LEVEL) {
 		Level.newlevel();
 	}
-
+	// if (Level.test3d) {
+	// 	state &= ~MODE_2D;
+	// 	state |= MODE_3D;
+	// }
 }
 
 void Engine::debug2d(bool* active) {
@@ -352,12 +355,6 @@ void Engine::debugmouse()
 }
 
 void Engine::ui() {
-        
-	if (checkupdate) {
-		checkupdate = false;
-		checkimg++;
-		loadmylevel();
-	}
 
     if (Level.check2 || Level.check) {
     	return;

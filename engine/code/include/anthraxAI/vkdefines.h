@@ -154,6 +154,19 @@ static inline glm::vec3 vec2glm(aiVector3D vec)
 	return v;
 }
 
+enum EngineState {
+	INIT_ENGINE 	= 1 << 0,	/* 0000 0001 */
+	ENGINE_EDITOR 	= 1 << 1, 	/* 0000 0010 */
+	HANDLE_EVENT 	= 1 << 2,	/* 0000 0100 */
+	NEW_LEVEL 		= 1 << 3,	/* 0000 1000 */
+	LOAD_LEVEL 		= 1 << 4,	/* 0001 0000 */
+	PLAY_GAME 		= 1 << 5,	/* 0010 0000 */
+	PAUSE_GAME  	= 1 << 6,	/* 0100 0000 */
+	EXIT  			= 1 << 7,	/* 1000 0000 */
+	MODE_2D  		= 1 << 8,	/* 1000 0000 0 */
+	MODE_3D  		= 1 << 9,	/* 1000 0000 00*/
+};
+
 struct BufferHandler {
 	VkBuffer buffer;
 	VkDeviceMemory devicememory;
@@ -272,12 +285,18 @@ struct Data {
 	Positions3 pos;
 	bool debugcollision;
 	bool animation;
+
+	Data() {}
+	Data(const std::string& path, Positions3 p, bool debugcol, bool anim)
+	: texturepath(path), pos(p), debugcollision(debugcol), animation(anim) {}
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> StorageArray;
+typedef std::unordered_map<int, Data> ResourcesMap;
+
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
 const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

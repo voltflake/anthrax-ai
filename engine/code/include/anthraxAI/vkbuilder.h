@@ -10,6 +10,7 @@
 #include "anthraxAI/vkbuffer.h"
 #include "anthraxAI/vkdescriptors.h"
 #include "anthraxAI/vktexture.h"
+#include "anthraxAI/animator.h"
 
 enum ClearFlags {
 	CLEAR_COLOR 	= 1 << 0,	/* 0000 0001 */
@@ -18,7 +19,6 @@ enum ClearFlags {
 
 struct RenderObject {
 	Model* model;
-	
 	Mesh* mesh;
 	Material* material;
 	VkDescriptorSet* textureset;
@@ -37,9 +37,11 @@ struct RenderObject {
 
 class VkBuilder {
 public:
-	DeletionQueue deletorhandler;
+	DeletionQueue 				deletorhandler;
 
 	void cleanall()				{ deletorhandler.cleanall(); };
+
+	void procscene(ResourcesMap& resmap, Animator& animator);
 
 	VkInstance&					getinstance() { return instance; };
 	VkSurfaceKHR&				getsurface() {	return surface; };
@@ -141,10 +143,7 @@ public:
 	Mesh* 		getmesh(int id) 								{ return meshhandler.getmesh(id);};
 	Texture* 	gettexture(const std::string& name) 			{ return texturehandler.gettexture(name);};
 
-
 	void copycheck(uint32_t swapchainimageindex);
 	bool instanceextensionssupport();
 	bool validationlayerssupport();
-
-	VkRenderPassBeginInfo beginrenderpass(ClearFlags flags, VkRenderPass& rp, VkExtent2D extent, VkFramebuffer framebuffer);
 };

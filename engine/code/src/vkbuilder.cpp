@@ -309,17 +309,3 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
 	});
 }
 
-VkRenderPassBeginInfo VkBuilder::beginrenderpass(ClearFlags flags, VkRenderPass& rp, VkExtent2D extent, VkFramebuffer framebuffer)
-{
-	VkRenderPassBeginInfo rpinfo = {};
-	rpinfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	rpinfo.pNext = nullptr;
-
-	rpinfo.renderPass = rp;
-	rpinfo.renderArea.offset.x = 0;
-	rpinfo.renderArea.offset.y = 0;
-	rpinfo.renderArea.extent = extent;
-
-	rpinfo.framebuffer = framebuffer;
-	return rpinfo;
-}

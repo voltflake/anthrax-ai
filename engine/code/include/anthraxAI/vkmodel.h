@@ -33,7 +33,7 @@ public:
     void init(DeletionQueue* del)                   { deletor = del; }
 	Model* getmodel(int id);
 
-    void loadmodel(std::string path, float time, int id);
+    void loadmodel(std::string path, int id);
     Mesh processmesh(aiMesh* aimesh,int id);
     void processnode(aiNode *node, const aiScene *scene, int id);
     void processbones(std::vector<Vertex>& vert, int id, aiMesh* aimesh);

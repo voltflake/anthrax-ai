@@ -102,63 +102,61 @@ void Engine::initimgui() {
 	style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 	style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
-	EditorStyle = style;
+	Debug.EditorStyle = style;
 
 
-	TextDisplayStyle = EditorStyle;
+	Debug.TextDisplayStyle = Debug.EditorStyle;
 
-	TextDisplayStyle.Alpha = 1.0f;
-	TextDisplayStyle.FrameRounding = 3.0f;
-	TextDisplayStyle.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_WindowBg]              = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
-	TextDisplayStyle.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-	TextDisplayStyle.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
-	TextDisplayStyle.Colors[ImGuiCol_BorderShadow]          = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
-	TextDisplayStyle.Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-	TextDisplayStyle.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-	TextDisplayStyle.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	TextDisplayStyle.Colors[ImGuiCol_TitleBg]               = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
-	TextDisplayStyle.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
-	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_CheckMark]             = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_Button]                = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-	TextDisplayStyle.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_Header]                = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-	TextDisplayStyle.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	TextDisplayStyle.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_ResizeGrip]            = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
-	TextDisplayStyle.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	TextDisplayStyle.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-	TextDisplayStyle.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	TextDisplayStyle.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	Debug.TextDisplayStyle.Alpha = 1.0f;
+	Debug.TextDisplayStyle.FrameRounding = 3.0f;
+	Debug.TextDisplayStyle.Colors[ImGuiCol_Text]                  = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_TextDisabled]          = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_WindowBg]              = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_PopupBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_Border]                = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_BorderShadow]          = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_FrameBg]               = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_FrameBgHovered]        = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_FrameBgActive]         = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_TitleBg]               = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_TitleBgCollapsed]      = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_TitleBgActive]         = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_MenuBarBg]             = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ScrollbarBg]           = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_CheckMark]             = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_SliderGrab]            = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_Button]                = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ButtonHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ButtonActive]          = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_Header]                = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_HeaderHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_HeaderActive]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ResizeGrip]            = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_PlotLines]             = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_PlotHistogram]         = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+	Debug.TextDisplayStyle.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
 }
 
 void Engine::animator2d() {
-	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 800), ImGuiCond_FirstUseEver);
-	
-	ImGui::Begin("Vulkan Texture Test");
-	for (int i = 0; i < DebugImGuiAnim.size(); i++) {
-		ImGui::TextUnformatted(DebugImGuiAnim[i].path.c_str());
-		ImGui::SliderInt(std::string("scale " + std::to_string(i)).c_str(), &DebugImGuiAnim[i].scale, 1, 8);
-		ImGui::Image((ImTextureID)DebugImGuiAnim[i].desc, ImVec2(Builder.gettexture(DebugImGuiAnim[i].path)->w / DebugImGuiAnim[i].scale, Builder.gettexture(DebugImGuiAnim[i].path)->h / DebugImGuiAnim[i].scale));
+
+   	Editor.beginwindow( { -500, 40 }, { 500, 800 }, ImGuiCond_FirstUseEver, "Vulkan Texture Test");
+
+	for (int i = 0; i < Debug.ImGuiAnim.size(); i++) {
+		ImGui::TextUnformatted(Debug.ImGuiAnim[i].path.c_str());
+		ImGui::SliderInt(std::string("scale " + std::to_string(i)).c_str(), &Debug.ImGuiAnim[i].scale, 1, 8);
+		ImGui::Image((ImTextureID)Debug.ImGuiAnim[i].desc, ImVec2(Builder.gettexture(Debug.ImGuiAnim[i].path)->w / Debug.ImGuiAnim[i].scale, Builder.gettexture(Debug.ImGuiAnim[i].path)->h / Debug.ImGuiAnim[i].scale));
 		ImGui::Separator();
 	}
-	ImGui::End();
+	
+	Editor.endwindow();
 }
 
 void Engine::checkuistate() {
@@ -172,13 +170,11 @@ void Engine::checkuistate() {
 	if (state & NEW_LEVEL) {
 		Level.newlevel();
 	}
-	// if (Level.test3d) {
-	// 	state &= ~MODE_2D;
-	// 	state |= MODE_3D;
-	// }
 }
 
 void Engine::debug2d(bool* active) {
+    if (Level.test3d) return;
+
 	ImGui::Columns(4, "enginebuttons", false);
 	if (ImGui::Button("New Level")) {
         state |= NEW_LEVEL;
@@ -207,7 +203,7 @@ void Engine::debug2d(bool* active) {
 		}
 	}
 	ImGui::Separator();
-    ImGui::Checkbox("Free Move", &freemove);
+    ImGui::Checkbox("Free Move", &Debug.freemove);
 
 	static bool anim = false;
 	ImGui::Checkbox("Animator 2d", &anim);
@@ -262,15 +258,8 @@ void Engine::debug3d(bool* active) {
 
 void Engine::debuglight()
 {
-	ImGuiStyle& stylem = ImGui::GetStyle();
-	stylem = EditorStyle;
-   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-	static bool active = true;
-	ImGui::Begin("Lighting", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings );
-    
+    Editor.beginwindow( { -500, 40 }, { 500, 400 }, ImGuiWindowFlags_NoSavedSettings, "Lighting");
+
 	ImGui::TextUnformatted("light position");
 	ImGui::SliderFloat("x", &camdata.lightpos.x, -5.0f, 5.0f, "%.2f"); 
 	ImGui::SliderFloat("y", &camdata.lightpos.y, -5.0f, 5.0f, "%.2f"); 
@@ -284,23 +273,20 @@ void Engine::debuglight()
 	ImGui::Separator();
 	ImGui::SliderFloat("ambient", &camdata.ambient, -5.0f, 5.0f, "%.2f");
 	ImGui::SliderFloat("specular", &camdata.specular, -5.0f, 5.0f, "%.2f");
-	ImGui::End();
+
+	Editor.endwindow();
 }
 
 void Engine::debuganim()
 {
 	ImGuiStyle& stylem = ImGui::GetStyle();
-	stylem = EditorStyle;
-   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, base_pos.y + 40), 0);
-	ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-	static bool active = true;
-	ImGui::Begin("Animation", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings );
-    
-	ImGui::SliderFloat("anim speed", &animspeed, 0.0f, 2.0f, "%.2f");
-	ImGui::Checkbox("debug bones", &debugbones);
-	ImGui::TextUnformatted(std::string("Bone id: " + std::to_string(debugboneID)).c_str());
+	stylem = Debug.EditorStyle;
+
+   	Editor.beginwindow( { -500, 40 }, { 500, 400 }, ImGuiWindowFlags_NoSavedSettings, "Animation");
+
+	ImGui::SliderFloat("anim speed", &Debug.animspeed, 0.0f, 2.0f, "%.2f");
+	ImGui::Checkbox("debug bones", &Debug.bones);
+	ImGui::TextUnformatted(std::string("Bone id: " + std::to_string(Debug.boneID)).c_str());
 
 	for (auto& animation : animator.animations) {
 		ImGui::TextUnformatted(std::string("Object id: " + std::to_string(animation.first)).c_str());
@@ -319,46 +305,41 @@ void Engine::debuganim()
     		ImGui::EndCombo();
 		}
 	}
-	ImGui::End();
+
+	Editor.endwindow();
 }
 
 void Engine::debugmouse()
 {
-	static bool active = true;
 
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+   	Editor.beginwindow( { -500, 0 }, { 0, 0 },
+						ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav, 
+						"Mouse state");
 
-   	const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - 500, 0), 0);
-    flags |= ImGuiWindowFlags_NoMove;
-  	ImGui::Begin("Mouse state", &active, flags);
 	std::string state = "IDLE";
-	if (mousestate == MOUSE_IDLE) {
+	if (Mouse.state == MOUSE_IDLE) {
 		state = "MOUSE_IDLE";
 	}
-	if (mousestate == MOUSE_MOVE) {
+	if (Mouse.state == MOUSE_MOVE) {
 		state = "MOUSE_MOVE";		
 	}
-	if (mousestate == MOUSE_PRESSED) {
+	if (Mouse.state == MOUSE_PRESSED) {
 		state = "MOUSE_PRESSED";
 	}
-	if (mousestate == MOUSE_RELEASED) {
+	if (Mouse.state == MOUSE_RELEASED) {
 		state = "MOUSE_RELEASED";	
 	}
-	if (mousestate == MOUSE_SELECTED) {
+	if (Mouse.state == MOUSE_SELECTED) {
 		state = "MOUSE_SELECTED";		
 	}
 	ImGui::Text("mouse state: %s", state.c_str());
 	ImGui::Separator();
-    ImGui::End();
+
+	Editor.endwindow();
 }
 
 void Engine::ui() {
 
-    if (Level.check2 || Level.check) {
-    	return;
-    }
     bool active = true;
 
     // ImGui::ShowDemoWindow();
@@ -369,17 +350,17 @@ void Engine::ui() {
 	if (!active) {
 		return;
 	}
-	ImGuiStyle& stylem = ImGui::GetStyle();
-	stylem = EditorStyle;
+
    	const ImGuiViewport* viewport = ImGui::GetMainViewport();
     const ImVec2 base_pos = viewport->Pos;
     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 40), 0);
 	ImGui::SetNextWindowSize(ImVec2(400, viewport->Size.y - 40), ImGuiCond_FirstUseEver);
 
-	ImGui::Begin("Engine ;p", &active, ImGuiCond_FirstUseEver | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Engine ;p", &active, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     
-	ImGuiStyle& style = EditorStyle;
+	ImGuiStyle& style = Debug.EditorStyle;
 	float alpha = style.Colors[ImGuiCol_WindowBg].w;
+
     ImGui::SliderFloat("Editor Alpha", &alpha, 0.0, 1.0, "%.1f");
 	if (style.Colors[ImGuiCol_WindowBg].w != alpha) {
 		style.Colors[ImGuiCol_WindowBg].w = alpha;
@@ -402,19 +383,18 @@ void Engine::ui() {
 
     ImGui::End();
 
-
 	debugmouse();
 }
 
 void Engine::fpsoverlay() {
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+    flags |= ImGuiWindowFlags_NoMove;
+
     static bool active = true;
 
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-
 	ImGui::SetNextWindowPos( ImVec2(0.0f, 0.0f), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
-    flags |= ImGuiWindowFlags_NoMove;
   	ImGui::Begin("FPS overlay", &active, flags);
-        ImGui::Text("FPS: %f", fps);
+        ImGui::Text("FPS: %f", Debug.fps);
         ImGui::Separator();
-    ImGui::End();
+   ImGui::End();
 }

@@ -26,7 +26,7 @@ class Animator {
 public:
     Animator() {};
 	
-	Assimp::Importer importer;
+	Assimp::Importer importer[2];
 	const aiScene* scene[10] = {NULL};
 
 	glm::mat4 globinverse;
@@ -38,7 +38,7 @@ public:
 		animations[id].selectedpath = paths[0];
 		animations[id].pathindex = 0;
 		animations[id].sceneind = animations.size() - 1;
-		scene[animations[id].sceneind]  = importer.ReadFile(animations[id].selectedpath, IMPORT_PROPS);
+		scene[animations[id].sceneind]  = importer[animations[id].sceneind].ReadFile(animations[id].selectedpath, IMPORT_PROPS);
 		
 		globinverse =  glm::inverse(glm::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0)); 
@@ -58,7 +58,7 @@ public:
 
 	void reload(int id) {
 		animations[id].selectedpath = animations[id].animpaths[animations[id].pathindex];
-		scene[animations[id].sceneind] = importer.ReadFile(animations[id].selectedpath, IMPORT_PROPS);
+		scene[animations[id].sceneind] = importer[animations[id].sceneind].ReadFile(animations[id].selectedpath, IMPORT_PROPS);
 	}
  
 	const aiNodeAnim* findanim(const aiAnimation* anim, const std::string nodename);

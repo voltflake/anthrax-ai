@@ -18,9 +18,9 @@ public:
     void endrp();
 
     VkSubmitInfo submitinfo(VkPipelineStageFlags waitstage, VkSemaphore* presentsem, VkSemaphore* rendersem);
-    void submit(VkQueue queue, VkSubmitInfo subinfo, VkFence fence);
+    void submit(VkQueue queue, VkSubmitInfo subinfo, VkFence* fence);
 
-    VkPresentInfoKHR presentinfo(VkSwapchainKHR* swapchain, VkSemaphore* rendersem, const uint32_t swapchind);
+    VkPresentInfoKHR presentinfo(VkSwapchainKHR* swapchain, VkSemaphore* rendersem, uint32_t* swapchind);
     VkResult present(VkQueue queue, VkPresentInfoKHR prinfo);
 
     void clearvalues();

@@ -22,7 +22,7 @@ void Engine::processtext() {
     }
 
     ImGuiStyle& style = ImGui::GetStyle();
-	style = TextDisplayStyle;
+	style = Debug.TextDisplayStyle;
 
     static bool active = false;
     for (int i = 0; i < Level.gettrigger().size(); i++) {

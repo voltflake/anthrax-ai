@@ -2,13 +2,16 @@
 // create a CB class maybe? 
 void Engine::render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial)
 {
+	if (object.animated) {
+		updatebones(object.ID,0);
+	}
 	// Mesh* lastMesh = nullptr;
 	// Material* lastMaterial = nullptr;
 	for (int i = 0; i < object.model->meshes.size(); i++) {
+		int k = 0;
 		if (object.type == TYPE_GIZMO && !gizmomove.visible) continue;
 
 		if (object.animated) {
-			updatebones(object.ID);
 		}
 
 		if (object.material != lastMaterial) {
@@ -16,12 +19,23 @@ void Engine::render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh,
 			lastMaterial = object.material;
 			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+			
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
+			
+			if (object.animated) {
+				// updatebones(object.ID,k);
+  				int frameind = FrameIndex % MAX_FRAMES_IN_FLIGHT;
+
+				uint32_t dynamicOffset = k * Builder.descriptors.paduniformbuffersize(sizeof(glm::mat4) * 200) * frameind;
+				// Bind the descriptor set for rendering a mesh using the dynamic offset
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,  object.material->pipelinelayout, 3, 1, &Builder.gettranformset()[FrameIndex], 1, &dynamicOffset);
+			k++;
+			}
 		}
 
 		MeshPushConstants constants;
-		constants.debugbones = debugbones;			
-		constants.boneind = debugboneID;
+		constants.debugbones = Debug.bones;			
+		constants.boneind = Debug.boneID;
 		constants.objectID = object.ID;
 		constants.debug = object.selected && gizmomove.visible ? 1 : 0;
 
@@ -47,29 +61,28 @@ void Engine::render2d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh,
 	// Mesh* lastMesh = nullptr;
 	// Material* lastMaterial = nullptr;
 	if (object.material != lastMaterial) {
-
-				vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
-				lastMaterial = object.material;
-				
-				uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
-			}
-			MeshPushConstants constants;
-			vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
-			
-			if (object.mesh != lastMesh && !object.debug) {
-				VkDeviceSize offset = {0};
-				vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
-				vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
-				lastMesh = object.mesh;
-			}
-			if (!object.debug) {
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-				vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);	
-			}
-			else {
-				vkCmdDraw(cmd, 6, 1, 0, 0);
-			}
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
+		lastMaterial = object.material;
+		
+		uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
+	}
+	MeshPushConstants constants;
+	vkCmdPushConstants(cmd, object.material->pipelinelayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(MeshPushConstants), &constants);
+	
+	if (object.mesh != lastMesh && !object.debug) {
+		VkDeviceSize offset = {0};
+		vkCmdBindVertexBuffers(cmd, 0, 1, &object.mesh->vertexbuffer.buffer, &offset);
+		vkCmdBindIndexBuffer(cmd, object.mesh->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+		lastMesh = object.mesh;
+	}
+	if (!object.debug) {
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.mesh->indices.size()), 1, 0, 0, 0);	
+	}
+	else {
+		vkCmdDraw(cmd, 6, 1, 0, 0);
+	}
 }
 
 void Engine::renderscene(VkCommandBuffer cmd) {
@@ -153,21 +166,37 @@ void Engine::render() {
 	Cmd.endrp();
 	Cmd.end();
 
-	Cmd.submit(
-		Builder.getqueue().graphicsqueue,
-		Cmd.submitinfo(
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
-			&Builder.getframes()[FrameIndex].PresentSemaphore,
-			&Builder.getframes()[FrameIndex].RenderSemaphore),
-		Builder.getframes()[FrameIndex].RenderFence
-	);
-	
+// this produce werid errors in validation layer
+
+	// Cmd.submit(
+	// 	Builder.getqueue().graphicsqueue,
+	// 	Cmd.submitinfo(
+	// 		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 
+	// 		&Builder.getframes()[FrameIndex].PresentSemaphore,
+	// 		&Builder.getframes()[FrameIndex].RenderSemaphore),
+	// 	&Builder.getframes()[FrameIndex].RenderFence
+	// );
+
+	VkSubmitInfo submit = {};
+	submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit.pNext = nullptr;
+	VkPipelineStageFlags waitstage2 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	submit.pWaitDstStageMask = &waitstage2;
+	submit.waitSemaphoreCount = 1;
+	submit.pWaitSemaphores = &Builder.getframes()[FrameIndex].PresentSemaphore;
+	submit.signalSemaphoreCount = 1;
+	submit.pSignalSemaphores = &Builder.getframes()[FrameIndex].RenderSemaphore;
+	submit.commandBufferCount = 1;
+	VkCommandBuffer cmd = Cmd.get();
+	submit.pCommandBuffers = &cmd;
+	VK_ASSERT(vkQueueSubmit(Builder.getqueue().graphicsqueue, 1, &submit, Builder.getframes()[FrameIndex].RenderFence), "failed to submit queue!");
+
 	VkResult presentresult = Cmd.present(
 		Builder.getqueue().graphicsqueue,
 		Cmd.presentinfo(
 			&Builder.getswapchain(),
 			&Builder.getframes()[FrameIndex].RenderSemaphore,
-			swapchainimageindex
+			&swapchainimageindex
 		)
 	);
 

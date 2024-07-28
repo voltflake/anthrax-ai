@@ -7,7 +7,7 @@ void Engine::editor() {
 }
 
 bool Engine::editormove() {
-    if (mousestate != MOUSE_MOVE || !freemove || Level.getobject().empty()) {
+    if (Mouse.state != MOUSE_MOVE || !Debug.freemove || Level.getobject().empty()) {
         return true ;
     }
     for (int i = 0; i < Level.getobject().size(); i++) {
@@ -16,12 +16,12 @@ bool Engine::editormove() {
         }
         if (Level.getobject()[i]->freemove) {
             Positions tmp = Level.getobject()[i]->getposition();
-            int factorx = (mousebegin.x - mousepos.x) ;
-            int factory = (mousebegin.y - mousepos.y) ;
+            int factorx = (Mouse.begin.x - Mouse.pos.x) ;
+            int factory = (Mouse.begin.y - Mouse.pos.y) ;
             Positions finpos = {(tmp.x - factorx), ((tmp.y - factory))};
             Level.getobject()[i]->setposition(finpos);
             Level.getobject()[i]->update = true;
-            mousebegin = mousepos;
+            Mouse.begin = Mouse.pos;
             return true ;
         }
     }
@@ -29,7 +29,7 @@ bool Engine::editormove() {
 }
 
 void Engine::uncatchobject() {
-    if (state & PLAY_GAME || mousestate != MOUSE_RELEASED || !freemove || Level.getobject().empty()) {
+    if (state & PLAY_GAME || Mouse.state != MOUSE_RELEASED || !Debug.freemove || Level.getobject().empty()) {
         return ;
     }
     for (int i = 0; i < Level.getobject().size(); i++) {
@@ -44,7 +44,7 @@ void Engine::uncatchobject() {
 }
 
 void Engine::catchobject() {
-    if (state & PLAY_GAME || mousestate != MOUSE_PRESSED || !freemove || Level.getobject().empty()) {
+    if (state & PLAY_GAME || Mouse.state != MOUSE_PRESSED || !Debug.freemove || Level.getobject().empty()) {
         return ;
     }
 
@@ -60,16 +60,16 @@ void Engine::catchobject() {
         // std::cout << (mousepos.y < Level.getobject()[i]->getposition().y + objh) << "\n";
         // std::cout << (mousepos.y > Level.getobject()[i]->getposition().y) << "\n";
         // std::cout << "---------------------\n";
-        if (mousepos.x < Level.getobject()[i]->getposition().x + objw &&
-            mousepos.x > Level.getobject()[i]->getposition().x &&
-            mousepos.y < Level.getobject()[i]->getposition().y + objh &&
-            mousepos.y > Level.getobject()[i]->getposition().y ) {
-            // std::cout << (mousepos.x ) << "!X!" << objw<< "\n";
-            // std::cout << (mousepos.y ) << "!Y!" << objh << "\n";
+        if (Mouse.pos.x < Level.getobject()[i]->getposition().x + objw &&
+            Mouse.pos.x > Level.getobject()[i]->getposition().x &&
+            Mouse.pos.y < Level.getobject()[i]->getposition().y + objh &&
+            Mouse.pos.y > Level.getobject()[i]->getposition().y ) {
+            // std::cout << (Mouse.pos.x ) << "!X!" << objw<< "\n";
+            // std::cout << (Mouse.pos.y ) << "!Y!" << objh << "\n";
             std::cout << "mouse catched object [" << Level.getobject()[i]->getpath() << "]\n";
             Level.getobject()[i]->freemove = true;
             Level.getobject()[i]->update = true;
-            mousestate = MOUSE_MOVE;
+            Mouse.state = MOUSE_MOVE;
             break;
         }
    }

@@ -151,7 +151,6 @@ void Animator::readnodehierarchy(Model* model, int animid, const aiNode* node, f
 
 std::vector<glm::mat4> Animator::getbonestransform(Model* model, int animid, float time)
 {
-
     float tickespersec = (float)(scene[animations[animid].sceneind]->mAnimations[0]->mTicksPerSecond != 0 ? scene[animations[animid].sceneind]->mAnimations[0]->mTicksPerSecond : 25.0f);
     float timeinticks = time * tickespersec;
     float timeticks =  fmod(timeinticks, (float)scene[animations[animid].sceneind]->mAnimations[0]->mDuration);
@@ -160,10 +159,12 @@ std::vector<glm::mat4> Animator::getbonestransform(Model* model, int animid, flo
     std::vector<glm::mat4> vec;
     vec.resize(model->boneinfo.size());
 
-    for (int i = 0; i < model->boneinfo.size(); i++) {        
+    for (int i = 0; i < model->boneinfo.size(); i++) {
        vec[i] = (model->boneinfo[i].fintransform);
-        // printf("|%f||%f||%f|\n|%f||%f||%f|\n", vec[i][0][0], vec[i][0][1],vec[i][0][2],vec[i][1][0],vec[i][2][0],vec[i][3][0]);
+    //    printf("\n\tmodel id: %d", animid);
+    //    printf("\n|%f||%f||%f|\n|%f||%f||%f|\n", vec[i][0][0], vec[i][0][1],vec[i][0][2],vec[i][1][0],vec[i][2][0],vec[i][3][0]);
     }
+    // printf("-----------------------------\n");
     return  vec;
 }
 

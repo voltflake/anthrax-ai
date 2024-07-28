@@ -5,17 +5,23 @@ void DescriptorBuilder::cleartextureset() {
 	vkDestroyDescriptorSetLayout(renderer.getdevice()->getlogicaldevice(), singletexturesetlayout, nullptr);
 	vkDestroyDescriptorSetLayout(renderer.getdevice()->getlogicaldevice(), storagesetlayout, nullptr);
 	vkDestroyDescriptorSetLayout(renderer.getdevice()->getlogicaldevice(), globalsetlayout, nullptr);
+	vkDestroyDescriptorSetLayout(renderer.getdevice()->getlogicaldevice(), transformationsetlayout, nullptr);
+	
 	vkDestroyDescriptorPool(renderer.getdevice()->getlogicaldevice(), descriptorpool, nullptr);
 
 	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 	    vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), CameraBuffer[i].buffer, nullptr);
 	    vkFreeMemory(renderer.getdevice()->getlogicaldevice(), CameraBuffer[i].devicememory, nullptr);
 
+		vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), TransformsBuffer[i].buffer, nullptr);
+	    vkFreeMemory(renderer.getdevice()->getlogicaldevice(), TransformsBuffer[i].devicememory, nullptr);
+
 		vkDestroyBuffer(renderer.getdevice()->getlogicaldevice(), StorageBuffer[i].buffer, nullptr);
 	    vkFreeMemory(renderer.getdevice()->getlogicaldevice(), StorageBuffer[i].devicememory, nullptr);
 	}
 
 	descriptorsets.clear();
+	transformdescsets.clear();
 	storagedescsets.clear();
 	textureset.clear();
 }
@@ -60,21 +66,24 @@ VkWriteDescriptorSet writedescriptorbuffer(VkDescriptorType type, VkDescriptorSe
 
 void DescriptorBuilder::builddescriptors() {
 	BufferBuilder buffer;
+	BufferBuilder tranfbuffer;
 	BufferBuilder storagebuffer;
 
-	std::array<VkDescriptorPoolSize, 5> sizes{};
+	std::array<VkDescriptorPoolSize, 7> sizes{};
 	sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	sizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 	sizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	sizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	sizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
 	sizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	sizes[3].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	sizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	sizes[3].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	sizes[4].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+	sizes[4].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	sizes[4].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[5].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
 	sizes[5].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	sizes[6].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+	sizes[6].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
 	VkDescriptorPoolCreateInfo poolinfo = {};
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -94,6 +103,15 @@ void DescriptorBuilder::builddescriptors() {
 	setinfo.pBindings = &bindings;
 	vkCreateDescriptorSetLayout(device.getlogicaldevice(), &setinfo, nullptr, &globalsetlayout);
 
+	VkDescriptorSetLayoutBinding bonesbufferbinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	VkDescriptorSetLayoutBinding trasformbindings = { bonesbufferbinding };
+	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	setinfo.pNext = nullptr;
+	setinfo.bindingCount = 1; 
+	setinfo.flags = 0;
+	setinfo.pBindings = &trasformbindings;
+	vkCreateDescriptorSetLayout(device.getlogicaldevice(), &setinfo, nullptr, &transformationsetlayout);
+
 	VkDescriptorSetLayoutBinding storagebinding = descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
 	VkDescriptorSetLayoutBinding storagebindings = { storagebinding };
 	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -105,7 +123,7 @@ void DescriptorBuilder::builddescriptors() {
 	
 	std::array<VkDescriptorSetLayoutBinding, 3> texturebind = {descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0), descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 1), descriptorsetlayoutbinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 2)};
 	VkDescriptorSetLayoutCreateInfo set3info = {};
-	set3info.bindingCount = 3; //size of VkDescriptorSetLayoutBinding
+	set3info.bindingCount = 3;
 	set3info.flags = 0;
 	set3info.pNext = nullptr;
 	set3info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -123,6 +141,15 @@ void DescriptorBuilder::builddescriptors() {
 	descriptorsets.resize(MAX_FRAMES_IN_FLIGHT);
 	VK_ASSERT(vkAllocateDescriptorSets(device.getlogicaldevice(), &allocInfo, descriptorsets.data()), "failed to allocate descriptor sets!");
 	
+	std::vector<VkDescriptorSetLayout> animlayouts(MAX_FRAMES_IN_FLIGHT, transformationsetlayout);
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = descriptorpool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.pSetLayouts = animlayouts.data();
+	transformdescsets.resize(MAX_FRAMES_IN_FLIGHT);
+	VK_ASSERT(vkAllocateDescriptorSets(device.getlogicaldevice(), &allocInfo, transformdescsets.data()), "failed to allocate descriptor sets!");
+	
+
 	std::vector<VkDescriptorSetLayout> storagelayouts(MAX_FRAMES_IN_FLIGHT, storagesetlayout);
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorpool;
@@ -138,29 +165,35 @@ void DescriptorBuilder::builddescriptors() {
 		// UBO bffer
 		const size_t cambuffersize = MAX_FRAMES_IN_FLIGHT * paduniformbuffersize(sizeof(CameraData));
 		buffer.createbuffer(renderer, CameraBuffer[i], cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-
 		VkDescriptorBufferInfo binfo;
 		binfo.buffer = CameraBuffer[i].buffer;
 		binfo.offset = 0;//paduniformbuffersize(sizeof(CameraData)) * i;//0;
 		binfo.range = sizeof(CameraData);
-
 		VkWriteDescriptorSet setwrite;
 		setwrite = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorsets[i], 0, 1);
 		setwrite.pBufferInfo = &binfo;
 
+		const size_t tranfbuffersize = MAX_FRAMES_IN_FLIGHT * paduniformbuffersize(sizeof(AnimationTransforms));
+		tranfbuffer.createbuffer(renderer, TransformsBuffer[i], tranfbuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		VkDescriptorBufferInfo tranfinfo;
+		tranfinfo.buffer = TransformsBuffer[i].buffer;
+		tranfinfo.offset = 0;//paduniformbuffersize(sizeof(CameraData)) * i;//0;
+		tranfinfo.range = sizeof(AnimationTransforms);
+		VkWriteDescriptorSet setwritetranfs;
+		setwritetranfs = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, transformdescsets[i], 0, 1);
+		setwritetranfs.pBufferInfo = &tranfinfo;
+
 		storagebuffer.createbuffer(renderer, StorageBuffer[i], bufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-		
 		VkDescriptorBufferInfo storageinfo;
 		storageinfo.buffer = StorageBuffer[i].buffer;
 		storageinfo.offset = 0;
 		storageinfo.range = sizeof(StorageData);
-
 		VkWriteDescriptorSet setwritestorage;
 		setwritestorage = writedescriptorbuffer(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, storagedescsets[i], 0, 1);
 		setwritestorage.pBufferInfo = &storageinfo;
 
-		VkWriteDescriptorSet setwrites[] = { setwrite, setwritestorage };
-		vkUpdateDescriptorSets(device.getlogicaldevice(), 2, setwrites, 0, nullptr);
+		VkWriteDescriptorSet setwrites[] = { setwrite, setwritetranfs, setwritestorage };
+		vkUpdateDescriptorSets(device.getlogicaldevice(), 3, setwrites, 0, nullptr);
 	}
 }
 

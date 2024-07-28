@@ -48,31 +48,48 @@ void Camera::checkmovement(float delta)
 #endif
 void Camera::checkdirection(Positions mousepos)
 {
-    static float lastx = mousepos.x;
-    static float lasty = mousepos.y;
+    Positions mousemove = mousepos;
+
+    float rotateSpeed = 0.0007f;
+
+    if (mousemove.x || mousemove.y) {
+        float yaw = rotateSpeed * mousemove.x;
+        float pitch = rotateSpeed * mousemove.y;
+
+        Rotation = glm::rotate(glm::mat4(1.0), -yaw, glm::vec3(0.f, 1.f, 0.f));
+        Rotation = glm::rotate(Rotation, -pitch, Right);
+    }
+
+
+    Direction = glm::normalize(glm::mat3(Rotation) * Direction);
+    Up = glm::normalize(glm::mat3(Rotation) * Up);
+    Right = glm::normalize(glm::cross(Direction, Up));
+    Front = -Direction;
+    // static float lastx = mousepos.x;
+    // static float lasty = mousepos.y;
   
-    float xoffset = mousepos.x - lastx;
-    float yoffset = lasty - mousepos.y; 
-    lastx = mousepos.x;
-    lasty = mousepos.y;
+    // float xoffset = mousepos.x - lastx;
+    // float yoffset = lasty - mousepos.y; 
+    // lastx = mousepos.x;
+    // lasty = mousepos.y;
 
-    float sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    // float sensitivity = 0.05f;
+    // xoffset *= sensitivity;
+    // yoffset *= sensitivity;
 
-    yaw   += xoffset;
-    pitch += yoffset;
+    // yaw   += xoffset;
+    // pitch += yoffset;
 
-    if(pitch > 89.0f)
-        pitch = 89.0f;
-    if(pitch < -89.0f)
-        pitch = -89.0f;
+    // if(pitch > 89.0f)
+    //     pitch = 89.0f;
+    // if(pitch < -89.0f)
+    //     pitch = -89.0f;
 
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    Front = glm::normalize(direction);
-    Right = glm::normalize(glm::cross(Front, WorldUp));
-    Up    = glm::normalize(glm::cross(Right, Front));
+    // glm::vec3 direction;
+    // direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    // direction.y = sin(glm::radians(pitch));
+    // direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    // Front = glm::normalize(direction);
+    // Right = glm::normalize(glm::cross(Front, WorldUp));
+    // Up    = glm::normalize(glm::cross(Right, Front));
 }

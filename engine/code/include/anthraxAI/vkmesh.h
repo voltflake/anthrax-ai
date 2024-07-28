@@ -63,19 +63,11 @@ struct Model {
 	std::vector<VertexBoneData> vert2bones;
 	std::vector<int> meshbase;
 	std::map<std::string, int> bonamap;
-	// std::vector<Node> nodes;
-	
-	// std::map<std::string, int> nodeMap;
+
 	std::vector<glm::mat4> bonestransforms;
 	std::vector<BoneInfo> boneinfo;
 
-	// aiNode* rootnode;
-    // const aiScene* scene = nullptr;
 	std::vector<glm::mat4> fintransforms;
-
-	// std::map<std::string, unsigned int> boneMap;
-	// std::vector<Animation> animations;
-	// std::vector<Animator> animator;
 };
 
 class MeshBuilder {

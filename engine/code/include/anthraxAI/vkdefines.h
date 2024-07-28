@@ -228,10 +228,12 @@ struct CameraData {
 #define DEPTH_ARRAY_SCALE 512
 #define MAX_BONES 400
 struct StorageData {
-    glm::mat4 bonesmatrices[MAX_BONES];
-
 	uint data[DEPTH_ARRAY_SCALE] = {0};
 
+};
+
+struct AnimationTransforms {
+    glm::mat4 bonesmatrices[MAX_BONES];
 };
 
 struct FrameData {
@@ -246,12 +248,6 @@ struct UploadContext {
 	VkFence UploadFence;
 	VkCommandPool CommandPool;
 	VkCommandBuffer CommandBuffer;
-};
-
-struct DebugAnim {
-	int scale = 1;
-	VkDescriptorSet desc;
-	std::string path;
 };
 
 struct Positions {
@@ -295,6 +291,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 typedef std::array<FrameData, MAX_FRAMES_IN_FLIGHT> FrameArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> UboArray;
 typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> StorageArray;
+typedef std::array<BufferHandler, MAX_FRAMES_IN_FLIGHT> AnimationTransformsArray;
 typedef std::unordered_map<int, Data> ResourcesMap;
 
 

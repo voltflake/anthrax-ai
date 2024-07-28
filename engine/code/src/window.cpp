@@ -44,8 +44,8 @@ void Engine::eventhandler(float delta)
 		POINT p;
 		if (GetCursorPos(&p))
 		{
-			mousepos = {p.x, p.y};
-			EditorCamera.checkdirection(mousepos);
+			Mouse.pos = {p.x, p.y};
+			EditorCamera.checkdirection(Mouse.pos);
 		}
 	}
 
@@ -278,10 +278,10 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 				Level.getplayer()->state |= MOVE_DOWN;
         	}
 			if (k == MINUS_KEY) {
-				debugboneID = debugboneID < 0 ? 0 : debugboneID - 1;
+				Debug.boneID = Debug.boneID < 0 ? 0 : Debug.boneID - 1;
 			}
 			if (k == PLUS_KEY) {
-				debugboneID = debugboneID > 100 ? 100 : debugboneID + 1;
+				Debug.boneID = Debug.boneID > 100 ? 100 : Debug.boneID + 1;
 			}
 			return true;
 		}
@@ -291,31 +291,31 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 		case XCB_MOTION_NOTIFY: {
 			xcb_motion_notify_event_t *motion = (xcb_motion_notify_event_t *)event;
 
-			if (mousestate == MOUSE_MOVE) {
-				mousepos.x = motion->event_x;
-            	mousepos.y = motion->event_y;
+			if (Mouse.state == MOUSE_MOVE) {
+				Mouse.pos.x = motion->event_x;
+            	Mouse.pos.y = motion->event_y;
 				//printf ("Mouse position: %d | %d |\n", motion->event_x, motion->event_y );
 			}
-			if (mousestate == MOUSE_PRESSED || mousestate == MOUSE_SELECTED) {
-				mousepos.x = motion->event_x;
-            	mousepos.y = motion->event_y;
-				mouseposdelta.x = (mousebegin.x - motion->event_x);
-            	mouseposdelta.y = (mousebegin.y - motion->event_y);
-				mousebegin = mousepos;
+			if (Mouse.state == MOUSE_PRESSED || Mouse.state == MOUSE_SELECTED) {
+				Mouse.pos.x = motion->event_x;
+            	Mouse.pos.y = motion->event_y;
+				Mouse.posdelta.x = (Mouse.begin.x - motion->event_x);
+            	Mouse.posdelta.y = (Mouse.begin.y - motion->event_y);
+				Mouse.begin = Mouse.pos;
 				if (state & PLAY_GAME) {
-					EditorCamera.checkdirection(mousepos);
+					EditorCamera.checkdirection(Mouse.posdelta);
 				}
-				//printf ("Mouse delta: %d | %d |\n", mouseposdelta.x, mouseposdelta.y );
+				//printf ("Mouse delta: %d | %d |\n", Mouse.posdelta.x, Mouse.posdelta.y );
 			}
 			return true;
 		}
 	  	case XCB_BUTTON_PRESS: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
             if (e->detail == 1) {
-            	mousepos.x = e->event_x;
-            	mousepos.y = e->event_y;
-	            mousebegin = mousepos;
-				mousestate = MOUSE_PRESSED;
+            	Mouse.pos.x = e->event_x;
+            	Mouse.pos.y = e->event_y;
+	            Mouse.begin = Mouse.pos;
+				Mouse.state = MOUSE_PRESSED;
             	std::cout <<  e->event_x << "|press|"<< e->event_y << '\n';
             }
            	return true;
@@ -323,15 +323,15 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
         case XCB_BUTTON_RELEASE: {
             xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
             if (e->detail == 1 && Level.check2) {
-                mousepos.x = 0;
-            	mousepos.y = 0;
+                Mouse.pos.x = 0;
+            	Mouse.pos.y = 0;
             }
 			else if (e->detail == 1) {
-				mousepos.x = e->event_x;
-            	mousepos.y = e->event_y;
-				mousestate = MOUSE_RELEASED;
+				Mouse.pos.x = e->event_x;
+            	Mouse.pos.y = e->event_y;
+				Mouse.state = MOUSE_RELEASED;
 				gizmomove.axis = AXIS_UNDEF; 
-            	std::cout <<  mousepos.x << "|release|"<< mousepos.y << '\n';
+            	std::cout <<  Mouse.pos.x << "|release|"<< Mouse.pos.y << '\n';
 			}
            	return true;
         }
@@ -402,8 +402,7 @@ void Engine::runlinux() {
 
 		start = std::chrono::system_clock::now();
 		delta = start - end;
-		deltatime = delta;
-		calculateFPS(delta);
+		Debug.calculateFPS(delta);
 
 		loop();
 
@@ -412,12 +411,3 @@ void Engine::runlinux() {
 }
 #endif
 
-void Engine::calculateFPS(std::chrono::duration<double, std::milli>& delta) {
-
-    if (delta.count() < (1000.0f / MAX_FPS + 2.0f / MAX_FPS)) {
-        std::chrono::duration<double, std::milli> deltams((1000.0f / MAX_FPS) + (2.0f / MAX_FPS) - delta.count());
-        auto msduration = std::chrono::duration_cast<std::chrono::milliseconds>(deltams);
-        std::this_thread::sleep_for(std::chrono::milliseconds(msduration.count()));
-        fps = 1000.0f / deltams.count();
-    }
-}

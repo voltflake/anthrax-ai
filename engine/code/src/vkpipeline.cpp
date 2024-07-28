@@ -169,6 +169,10 @@ void PipelineBuilder::buildpipeline(bool check) {
 	creatematerial(pipelineswrite[ind], pipelayouts[ind], "monkey");
 
 // animated model pipeline
+	VkDescriptorSetLayout setLayoutsanim[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout(), descriptors->getstoragelayout(), descriptors->gettransformlayout()};
+	pipelinelayoutinfo.setLayoutCount = 4;
+	pipelinelayoutinfo.pSetLayouts = setLayoutsanim;
+	
 	ind = 2;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderanimated));

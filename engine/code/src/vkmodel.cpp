@@ -136,7 +136,7 @@ void ModelBuilder::processnode(aiNode *node, const aiScene *scene, int id)
     }
 }
 
-void ModelBuilder::loadmodel(std::string path,float time, int id)
+void ModelBuilder::loadmodel(std::string path, int id)
 {
     Assimp::Importer importer;
     const aiScene* scene = NULL;

@@ -1,19 +1,53 @@
 #include "anthraxAI/vkengine.h"
 
-void Engine::updatebones(int id) {
-    if (animprepared) {
-        float timesec = (float)((double)getcurtime() - (double)startms) / 1000.0f;
-		std::vector<glm::mat4> vec = animator.getbonestransform(Builder.getmodel(id), id, timesec * animspeed);
+void Engine::updatebones(int id, int objind) {
+    if (Debug.animprepared) {
+   	int frameind = FrameIndex % MAX_FRAMES_IN_FLIGHT;
+
+        float timesec = (float)((double)getcurtime() - (double)Debug.startms) / 1000.0f;
+		std::vector<glm::mat4> vec = animator.getbonestransform(Builder.getmodel(103), 103, timesec * Debug.animspeed);
 
         for(int i = 0; (i < vec.size() ); i++) {
-            storagedata.bonesmatrices[i] = vec[i];
-        }
+        
+            animtransf.bonesmatrices[i] = vec[i] ;
 
-        char* storagetmp;
-        vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, sizeof(glm::mat4 )* MAX_BONES, 0, (void**)&storagetmp);
-        memcpy( storagetmp, &storagedata, (size_t)sizeof(glm::mat4)  * MAX_BONES);
-        vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
+            
+        }
+ char* datadst;
+   	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms));
+  	vkMapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize, 0, (void**)&datadst);
+	datadst += (0 * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms)) * frameind);
+    memcpy( datadst, &animtransf, (size_t)sizeof(AnimationTransforms));
+  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory);
+
+		
+        
+        std::vector<glm::mat4> vec2 = animator.getbonestransform(Builder.getmodel(104), 104, timesec * Debug.animspeed);
+memset(animtransf.bonesmatrices, 0, sizeof(animtransf.bonesmatrices));
+        for(int i = 0; (i < vec2.size() ); i++) {
+//             if (id == 104) {
+//             animtransf.bonesmatrices[i] = glm::mat4(1.0f);
+// // printf("\t hahahahaahaahah\n\n");
+//             }
+//             else {
+            animtransf.bonesmatrices[i] = vec2[i];
+
+            //}
+        }
+    
+    char* datadst2;
+ const size_t  sceneParamBufferSize2 = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms));
+  	vkMapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize2, 0, (void**)&datadst2);
+	datadst2 += ( 1 * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms)) * frameind);
+    memcpy( datadst2, &animtransf, (size_t)sizeof(AnimationTransforms));
+  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory);
+        // char* storagetmp;
+        // vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, sizeof(glm::mat4 )* MAX_BONES, 0, (void**)&storagetmp);
+        // memcpy( storagetmp, &storagedata, (size_t)sizeof(glm::mat4)  * MAX_BONES);
+        // vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
     }
+memset(animtransf.bonesmatrices, 0, sizeof(animtransf.bonesmatrices));
+
 }
 
 void Engine::preparecamerabuffer() {
@@ -29,7 +63,7 @@ void Engine::preparecamerabuffer() {
 	camdata.view = view;
 	camdata.viewproj = projection * view;
 	camdata.viewpos = glm::vec4(0, 0, 0, 1.0);
-	camdata.mousepos = {mousepos.x, mousepos.y, 0, 0};
+	camdata.mousepos = {Mouse.pos.x, Mouse.pos.y, 0, 0};
 	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
 
 	char* datadst;
@@ -45,7 +79,7 @@ void Engine::preparecamerabuffer() {
 
 void Engine::mousepicking() {
 
-    if (mousestate != MOUSE_PRESSED) {
+    if (Mouse.state != MOUSE_PRESSED) {
         return;
     }
     
@@ -61,14 +95,14 @@ void Engine::mousepicking() {
 
     void* storagetmp;
     VkDeviceSize storagesize = sizeof(uint )* DEPTH_ARRAY_SCALE;
-    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, sizeof(glm::mat4)* MAX_BONES, storagesize, 0, (void**)&storagetmp);
+    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, storagesize, 0, (void**)&storagetmp);
     uint* u = static_cast<uint*>(storagetmp);
 
     int selectedID = -1;
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
         if (u[i] != 0) {
             selectedID = u[i];
-            mousestate = MOUSE_SELECTED;
+            Mouse.state = MOUSE_SELECTED;
             break;
         }
 
@@ -117,14 +151,14 @@ void Engine::update3d() {
         return;
     }
 
-    if ((mouseposdelta.x < -1 || mouseposdelta.x > 1) && gizmomove.axis == AXIS_X) {
-        model_it->pos.x -= 0.06 *  mouseposdelta.x ;
+    if ((Mouse.posdelta.x < -1 || Mouse.posdelta.x > 1) && gizmomove.axis == AXIS_X) {
+        model_it->pos.x -= 0.06 *  Mouse.posdelta.x ;
     }
-    if ((mouseposdelta.y < -1 || mouseposdelta.y > 1) && gizmomove.axis == AXIS_Y) {
-        model_it->pos.y += 0.06 *  mouseposdelta.y ;
+    if ((Mouse.posdelta.y < -1 || Mouse.posdelta.y > 1) && gizmomove.axis == AXIS_Y) {
+        model_it->pos.y += 0.06 *  Mouse.posdelta.y ;
     }
-    if ((mouseposdelta.y < -1 || mouseposdelta.y > 1) && gizmomove.axis == AXIS_Z) {
-        model_it->pos.z += 0.06 *  mouseposdelta.y;
+    if ((Mouse.posdelta.y < -1 || Mouse.posdelta.y > 1) && gizmomove.axis == AXIS_Z) {
+        model_it->pos.z += 0.06 *  Mouse.posdelta.y;
     }
     model_it->selected = true;
     

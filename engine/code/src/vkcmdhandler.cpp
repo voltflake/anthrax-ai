@@ -34,7 +34,8 @@ VkSubmitInfo CmdHandler::submitinfo(VkPipelineStageFlags waitstage, VkSemaphore*
    	VkSubmitInfo submit = {};
 	submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submit.pNext = nullptr;
-	submit.pWaitDstStageMask = &waitstage;
+	VkPipelineStageFlags waitstage2 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	submit.pWaitDstStageMask = &waitstage2;
 	submit.waitSemaphoreCount = 1;
 	submit.pWaitSemaphores = presentsem;
 	submit.signalSemaphoreCount = 1;
@@ -45,7 +46,7 @@ VkSubmitInfo CmdHandler::submitinfo(VkPipelineStageFlags waitstage, VkSemaphore*
     return submit;
 }
 
-VkPresentInfoKHR CmdHandler::presentinfo(VkSwapchainKHR* swapchain, VkSemaphore* rendersem, const uint32_t swapchind)
+VkPresentInfoKHR CmdHandler::presentinfo(VkSwapchainKHR* swapchain, VkSemaphore* rendersem, uint32_t* swapchind)
 {
     VkPresentInfoKHR presentinfo = {};
 	presentinfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -54,7 +55,7 @@ VkPresentInfoKHR CmdHandler::presentinfo(VkSwapchainKHR* swapchain, VkSemaphore*
 	presentinfo.swapchainCount = 1;
 	presentinfo.pWaitSemaphores = rendersem;
 	presentinfo.waitSemaphoreCount = 1;
-	presentinfo.pImageIndices = &swapchind;
+	presentinfo.pImageIndices = swapchind;
 
     return presentinfo;
 }
@@ -76,9 +77,9 @@ VkResult CmdHandler::present(VkQueue queue, VkPresentInfoKHR prinfo)
     return vkQueuePresentKHR(queue, &prinfo);
 }
 
-void CmdHandler::submit(VkQueue queue, VkSubmitInfo subinfo, VkFence fence)
+void CmdHandler::submit(VkQueue queue, VkSubmitInfo subinfo, VkFence* fence)
 {
-	VK_ASSERT(vkQueueSubmit(queue, 1, &subinfo, fence), "failed to submit queue!");
+	VK_ASSERT(vkQueueSubmit(queue, 1, &subinfo, *fence), "failed to submit queue!");
 }
 
 void CmdHandler::begin(VkCommandBufferBeginInfo cmdinfo)

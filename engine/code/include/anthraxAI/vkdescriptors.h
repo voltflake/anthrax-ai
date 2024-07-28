@@ -19,6 +19,7 @@ public:
 	size_t paduniformbuffersize(size_t originalsize);
 
 	VkDescriptorSetLayout& getgloballayout() { return globalsetlayout; };
+	VkDescriptorSetLayout& gettransformlayout() { return transformationsetlayout; };
 	VkDescriptorSetLayout& getstoragelayout() { return storagesetlayout; };
 	VkDescriptorSetLayout& getsamplerlayout() { return singletexturesetlayout; };
 
@@ -28,15 +29,18 @@ public:
 	void cleartextureset();
 
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
+	AnimationTransformsArray& 		gettransformbuffer() 	{return TransformsBuffer;};
 	StorageArray& 					getstoragebuffer() 		{return StorageBuffer;};
 
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptorsets;};
+	std::vector<VkDescriptorSet>& gettranformset()	{ return transformdescsets; }
 	std::vector<VkDescriptorSet>& getstorageset() { return storagedescsets;};
 
 	TextureBuilder texturehandler;
 
 private:
 	VkDescriptorSetLayout globalsetlayout;
+	VkDescriptorSetLayout transformationsetlayout;
 	VkDescriptorSetLayout storagesetlayout;
 	VkDescriptorSetLayout singletexturesetlayout;
 
@@ -44,9 +48,11 @@ private:
 	VkDescriptorSet attachmentset;
 	VkDescriptorPool descriptorpool;
 	std::vector<VkDescriptorSet> descriptorsets;
+	std::vector<VkDescriptorSet> transformdescsets;
 	std::vector<VkDescriptorSet> storagedescsets;
 
 	UboArray 		CameraBuffer;
+	AnimationTransformsArray TransformsBuffer;
 	StorageArray	StorageBuffer;
 
 	DeletionQueue*	deletorhandler;

@@ -1,3 +1,6 @@
+THE PROJECT IS IN DEVELOPMENT
+MIGHT NOT WORK ON WINDOWS
+
 # anthraxAI
 
 The Vulkan-Based Game Engine

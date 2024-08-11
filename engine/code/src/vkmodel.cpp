@@ -11,6 +11,41 @@ Model* ModelBuilder::getmodel(int id)
 	}
 }
 
+void ModelBuilder::updatedescriptors(RenderBuilder& renderer,  DescriptorBuilder* desc)
+{
+    BufferBuilder buffer;
+    for (auto& model : models)
+	{
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = desc->getdescriptorpool();
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &(desc->getstoragelayout());
+
+        VK_ASSERT(vkAllocateDescriptorSets(renderer.getdevice()->getlogicaldevice(), &allocInfo, &model.second.descritor), "failed to allocate descriptor sets!");
+
+
+        buffer.createbuffer(renderer, model.second.storagebuffer, BONE_ARRAY_SIZE, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+            
+        VkDescriptorBufferInfo storageinfo;
+        storageinfo.buffer = model.second.storagebuffer.buffer;
+        storageinfo.offset = 0;
+        storageinfo.range = BONE_ARRAY_SIZE;
+        
+        VkWriteDescriptorSet write = {};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.pNext = nullptr;
+
+        write.dstBinding = 0;
+        write.dstSet = model.second.descritor;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        write.pBufferInfo = &storageinfo;
+
+        vkUpdateDescriptorSets(renderer.getdevice()->getlogicaldevice(), 1, &write, 0, nullptr);
+	}
+}
+
 void ModelBuilder::setvertexbonedata(Vertex& vert, int id, float weight)
 {
     for (int i = 0; i < BONE_INFLUENCE; i++) {

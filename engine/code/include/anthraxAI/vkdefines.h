@@ -54,6 +54,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 #define MAX_FPS 120
 #define FPS_SAMPLER 100
 
+
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
 {                                                               \
@@ -226,14 +227,16 @@ struct CameraData {
 };
 
 #define DEPTH_ARRAY_SCALE 512
-#define MAX_BONES 400
+#define MAX_BONES 200
 struct StorageData {
+    glm::mat4 bonesmatrices[MAX_BONES];
 	uint data[DEPTH_ARRAY_SCALE] = {0};
-
 };
 
+#define BONE_ARRAY_SIZE (sizeof(glm::mat4) * MAX_BONES)
+
 struct AnimationTransforms {
-    glm::mat4 bonesmatrices[MAX_BONES];
+    glm::mat4* bonesmatrices{nullptr};
 };
 
 struct FrameData {

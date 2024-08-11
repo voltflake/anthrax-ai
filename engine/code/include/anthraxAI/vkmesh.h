@@ -60,6 +60,9 @@ struct BoneInfo {
 struct Model {
 	std::vector<Mesh*> meshes;
 
+	BufferHandler storagebuffer;
+	VkDescriptorSet descritor;
+
 	std::vector<VertexBoneData> vert2bones;
 	std::vector<int> meshbase;
 	std::map<std::string, int> bonamap;

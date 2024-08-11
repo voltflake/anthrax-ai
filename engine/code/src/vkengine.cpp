@@ -105,8 +105,9 @@ void Engine::reloadresources() {
 	Builder.builddescriptors();
 
 	Builder.initmeshbuilder();
-
 	initmeshes();
+	Builder.updatemodeldescriptors();
+
 	initscene();
 
 	for (int i = 0; i < Level.getobject().size(); i++) {

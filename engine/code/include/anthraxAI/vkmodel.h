@@ -41,6 +41,8 @@ public:
 
     void setvertexbonedata(Vertex& vert, int id, float weight);
 
+    void updatedescriptors(RenderBuilder& renderer,  DescriptorBuilder* desc);
+
 private:
 	DeletionQueue*	deletor;
     int totalvert = 0;

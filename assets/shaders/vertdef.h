@@ -12,7 +12,7 @@ layout (location = 2) out vec3 outcolor;
 layout (location = 3) out vec2 outcoord;
 layout (location = 4) out vec4 outweight;
 layout (location = 5) out ivec4 outboneid;
-const int MAX_BONES = 400;
+const int MAX_BONES = 200;
 const int BONE_INFLUENCE = 4;
 
 layout( push_constant ) uniform constants

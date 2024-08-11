@@ -64,10 +64,10 @@ void PipelineBuilder::clearpipeline() {
 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayoutsread, nullptr);
 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineread, nullptr);
 	
-	for (int i = 0; i < 3; ++i) {
-		vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayouts[i], nullptr);
-		vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineswrite[i], nullptr);
-	}
+	// for (int i = 0; i < 3; ++i) {
+	// 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayouts[i], nullptr);
+	// 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineswrite[i], nullptr);
+	// }
 }
 
 void PipelineBuilder::buildpipeline(bool check) {
@@ -169,10 +169,6 @@ void PipelineBuilder::buildpipeline(bool check) {
 	creatematerial(pipelineswrite[ind], pipelayouts[ind], "monkey");
 
 // animated model pipeline
-	VkDescriptorSetLayout setLayoutsanim[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout(), descriptors->getstoragelayout(), descriptors->gettransformlayout()};
-	pipelinelayoutinfo.setLayoutCount = 4;
-	pipelinelayoutinfo.pSetLayouts = setLayoutsanim;
-	
 	ind = 2;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderanimated));

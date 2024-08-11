@@ -72,7 +72,6 @@ public:
 
 	CameraData 					camdata;
 	StorageData 				storagedata;
-	AnimationTransforms			animtransf;
 
 // builder candidate 
 	VkExtent2D 					WindowExtend = {1200, 800};
@@ -112,7 +111,7 @@ private:
 	void 						update();
 	void 						update3d();
 	void 						preparecamerabuffer();
-	void 						updatebones(int id, int objind);
+	void 						updatebones(int id);
 
 	void 						mousepicking();
 	void 						render();

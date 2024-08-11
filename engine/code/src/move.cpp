@@ -1,53 +1,20 @@
 #include "anthraxAI/vkengine.h"
 
-void Engine::updatebones(int id, int objind) {
-    if (Debug.animprepared) {
-   	int frameind = FrameIndex % MAX_FRAMES_IN_FLIGHT;
 
+void Engine::updatebones(int id) {
+    if (Debug.animprepared) {
         float timesec = (float)((double)getcurtime() - (double)Debug.startms) / 1000.0f;
-		std::vector<glm::mat4> vec = animator.getbonestransform(Builder.getmodel(103), 103, timesec * Debug.animspeed);
+		std::vector<glm::mat4> vec = animator.getbonestransform(Builder.getmodel(id), id, timesec * Debug.animspeed);
 
         for(int i = 0; (i < vec.size() ); i++) {
-        
-            animtransf.bonesmatrices[i] = vec[i] ;
-
-            
+            storagedata.bonesmatrices[i] = Builder.getmodel(id)->fintransforms[i];//vec[i];
         }
- char* datadst;
-   	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms));
-  	vkMapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize, 0, (void**)&datadst);
-	datadst += (0 * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms)) * frameind);
-    memcpy( datadst, &animtransf, (size_t)sizeof(AnimationTransforms));
-  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory);
 
-		
-        
-        std::vector<glm::mat4> vec2 = animator.getbonestransform(Builder.getmodel(104), 104, timesec * Debug.animspeed);
-memset(animtransf.bonesmatrices, 0, sizeof(animtransf.bonesmatrices));
-        for(int i = 0; (i < vec2.size() ); i++) {
-//             if (id == 104) {
-//             animtransf.bonesmatrices[i] = glm::mat4(1.0f);
-// // printf("\t hahahahaahaahah\n\n");
-//             }
-//             else {
-            animtransf.bonesmatrices[i] = vec2[i];
-
-            //}
-        }
-    
-    char* datadst2;
- const size_t  sceneParamBufferSize2 = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms));
-  	vkMapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory, 0, sceneParamBufferSize2, 0, (void**)&datadst2);
-	datadst2 += ( 1 * Builder.descriptors.paduniformbuffersize(sizeof(AnimationTransforms)) * frameind);
-    memcpy( datadst2, &animtransf, (size_t)sizeof(AnimationTransforms));
-  	vkUnmapMemory(Builder.getdevice(), Builder.descriptors.gettransformbuffer()[FrameIndex].devicememory);
-        // char* storagetmp;
-        // vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, sizeof(glm::mat4 )* MAX_BONES, 0, (void**)&storagetmp);
-        // memcpy( storagetmp, &storagedata, (size_t)sizeof(glm::mat4)  * MAX_BONES);
-        // vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
+        char* storagetmp;
+        vkMapMemory(Builder.getdevice(), Builder.getmodel(id)->storagebuffer.devicememory, 0, BONE_ARRAY_SIZE, 0, (void**)&storagetmp);
+        memcpy( storagetmp, &storagedata.bonesmatrices, (size_t)BONE_ARRAY_SIZE);
+        vkUnmapMemory(Builder.getdevice(), Builder.getmodel(id)->storagebuffer.devicememory);
     }
-memset(animtransf.bonesmatrices, 0, sizeof(animtransf.bonesmatrices));
-
 }
 
 void Engine::preparecamerabuffer() {
@@ -95,7 +62,7 @@ void Engine::mousepicking() {
 
     void* storagetmp;
     VkDeviceSize storagesize = sizeof(uint )* DEPTH_ARRAY_SCALE;
-    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, 0, storagesize, 0, (void**)&storagetmp);
+    vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, BONE_ARRAY_SIZE, storagesize, 0, (void**)&storagetmp);
     uint* u = static_cast<uint*>(storagetmp);
 
     int selectedID = -1;
@@ -109,6 +76,7 @@ void Engine::mousepicking() {
     }
     std::memset(storagetmp, 0, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
     vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
+
 
     bool selected = false;
     RenderObject* rq = Builder.getrenderqueue().data();

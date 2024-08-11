@@ -17,6 +17,9 @@ public:
 	void updatesamplerdescriptors2(std::string texture,std::string texture2);
 
 	size_t paduniformbuffersize(size_t originalsize);
+	void* allocallign(size_t size, size_t alignment, size_t objamount);
+
+	VkDescriptorPool getdescriptorpool() { return descriptorpool; }
 
 	VkDescriptorSetLayout& getgloballayout() { return globalsetlayout; };
 	VkDescriptorSetLayout& gettransformlayout() { return transformationsetlayout; };
@@ -33,10 +36,12 @@ public:
 	StorageArray& 					getstoragebuffer() 		{return StorageBuffer;};
 
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptorsets;};
-	std::vector<VkDescriptorSet>& gettranformset()	{ return transformdescsets; }
+	VkDescriptorSet gettranformset()	{ return transformdescsets; }
 	std::vector<VkDescriptorSet>& getstorageset() { return storagedescsets;};
 
 	TextureBuilder texturehandler;
+
+	AnimationTransforms			animtransf;
 
 private:
 	VkDescriptorSetLayout globalsetlayout;
@@ -48,11 +53,12 @@ private:
 	VkDescriptorSet attachmentset;
 	VkDescriptorPool descriptorpool;
 	std::vector<VkDescriptorSet> descriptorsets;
-	std::vector<VkDescriptorSet> transformdescsets;
+	VkDescriptorSet transformdescsets;
 	std::vector<VkDescriptorSet> storagedescsets;
 
 	UboArray 		CameraBuffer;
 	AnimationTransformsArray TransformsBuffer;
+	// BufferHandler TransformsBuffer;
 	StorageArray	StorageBuffer;
 
 	DeletionQueue*	deletorhandler;

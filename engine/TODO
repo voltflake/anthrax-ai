@@ -1,1 +1,35 @@
-separete logic between 
+1. process material loading; connection between model class and resource data structure
+
+2. parser for 3d levels? improve 2d/3d modes handling
+
+3. fix lighting; direction ligting; point lights
+
+----------
+
+Ambitious:
+- completely rewrite engine architecture
+(probably combine this with streams, but at separate time work on the features for anthraxAI and make videos)
+
+----------
+
+
+parser thoughts:
+
+- two folders: levels/2d and levels/3d
+
+- if we are in 2d mode -> parse 2d level
+- if we are in 3d mode -> parse 3d level
+
+- 3d level text: 
+    - model path
+    - input texture (also check whether model contains material)
+    - position (x y z)
+    - is animation
+        - path to other animations
+        - speed
+
+(add some basic assertions eg if we are passing correct node names)
+
+implementation details:
+    - recursive function Parse()
+    

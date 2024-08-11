@@ -46,7 +46,7 @@ void Engine::load3dresources()
     Resources.add(TYPE_MODEL + 3, 
 	    Data("dummy.png", {5, 0, 0}, false, false));
     Resources.add(TYPE_MODEL + 4, 
-	    Data("dummy.png", {15, 0, 0}, false, false));
+	    Data("dummy.png", {8, 0, 0}, false, false));
 
     Resources.add(TYPE_GIZMO + 0, 
 	    Data("dummy.png", {0, 0, 0}, false, false));
@@ -68,36 +68,33 @@ void Engine::initresources()
 
 void Engine::initmeshes()
 {
-
 	if (Level.test3d) {
 
-	Builder.loadmodel("models/monkeytextured.obj", TYPE_MODEL + 0);
-	Builder.loadmodel("models/cube.obj", TYPE_MODEL + 1);
-	Builder.loadmodel("models/sphere.obj", TYPE_MODEL + 2);
+		Builder.loadmodel("models/monkeytextured.obj", TYPE_MODEL + 0);
+		Builder.loadmodel("models/cube.obj", TYPE_MODEL + 1);
+		Builder.loadmodel("models/sphere.obj", TYPE_MODEL + 2);
 
-	Builder.loadmodel("models/gizmox.obj", TYPE_GIZMO + 0);
-	Builder.loadmodel("models/gizmoy.obj", TYPE_GIZMO + 1);
-	Builder.loadmodel("models/gizmoz.obj", TYPE_GIZMO + 2);
-	
-	Debug.startms = getcurtime();
-	Builder.loadmodel("models/forgiving-mesh-anim.dae", TYPE_MODEL + 3);
-	animator.init({"models/forgiving-mesh-anim.dae", "models/body-jab-cross.dae", "models/double-kick-anim.dae"} , TYPE_MODEL + 3);
-	
-	Builder.loadmodel("models/Walking-mesh-anim.dae", TYPE_MODEL + 4);
-	animator.init({"models/Walking-mesh-anim.dae", "models/Dying-anim.dae"} , TYPE_MODEL + 4);
+		Builder.loadmodel("models/gizmox.obj", TYPE_GIZMO + 0);
+		Builder.loadmodel("models/gizmoy.obj", TYPE_GIZMO + 1);
+		Builder.loadmodel("models/gizmoz.obj", TYPE_GIZMO + 2);
+		
+		Debug.startms = getcurtime();
+		Builder.loadmodel("models/forgiving-mesh-anim.dae", TYPE_MODEL + 3);
+		animator.init({"models/forgiving-mesh-anim.dae", "models/body-jab-cross.dae", "models/double-kick-anim.dae"} , TYPE_MODEL + 3);
+		
+		Builder.loadmodel("models/Walking-mesh-anim.dae", TYPE_MODEL + 4);
+		animator.init({"models/Walking-mesh-anim.dae", "models/Dying-anim.dae"} , TYPE_MODEL + 4);
 
-	Debug.animprepared = true;
-	
-	for (int i = TYPE_MODEL; i < TYPE_MODEL + 5; i++) {
-		Builder.updatemodel(Builder.getmodel(i));
-	}
-	for (int i = TYPE_GIZMO; i < TYPE_GIZMO + 3; i++) {
-		Builder.updatemodel(Builder.getmodel(i));
-	}
-
+		Debug.animprepared = true;
+		
+		for (int i = TYPE_MODEL; i < TYPE_MODEL + 5; i++) {
+			Builder.updatemodel(Builder.getmodel(i));
+		}
+		for (int i = TYPE_GIZMO; i < TYPE_GIZMO + 3; i++) {
+			Builder.updatemodel(Builder.getmodel(i));
+		}
 	}
     else {
-    Builder.loadmeshes();
-
+    	Builder.loadmeshes();
     }
 }

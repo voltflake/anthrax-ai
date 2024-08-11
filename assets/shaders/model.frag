@@ -5,19 +5,13 @@ layout (location = 4) in vec4 inweight;
 layout (location = 5) flat in ivec4 inboneid;
 
 #define DEPTH_ARRAY_SCALE 512
-const int MAX_BONES = 400;
+const int MAX_BONES = 200;
 
 layout(set = 2, binding = 0) buffer writeonly StorageArray
 {
+    mat4 bonesmatrices[MAX_BONES];
     uint data[DEPTH_ARRAY_SCALE];
 } storagedata;
-
-layout(set = 3, binding = 0) uniform  TransformsBuffer
-{
-    mat4 transforms[MAX_BONES];
-
-} transforms;
-
 
 void main()
 {

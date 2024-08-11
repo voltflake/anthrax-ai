@@ -157,10 +157,13 @@ std::vector<glm::mat4> Animator::getbonestransform(Model* model, int animid, flo
 
     readnodehierarchy(model, animid, scene[animations[animid].sceneind]->mRootNode, timeticks, glm::mat4(1.0));
     std::vector<glm::mat4> vec;
-    vec.resize(model->boneinfo.size());
+    vec.resize(model->boneinfo.size(), glm::mat4(1.0));
+    model->fintransforms.resize(model->boneinfo.size());
 
     for (int i = 0; i < model->boneinfo.size(); i++) {
-       vec[i] = (model->boneinfo[i].fintransform);
+        vec[i] = (model->boneinfo[i].fintransform);
+        model->fintransforms[i] = model->boneinfo[i].fintransform;
+
     //    printf("\n\tmodel id: %d", animid);
     //    printf("\n|%f||%f||%f|\n|%f||%f||%f|\n", vec[i][0][0], vec[i][0][1],vec[i][0][2],vec[i][1][0],vec[i][2][0],vec[i][3][0]);
     }

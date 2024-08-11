@@ -63,7 +63,7 @@ public:
 	VkDescriptorSet&			getattachmentset() { return descriptors.getattachmentdescriptor(); };
 
 	std::vector<VkDescriptorSet>& 			getstorageset() { return descriptors.getstorageset();};
-	std::vector<VkDescriptorSet>& 			gettranformset() { return descriptors.gettranformset(); }
+	VkDescriptorSet 			gettranformset() { return descriptors.gettranformset(); }
 	std::vector<VkDescriptorSet>& 			getdescriptorset() { return descriptors.getdescriptorset();};
 	UboArray& 								getcamerabuffer() { return descriptors.getcamerabuffer();};			
 
@@ -136,6 +136,8 @@ public:
 
 	void updatemesh(Mesh* mesh, Positions size, Positions newpos) 		{ meshhandler.updatemesh(mesh, size, newpos);	};
 	void updatemodel(Model* model) 		{ meshhandler.updatemodel(model);	};
+
+	void updatemodeldescriptors() 	{ modelhandler.updatedescriptors(renderer, &descriptors); }
 
 	void loadmodel(std::string path, int id) { modelhandler.loadmodel(path, id); }
 

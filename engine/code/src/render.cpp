@@ -2,35 +2,24 @@
 // create a CB class maybe? 
 void Engine::render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial)
 {
-	if (object.animated) {
-		updatebones(object.ID,0);
-	}
-	// Mesh* lastMesh = nullptr;
-	// Material* lastMaterial = nullptr;
 	for (int i = 0; i < object.model->meshes.size(); i++) {
 		int k = 0;
 		if (object.type == TYPE_GIZMO && !gizmomove.visible) continue;
-
-		if (object.animated) {
-		}
 
 		if (object.material != lastMaterial) {
 			vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 			lastMaterial = object.material;
 			uint32_t uniformoffset = Builder.descriptors.paduniformbuffersize(sizeof(CameraData)) * (FrameIndex % MAX_FRAMES_IN_FLIGHT);
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
-			
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
-			
+		
 			if (object.animated) {
-				// updatebones(object.ID,k);
-  				int frameind = FrameIndex % MAX_FRAMES_IN_FLIGHT;
-
-				uint32_t dynamicOffset = k * Builder.descriptors.paduniformbuffersize(sizeof(glm::mat4) * 200) * frameind;
-				// Bind the descriptor set for rendering a mesh using the dynamic offset
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,  object.material->pipelinelayout, 3, 1, &Builder.gettranformset()[FrameIndex], 1, &dynamicOffset);
-			k++;
+				updatebones(object.ID);
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getmodel(object.ID)->descritor, 0, nullptr);
 			}
+			else {
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
+			}
+
 		}
 
 		MeshPushConstants constants;
@@ -51,15 +40,13 @@ void Engine::render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh,
 			vkCmdBindIndexBuffer(cmd, object.model->meshes[i]->indexbuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 			lastMesh = object.model->meshes[i];
 		}
-			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
-			vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.model->meshes[i]->aiindices.size()), 1, 0, 0, 0);
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 1, 1, &(*object.textureset), 0, nullptr);
+		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(object.model->meshes[i]->aiindices.size()), 1, 0, 0, 0);
 	}
 }
 
 void Engine::render2d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial)
 {
-	// Mesh* lastMesh = nullptr;
-	// Material* lastMaterial = nullptr;
 	if (object.material != lastMaterial) {
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinewrite);
 		lastMaterial = object.material;

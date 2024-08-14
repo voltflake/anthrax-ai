@@ -17,7 +17,7 @@ public:
 #else
     void checkmovement(float delta);
 #endif
-    void checkdirection(Positions mousepos);
+    void checkdirection(Positions mousepos, float delta);
 
 private:
 	glm::vec3 Position;

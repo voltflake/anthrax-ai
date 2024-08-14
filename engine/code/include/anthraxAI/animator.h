@@ -46,11 +46,11 @@ public:
 	}
 	
 	glm::mat4 interpolatepos(glm::vec3 out, float timeticks, const aiNodeAnim* animnode);
-	uint findpos(float timeticks, const aiNodeAnim* animnode);
+	u_int findpos(float timeticks, const aiNodeAnim* animnode);
 	glm::mat4 interpolaterot(glm::quat out, float timeticks, const aiNodeAnim* animnode);
-	uint findrot(float timeticks, const aiNodeAnim* animnode);
+	u_int findrot(float timeticks, const aiNodeAnim* animnode);
 	glm::mat4 interpolatescale(glm::vec3 out, float timeticks, const aiNodeAnim* animnode);
-	uint findscale(float timeticks, const aiNodeAnim* animnode);
+	u_int findscale(float timeticks, const aiNodeAnim* animnode);
 
 	bool hasanimation(int id) {
 		return animations.find(id) != animations.end();

@@ -93,6 +93,7 @@ do                                                              \
 	#define MINUS_KEY 45
 #else
 #define VK_USE_PLATFORM_WIN32_KHR
+	#define MOUSE_LEFT 1
 	#define ESC_KEY 0x1B
 	#define W_KEY 0x57
 	#define D_KEY 0x44
@@ -230,7 +231,7 @@ struct CameraData {
 #define MAX_BONES 200
 struct StorageData {
     glm::mat4 bonesmatrices[MAX_BONES];
-	uint data[DEPTH_ARRAY_SCALE] = {0};
+	u_int data[DEPTH_ARRAY_SCALE] = {0};
 };
 
 #define BONE_ARRAY_SIZE (sizeof(glm::mat4) * MAX_BONES)

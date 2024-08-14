@@ -87,7 +87,7 @@ public:
 
 	DeviceBuilder devicehandler;
 #if defined(AAI_WINDOWS)
-	void initdevicebuilder(HWND& hwnd)	{ devicehandler.init(hwnd, instance, surface, &deletorhandler);};
+	void initdevicebuilder(VkExtent2D windowextend, HWND& hwnd)	{ devicehandler.init(windowextend, hwnd, instance, surface, &deletorhandler);};
 #endif
 #ifdef AAI_LINUX
 	void initdevicebuilder(VkExtent2D windowextend)	{ devicehandler.init(windowextend, instance, surface, &deletorhandler);};

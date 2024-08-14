@@ -343,7 +343,7 @@ void Engine::ui() {
 
     bool active = true;
 
-    // ImGui::ShowDemoWindow();
+   // ImGui::ShowDemoWindow();
 
 	if (state & PLAY_GAME) {
 		active = false ;
@@ -366,8 +366,18 @@ void Engine::ui() {
 
     ImGui::SliderFloat("Editor Alpha", &alpha, 0.0, 1.0, "%.1f");
 	if (style.Colors[ImGuiCol_WindowBg].w != alpha) {
-		style.Colors[ImGuiCol_WindowBg].w = alpha;
+		Debug.EditorStyle.Colors[ImGuiCol_WindowBg].w = alpha;
 	}
+	ImGui::SameLine();
+	ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted("WARNING ! Issues remains !\nPress 2D or 3D button (changes debug functionality)\nType '0' in the input field to load 2D level \nType '1' in the inputfield to load 3D level\nUse WASD to move camera, for rotation use LMB\nPress ESC to switch between 'Editor' and 'Play' mode");
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+
 	ImGui::Separator();
 	ImGui::Columns(2, "modes");
 	if (ImGui::Button("2d")) {

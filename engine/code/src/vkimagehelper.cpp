@@ -52,7 +52,6 @@ void ImageHelper::createimage(VkImageCreateInfo imginfo, DeviceBuilder& device, 
 	allocInfo.memoryTypeIndex = buffer.findmemorytype(device.getphysicaldevice(), memrequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
 	VK_ASSERT(vkAllocateMemory(device.getlogicaldevice(), &allocInfo, nullptr, &img->texture->memory),"failed to allocate image memory!");
-
 	vkBindImageMemory(device.getlogicaldevice(), img->texture->image, img->texture->memory, 0);
 }
 

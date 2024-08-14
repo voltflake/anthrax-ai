@@ -28,7 +28,7 @@ void Engine::initvulkan() {
 
 #if defined(AAI_WINDOWS)
 	Builder.buildwinsurface(hwnd, hinstance);
-	Builder.initdevicebuilder(hwnd);
+	Builder.initdevicebuilder(WindowExtend, hwnd);
 #endif
 #ifdef AAI_LINUX
 	Builder.buildlinuxsurface(connection, window);

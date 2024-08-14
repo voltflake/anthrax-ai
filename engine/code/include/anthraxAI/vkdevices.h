@@ -29,8 +29,8 @@ struct SwapChainSupportDetails {
 class DeviceBuilder {
 public:
 #if defined(AAI_WINDOWS)
-	void 						init(HWND& hwndh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
-								{ hwnd = hwndh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
+	void 						init(VkExtent2D windowextendh, HWND& hwndh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 
+								{ windowextend = windowextendh; hwnd = hwndh; instance = instanceh; surface = surfaceh; deletorhandler = deletor; };
 #endif
 #ifdef AAI_LINUX
 	void 						init(VkExtent2D windowextendh, VkInstance& instanceh, VkSurfaceKHR& surfaceh, DeletionQueue*	deletor) 

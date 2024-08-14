@@ -12,11 +12,11 @@ const aiNodeAnim* Animator::findanim(const aiAnimation* anim, const std::string 
     return nullptr;
 }
 
-uint Animator::findscale(float timeticks, const aiNodeAnim* animnode)
+u_int Animator::findscale(float timeticks, const aiNodeAnim* animnode)
 {
     assert(animnode->mNumScalingKeys > 0);
 
-    for (uint i = 0 ; i < animnode->mNumScalingKeys - 1 ; i++) {
+    for (u_int i = 0 ; i < animnode->mNumScalingKeys - 1 ; i++) {
         float t = (float)animnode->mScalingKeys[i + 1].mTime;
         if (timeticks < t) {
             return i;
@@ -33,8 +33,8 @@ glm::mat4 Animator::interpolatescale(glm::vec3 out, float timeticks, const aiNod
         return glm::scale(glm::mat4(1.0f), out);
     }
 
-    uint ScalingIndex = findscale(timeticks, animnode);
-    uint NextScalingIndex = ScalingIndex + 1;
+    u_int ScalingIndex = findscale(timeticks, animnode);
+    u_int NextScalingIndex = ScalingIndex + 1;
     assert(NextScalingIndex < animnode->mNumScalingKeys);
     float t1 = (float)animnode->mScalingKeys[ScalingIndex].mTime;
     float t2 = (float)animnode->mScalingKeys[NextScalingIndex].mTime;
@@ -47,11 +47,11 @@ glm::mat4 Animator::interpolatescale(glm::vec3 out, float timeticks, const aiNod
     return glm::scale(glm::mat4(1.0f), out);
 }
 
-uint Animator::findrot(float timeticks, const aiNodeAnim* animnode)
+u_int Animator::findrot(float timeticks, const aiNodeAnim* animnode)
 {
     assert(animnode->mNumRotationKeys > 0);
 
-    for (uint i = 0 ; i < animnode->mNumRotationKeys - 1 ; i++) {
+    for (u_int i = 0 ; i < animnode->mNumRotationKeys - 1 ; i++) {
         float t = (float)animnode->mRotationKeys[i + 1].mTime;
         if (timeticks < t) {
             return i;
@@ -68,8 +68,8 @@ glm::mat4 Animator::interpolaterot(glm::quat out, float timeticks, const aiNodeA
         return glm::toMat4(static_cast<glm::quat>(quat2glm(animnode->mRotationKeys[0].mValue)));
     }
 
-    uint RotationIndex = findrot(timeticks, animnode);
-    uint NextRotationIndex = RotationIndex + 1;
+    u_int RotationIndex = findrot(timeticks, animnode);
+    u_int NextRotationIndex = RotationIndex + 1;
     assert(NextRotationIndex < animnode->mNumRotationKeys);
     float t1 = (float)animnode->mRotationKeys[RotationIndex].mTime;
     float t2 = (float)animnode->mRotationKeys[NextRotationIndex].mTime;
@@ -82,11 +82,11 @@ glm::mat4 Animator::interpolaterot(glm::quat out, float timeticks, const aiNodeA
     return glm::toMat4(finrot);
 }
 
-uint Animator::findpos(float timeticks, const aiNodeAnim* animnode)
+u_int Animator::findpos(float timeticks, const aiNodeAnim* animnode)
 {
     assert(animnode->mNumPositionKeys > 0);
 
-    for (uint i = 0 ; i < animnode->mNumPositionKeys - 1 ; i++) {
+    for (u_int i = 0 ; i < animnode->mNumPositionKeys - 1 ; i++) {
         float t = (float)animnode->mPositionKeys[i + 1].mTime;
         if (timeticks < t) {
             return i;
@@ -102,8 +102,8 @@ glm::mat4 Animator::interpolatepos(glm::vec3 out, float timeticks, const aiNodeA
         return glm::translate(glm::mat4(1.0f), out);
     }
 
-    uint PositionIndex = findpos(timeticks, animnode);
-    uint NextPositionIndex = PositionIndex + 1;
+    u_int PositionIndex = findpos(timeticks, animnode);
+    u_int NextPositionIndex = PositionIndex + 1;
     assert(NextPositionIndex < animnode->mNumPositionKeys);
     float t1 = (float)animnode->mPositionKeys[PositionIndex].mTime;
     float t2 = (float)animnode->mPositionKeys[NextPositionIndex].mTime;

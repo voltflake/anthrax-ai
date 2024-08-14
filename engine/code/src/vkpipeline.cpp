@@ -141,7 +141,7 @@ void PipelineBuilder::buildpipeline(bool check) {
 
 	scissor.offset = { 0, 0 };
 	scissor.extent = devicehandler->getwindowxtent();
-
+printf("w: %d ----------------- h^ %d\n\n",scissor.extent.width, scissor.extent.height );
 	rasterizer = rasterezationcreateinfo(VK_POLYGON_MODE_FILL);
 
 	multisampling = multisamplingcreateinfo();

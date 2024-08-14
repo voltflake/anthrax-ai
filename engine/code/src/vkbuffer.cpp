@@ -34,7 +34,6 @@ void BufferBuilder::allocbuffer(RenderBuilder& renderer, BufferHandler& bufhandl
     allocInfo.memoryTypeIndex = findmemorytype(renderer.getdevice()->getphysicaldevice(), memRequirements.memoryTypeBits, properties);
 
     VK_ASSERT(vkAllocateMemory(renderer.getdevice()->getlogicaldevice(), &allocInfo, nullptr, &bufhandler.devicememory), "failed to allocate buffer memory!");
-
     vkBindBufferMemory(renderer.getdevice()->getlogicaldevice(), bufhandler.buffer, bufhandler.devicememory, 0);
 }
 

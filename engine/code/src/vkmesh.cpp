@@ -191,6 +191,7 @@ void MeshBuilder::updatemesh(Mesh* mesh, Positions size, Positions pos) {
 	mesh->vertices[2].position = {x + size.x, y + size.y, 0.0f};
 	mesh->vertices[3].position = {x + size.x, y, 0.0f};
 
+// broken for 2d animation - vkAllocateMemory: Number of currently valid memory objects is not less than maxMemoryAllocationCount (4096)
 	updatemesh(*mesh);
 }
 

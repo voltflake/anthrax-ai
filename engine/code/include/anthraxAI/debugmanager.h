@@ -42,5 +42,7 @@ namespace Debug
             long long                   startms;
             float 						fps = 0;
             void 						calculateFPS(std::chrono::duration<double, std::milli>& delta);
+            void                        calculateFPS(long long delta);
+    
     };
 }

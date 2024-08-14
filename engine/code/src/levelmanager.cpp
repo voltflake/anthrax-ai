@@ -189,7 +189,6 @@ bool LevelManager::loadlevel() {
 	static char filename[64] = "";
 	bool open = true;
 
-
 	ImGui::InputText("Level:", filename, 64);
 
     std::string ff = "levels/";
@@ -199,7 +198,7 @@ bool LevelManager::loadlevel() {
 		return true;
 	}
 
-	if (test == "3") {
+	if (test == "1") {
 		test3d = true;
 	}
 	else {
@@ -211,6 +210,10 @@ bool LevelManager::loadlevel() {
 	int objectind = 0;
 	ImGui::SameLine();
 	if (ImGui::Button("Load")){
+		std::ifstream in(ff.c_str());
+    	if (!in.good()) {
+			return true;
+		}
 
 		gettrigger().clear();
 		for (int i = 0; i < getobject().size(); i++) {
@@ -221,7 +224,7 @@ bool LevelManager::loadlevel() {
 		getbackground().clear();
 		parser.Clear();
 
-		if (std::ifstream in{ff}) {
+		if (in) {
 			while (std::getline(in, modify)) {
 				if (modify == "Trigger:") {
 					triggerind++;

@@ -3,6 +3,22 @@
 #include        <chrono>
 #include 		<ctime>
 
+long long Engine::getcurtime() {
+#ifdef AAI_WINDOWS
+    return GetTickCount();
+#else
+    timeval t;
+    gettimeofday(&t, NULL);
+    long long tim = t.tv_sec * 1000 + t.tv_usec / 1000;
+	return (tim);
+#endif
+}
+
+double clockToMilliseconds(clock_t ticks){
+    // units/(units/time) => time (seconds) * 1000 = milliseconds
+    return (ticks/(double)CLOCKS_PER_SEC)*1000.0;
+}
+
 void Engine::start() {
 	ASSERT(state != INIT_ENGINE, "How is it possible?");
 	init();
@@ -22,11 +38,11 @@ void Engine::wininitwindow() {
 	wcex.hInstance = hinstance;
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszClassName = TEXT("MyTestClass");
+	wcex.lpszClassName = TEXT("35");
 
 	ASSERT(!RegisterClassEx(&wcex), "Can't register winClass!");
 	
-	hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"),WS_OVERLAPPEDWINDOW | WS_VISIBLE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED ,
+	hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"), WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
             CW_USEDEFAULT, CW_USEDEFAULT,
             WindowExtend.width, WindowExtend.height,
             nullptr,
@@ -34,25 +50,40 @@ void Engine::wininitwindow() {
             hinstance,
             nullptr);
 	ASSERT(!hwnd, "Can't create window!");
+
+	ShowWindow(hwnd, SW_SHOW);
+	SetForegroundWindow(hwnd);
+	SetFocus(hwnd);
 }
 
 void Engine::eventhandler(float delta)
 {
 	EditorCamera.checkmovement(delta);
 
-	if (GetKeyState(1) == 1) {
+	if (GetAsyncKeyState(VK_LBUTTON) < 0 && (Mouse.state == MOUSE_PRESSED || Mouse.state == MOUSE_SELECTED)) {
 		POINT p;
-		if (GetCursorPos(&p))
-		{
+		if (GetCursorPos(&p)) {
 			Mouse.pos = {p.x, p.y};
-			EditorCamera.checkdirection(Mouse.pos);
+		}
+// printf ("Mouse position: %d | %d |\n",Mouse.posdelta.x, Mouse.posdelta.y );
+		Mouse.posdelta.x = Mouse.begin.x - Mouse.pos.x;
+		Mouse.posdelta.y = Mouse.begin.y - Mouse.pos.y;
+		Mouse.begin = Mouse.pos;
+		
+		if (state & PLAY_GAME) {
+			EditorCamera.checkdirection(Mouse.posdelta, delta);
 		}
 	}
-
+	else {
+		POINT p;
+		if (GetCursorPos(&p)) {
+			Mouse.pos = {p.x, p.y};
+		}
+	}
 	if (GetAsyncKeyState(ENTER_KEY) < 0) {
 		processtextind();
 	}
-	if (GetAsyncKeyState(ESC_KEY) < 0) {
+	if (GetAsyncKeyState(ESC_KEY) & 0x01) {
 		state ^= PLAY_GAME;
 		state |= ENGINE_EDITOR;
 	}
@@ -72,30 +103,33 @@ void Engine::eventhandler(float delta)
 }
 
 VkExtent2D winext;
-void Engine::runwindows() {
-	using delta_duration = std::chrono::duration<double, std::milli>;
-	using clock = std::chrono::system_clock;
 
-	ShowWindow(hwnd, SW_SHOWNORMAL);
+void Engine::runwindows() {
 	MSG msg = {};
 
-	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-	std::chrono::duration<double, std::milli> delta;
-
 	state |= ENGINE_EDITOR;
-
+	long long start, end = 0;
+	float delta;
 	while (running) {
+		start = getcurtime();
+
 		if (PeekMessage(&msg, NULL, 0,0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 
 			if (msg.message == WM_QUIT)
 				break ;
+			if (msg.message == WM_LBUTTONDOWN) {
+				Mouse.state = MOUSE_PRESSED;
+				Mouse.begin = Mouse.pos;
+			}
+			if (msg.message == WM_LBUTTONUP) {
+				Mouse.state = MOUSE_RELEASED;
+				gizmomove.axis = AXIS_UNDEF;
+			}
 		}
-		eventhandler(static_cast<float>(delta.count()));
-		
-		if (winext.width != WindowExtend.width || winext.height != WindowExtend.height ) {
+		eventhandler(delta);
+		if (winprepared && (winext.width != WindowExtend.width || winext.height != WindowExtend.height)) {
 			WindowExtend = winext;
 			Builder.resizewindow(winprepared, WindowExtend, Level.check);
 			std::cout << "window w: " << WindowExtend.width << " && h: " << WindowExtend.height << '\n';
@@ -106,14 +140,13 @@ void Engine::runwindows() {
 		ImGui::NewFrame();
 
 		fpsoverlay();
-
-		start = std::chrono::system_clock::now();
-		delta = start - end;
-		calculateFPS(delta);
-
 		loop();
 
-		end = std::chrono::system_clock::now();		
+		end = getcurtime();
+    	if(end - start > 0) {
+        	Debug.fps = CLOCKS_PER_SEC / (end - start);
+			delta = float(double(end - start)) / CLOCKS_PER_SEC;
+		}
 	}
 }
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -125,22 +158,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			PostQuitMessage(0);
 			break ;
 		case WM_SIZE: {
-			HWND groupControl;
-			RECT rcClient;//screen size
-			GetClientRect(hWnd, &rcClient);
-			int width, height;
-			groupControl = GetDlgItem(hWnd,0);//get the id of control
-			SetWindowPos(groupControl, NULL, rcClient.right-50, 
-			rcClient.bottom-50, 20, 20,
-			SWP_NOZORDER);
 			RECT rect;
-			if(GetWindowRect(hWnd, &rect))
-			{
+			if(GetWindowRect(hWnd, &rect)) {
 				winext.width = rect.right - rect.left;
 				winext.height = rect.bottom - rect.top;
 			}
 			break;
 		}
+		case WM_PAINT:
+			ValidateRect(hWnd, NULL);
+			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 			break;
@@ -151,15 +178,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 #endif
 
 #ifdef AAI_LINUX
-
-long long Engine::getcurtime() {
-    timeval t;
-    gettimeofday(&t, NULL);
-    long long tim = t.tv_sec * 1000 + t.tv_usec / 1000;
-
-	return (tim);
-}
-
 void Engine::linuxinitwindow() {
 	uint32_t value_mask, value_list[32];
 
@@ -303,7 +321,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
             	Mouse.posdelta.y = (Mouse.begin.y - motion->event_y);
 				Mouse.begin = Mouse.pos;
 				if (state & PLAY_GAME) {
-					EditorCamera.checkdirection(Mouse.posdelta);
+					EditorCamera.checkdirection(Mouse.posdelta, delta);
 				}
 				//printf ("Mouse delta: %d | %d |\n", Mouse.posdelta.x, Mouse.posdelta.y );
 			}
@@ -381,32 +399,31 @@ void Engine::runlinux() {
 	
 	xcb_flush(connection);
 
-	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-	std::chrono::duration<double, std::milli> delta;
-
 	state |= ENGINE_EDITOR;
+	long long start, end = 0;
+	float delta;
 
 	while (running) {
-		checkstate(static_cast<float>(delta.count()));
+		start = getcurtime();
+
+		checkstate(delta);
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplX11_NewFrame();
 		ImGui::NewFrame();
 
 		fpsoverlay();
+		loop();
 
 		if (state & EXIT) {
 			xcb_key_symbols_free(KeySyms);
 		}
 
-		start = std::chrono::system_clock::now();
-		delta = start - end;
-		Debug.calculateFPS(delta);
-
-		loop();
-
-		end = std::chrono::system_clock::now();
+		end = getcurtime();
+    	if(end - start > 0) {
+        	Debug.fps = CLOCKS_PER_SEC / (end - start);
+			delta = float(double(end - start)) / CLOCKS_PER_SEC;
+		}
 	}
 }
 #endif

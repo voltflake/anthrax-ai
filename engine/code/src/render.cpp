@@ -87,7 +87,7 @@ void Engine::renderscene(VkCommandBuffer cmd) {
 	std::vector<RenderObject> rq = Builder.getrenderqueue();
 	
 	for (RenderObject& object : rq) {
-		std::cout << "object type: " << object.type << '\n';
+		//std::cout << "object type: " << object.type << '\n';
 		if (object.type >= TYPE_MODEL) {
 			render3d(cmd, object, lastMesh, lastMaterial);
 		}
@@ -95,7 +95,7 @@ void Engine::renderscene(VkCommandBuffer cmd) {
 			render2d(cmd, object, lastMesh, lastMaterial);
 		}
 	}
-	std::cout << "-------------------\n\n";
+	//std::cout << "-------------------\n\n";
 //  ----------------------------------------------------------------------------------------
 // 	SUBPASS 1: WRITE TO SHADER
 //  ----------------------------------------------------------------------------------------
@@ -192,7 +192,6 @@ void Engine::render() {
 	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
 		winprepared = true;
 	}
-
 	FrameIndex = (FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 

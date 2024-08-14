@@ -37,12 +37,21 @@ void Engine::load2dresources()
 
 void Engine::load3dresources()
 {
+#ifdef AAI_WINDOWS
+  Resources.add(TYPE_MODEL, 
+	    Data("zeroone.png", {0, 0, -10}, false, false));
+    Resources.add(TYPE_MODEL + 1, 
+	    Data("bg2.png", {2, 0, -10}, false, false));
+    Resources.add(TYPE_MODEL + 2, 
+	    Data("floor.jpg", {3, 0, -5}, false, false));
+#else
     Resources.add(TYPE_MODEL, 
 	    Data(Builder.getmodel(TYPE_MODEL)->texturepath, {0, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL)->texturepath.empty()));
     Resources.add(TYPE_MODEL + 1, 
 	    Data(Builder.getmodel(TYPE_MODEL + 1)->texturepath, {2, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL + 1)->texturepath.empty()));
     Resources.add(TYPE_MODEL + 2, 
 	    Data(Builder.getmodel(TYPE_MODEL + 2)->texturepath, {3, 0, -5}, false, false, !Builder.getmodel(TYPE_MODEL + 2)->texturepath.empty()));
+#endif
     Resources.add(TYPE_MODEL + 3,
 	    Data("bg3.png", {5, 0, 0}, false, false));
     Resources.add(TYPE_MODEL + 4, 

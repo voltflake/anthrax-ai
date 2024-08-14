@@ -19,7 +19,7 @@ void Engine::updatebones(int id) {
 
 void Engine::preparecamerabuffer() {
     glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
-	glm::mat4 projection = glm::perspective(glm::radians(45.f), static_cast<float>(Builder.getswapchainextent().width / Builder.getswapchainextent().height), 0.01f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(45.f), float(Builder.getswapchainextent().width) / float(Builder.getswapchainextent().height), 0.01f, 100.0f);
 	projection[1][1] *= -1;
 	glm::mat4 modell = glm::mat4(1.0f);
 	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
@@ -61,9 +61,9 @@ void Engine::mousepicking() {
     }
 
     void* storagetmp;
-    VkDeviceSize storagesize = sizeof(uint )* DEPTH_ARRAY_SCALE;
+    VkDeviceSize storagesize = sizeof(u_int )* DEPTH_ARRAY_SCALE;
     vkMapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory, BONE_ARRAY_SIZE, storagesize, 0, (void**)&storagetmp);
-    uint* u = static_cast<uint*>(storagetmp);
+    u_int* u = static_cast<u_int*>(storagetmp);
 
     int selectedID = -1;
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
@@ -223,13 +223,13 @@ void Engine::moveplayer() {
             tmp.y -= 16;
             Level.getplayer()->state ^= MOVE_UP;
         }
-        if (!collision(Level.getplayer()->state, Level.getplayer()->collision, {Level.getplayer()->getposition().x - 5, Level.getplayer()->getposition().y}, sizes) && Level.getplayer()->state & MOVE_LEFT) {
-            tmp.x -= 10;
+        if (!collision(Level.getplayer()->state, Level.getplayer()->collision, {Level.getplayer()->getposition().x - 2, Level.getplayer()->getposition().y}, sizes) && Level.getplayer()->state & MOVE_LEFT) {
+            tmp.x -= 4;
         }
-        if (!collision(Level.getplayer()->state, Level.getplayer()->collision, {Level.getplayer()->getposition().x + 5, Level.getplayer()->getposition().y}, sizes) && Level.getplayer()->state & MOVE_RIGHT) {
-            tmp.x += 10;
+        if (!collision(Level.getplayer()->state, Level.getplayer()->collision, {Level.getplayer()->getposition().x + 2, Level.getplayer()->getposition().y}, sizes) && Level.getplayer()->state & MOVE_RIGHT) {
+            tmp.x += 4;
         }
-        if (tmp.x != tmp2.x || tmp.y != tmp2.y) {
+        if ((tmp.x != tmp2.x || tmp.y != tmp2.y) && (tmp.x > 0 && tmp.x < WindowExtend.width) && (tmp.y > 0 && tmp.y < WindowExtend.height)) {
             Level.getplayer()->setposition(tmp);
             Level.getplayer()->update = true;
             //Builder.updatemesh(Builder.getmesh(TYPE_PLAYER), TYPE_PLAYER, Level.getplayer()->getposition());

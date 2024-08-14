@@ -58,7 +58,9 @@ endif()
 make_library(imgui)
 # imgui requires the Vulkan ans X11 libraries, so we need to link them here
 target_link_libraries(imgui PRIVATE ${_libraryes})
-
+if (WIN32)
+target_link_libraries(imgui dwmapi)
+endif()
 list(APPEND _libraries lib::imgui)
 
 #======================================== GLM ========================================#
@@ -83,8 +85,20 @@ list(APPEND _includes ${_path}/tinyobjloader)
 
 #=================================== assimp ===================================#
 
+set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE INTERNAL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE INTERNAL "" FORCE)
+configure_file("${PROJECT_SOURCE_DIR}/libs/assimp/include/assimp/config.h.in" "${PROJECT_SOURCE_DIR}/libs/assimp/include/assimp/config.h")
+configure_file("${PROJECT_SOURCE_DIR}/libs/assimp/contrib/zlib/zconf.h.cmakein" "libs/assimp/contrib/zlib/zconf.h")
 add_subdirectory(${_path}/assimp)
 list(APPEND _libraries assimp::assimp)
+#target_include_directories(PUBLIC ${_path}/assimp/include)
+
+#list(APPEND _libraries assimp::assimp)
+
+# add_subdirectory(${_path}/assimp)
 
 #=====================================================================================#
 

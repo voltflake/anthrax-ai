@@ -9,3 +9,7 @@ void Debug::DebugManager::calculateFPS(std::chrono::duration<double, std::milli>
         fps = 1000.0f / deltams.count();
     }
 }
+
+void Debug::DebugManager::calculateFPS(long long delta)
+{
+}

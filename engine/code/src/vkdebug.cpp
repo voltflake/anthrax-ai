@@ -47,8 +47,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL VkDebug::debugCallback(
     void* pUserData)
 {
    
-    if (pCallbackData->messageIdNumber != 951775942)
+    if (pCallbackData->messageIdNumber != 3357201678) {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
+    }
+    
     return VK_FALSE;
 }

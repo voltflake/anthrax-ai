@@ -13,8 +13,10 @@ void Engine::render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh,
 			vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 0, 1, &Builder.getdescriptorset()[FrameIndex], 1, &uniformoffset);
 		
 			if (object.animated) {
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
+
 				updatebones(object.ID);
-				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getmodel(object.ID)->descritor, 0, nullptr);
+				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 3, 1, &Builder.getmodel(object.ID)->descritor, 0, nullptr);
 			}
 			else {
 				vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, object.material->pipelinelayout, 2, 1, &Builder.getstorageset()[FrameIndex], 0, nullptr);
@@ -85,7 +87,7 @@ void Engine::renderscene(VkCommandBuffer cmd) {
 	std::vector<RenderObject> rq = Builder.getrenderqueue();
 	
 	for (RenderObject& object : rq) {
-		
+		std::cout << "object type: " << object.type << '\n';
 		if (object.type >= TYPE_MODEL) {
 			render3d(cmd, object, lastMesh, lastMaterial);
 		}
@@ -93,7 +95,7 @@ void Engine::renderscene(VkCommandBuffer cmd) {
 			render2d(cmd, object, lastMesh, lastMaterial);
 		}
 	}
-
+	std::cout << "-------------------\n\n";
 //  ----------------------------------------------------------------------------------------
 // 	SUBPASS 1: WRITE TO SHADER
 //  ----------------------------------------------------------------------------------------

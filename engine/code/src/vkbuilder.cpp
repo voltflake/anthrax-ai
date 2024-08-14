@@ -92,7 +92,7 @@ void VkBuilder::resizewindow(bool& winprepared, VkExtent2D windowextendh, bool c
 	builddepthbuffer();
 	buildmainimage();
 	renderer.recreateframebuffer(devicehandler);
-	pipeline.recreatepipeline(check);
+	pipeline.recreatepipeline(getdevice(), check);
 
 	descriptors.updateattachmentdescriptors(devicehandler);
 

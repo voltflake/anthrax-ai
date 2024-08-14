@@ -33,6 +33,8 @@ struct VertexBoneData {
 
 struct Mesh {
 	std::string path;
+	std::string texturepath;
+
 	std::vector<Vertex> vertices;
 	BufferHandler vertexbuffer;
 
@@ -58,6 +60,7 @@ struct BoneInfo {
 };
 
 struct Model {
+	std::string texturepath;
 	std::vector<Mesh*> meshes;
 
 	BufferHandler storagebuffer;

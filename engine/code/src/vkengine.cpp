@@ -87,6 +87,9 @@ void Engine::initscene() {
 void Engine::reloadresources() {
 	vkDeviceWaitIdle(Builder.getdevice()); // test it
 
+	EditorCamera.setposition({ 0.f, 0.f, 3.0f});
+	EditorCamera.setdirections();
+
 	Builder.clearimages();
 	Builder.cleartextureset();
 	Builder.clearmeshes();
@@ -96,16 +99,27 @@ void Engine::reloadresources() {
 
 	Builder.renderqueue.clear();
 
-	initresources();
+	if (Level.test3d) {
+		Builder.initmeshbuilder();
+		initmeshes();
 
-	Builder.inittexture(Resources.get());
-	Builder.loadimages();
+		initresources();
 
+		Builder.inittexture(Resources.get());
+		Builder.loadimages();
+	}
+	else {
+		initresources();
+
+		Builder.inittexture(Resources.get());
+		Builder.loadimages();
+
+		Builder.initmeshbuilder();
+		initmeshes();
+	}
 	Builder.initdescriptors();
 	Builder.builddescriptors();
 
-	Builder.initmeshbuilder();
-	initmeshes();
 	Builder.updatemodeldescriptors();
 
 	initscene();

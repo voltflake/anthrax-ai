@@ -68,10 +68,13 @@ void TextureBuilder::loadimages() {
 
 	for (auto& list : resources) {
 		auto it = loadedtextures.find(list.second.texturepath);
-        if (list.second.texturepath == "" || it != loadedtextures.end()) {
+        if (list.second.texturepath.empty() || it != loadedtextures.end()) {
             continue;
         }
 		std::string path = "./textures/";
+		if (list.second.material) {
+			path = "";
+		}
 		path += list.second.texturepath;
 
 		std::cout << "textures|"<< list.second.pos.x << " ----- " << list.second.pos.y << "\n";

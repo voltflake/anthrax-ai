@@ -1,4 +1,9 @@
-1. process material loading; connection between model class and resource data structure
+(1. process material loading; connection between model class and resource data structure
+
+1.1. descriptor layout error after 3d -> 2d 
+1.2. starting engine -> 2d -> editor color messed up) --> probably done !
+
+1. please get rid of test3d variable 
 
 2. parser for 3d levels? improve 2d/3d modes handling
 
@@ -31,5 +36,9 @@ parser thoughts:
 (add some basic assertions eg if we are passing correct node names)
 
 implementation details:
-    - recursive function Parse()
+    - GetRootNode()
+    -> GetNextChild() -> GetElement<std::string>(ELEM_PATH) etc
+
+    - array of strings? bind iterator with particular node
+    - arrayy of NodeStruct ? bind iterator with nodestruct element which has root and next child 
     

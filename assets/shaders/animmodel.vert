@@ -2,10 +2,12 @@
 
 #include "vertdef.h"
 
-layout(set = 2, binding = 0) buffer readonly AnimationTransforms
+layout(set = 3, binding = 0) buffer readonly StorageArray
 {
     mat4 bonesmatrices[MAX_BONES];
+    uint data[DEPTH_ARRAY_SCALE];
 } storagedata;
+
 
 void main()
 {

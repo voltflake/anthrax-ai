@@ -10,7 +10,7 @@ void VkBuilder::procscene(ResourcesMap& resmap, Animator& animator)
         }
 		RenderObject obj;
 
-        DataTypes type;
+        DataTypes type = static_cast<DataTypes>(list.first);
         std::string material;
         bool anim = false;
         int id = -1;

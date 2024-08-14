@@ -284,10 +284,11 @@ struct Data {
 	Positions3 pos;
 	bool debugcollision;
 	bool animation;
+	bool material;
 
 	Data() {}
-	Data(const std::string& path, Positions3 p, bool debugcol, bool anim)
-	: texturepath(path), pos(p), debugcollision(debugcol), animation(anim) {}
+	Data(const std::string& path, Positions3 p, bool debugcol, bool anim, bool mat = false)
+	: texturepath(path), pos(p), debugcollision(debugcol), animation(anim), material(mat) {}
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;

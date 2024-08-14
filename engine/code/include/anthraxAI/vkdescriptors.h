@@ -32,7 +32,6 @@ public:
 	void cleartextureset();
 
 	UboArray& 						getcamerabuffer() 		{return CameraBuffer;};
-	AnimationTransformsArray& 		gettransformbuffer() 	{return TransformsBuffer;};
 	StorageArray& 					getstoragebuffer() 		{return StorageBuffer;};
 
 	std::vector<VkDescriptorSet>& getdescriptorset() { return descriptorsets;};

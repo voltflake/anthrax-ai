@@ -57,7 +57,7 @@ void ModelBuilder::setvertexbonedata(Vertex& vert, int id, float weight)
     }
 }
 
-Mesh ModelBuilder::processmesh(aiMesh* mesh, int id)
+Mesh ModelBuilder::processmesh(const aiScene *scene, aiMesh* mesh, int id)
 {
     Mesh model;
 
@@ -90,16 +90,18 @@ Mesh ModelBuilder::processmesh(aiMesh* mesh, int id)
 		model.vertices.push_back(vertex);
 
     }
+
 	for(unsigned int i = 0; i < mesh->mNumFaces; i++) {
 		aiFace face = mesh->mFaces[i];
 		for(unsigned int j = 0; j < face.mNumIndices; j++) {
 			model.aiindices.push_back(face.mIndices[j]);
 		}
 	}
+
+  
+
     return model;
 }
-
-
 
 int  ModelBuilder::getboneid(int modelind, const aiBone* bone)
 {
@@ -158,8 +160,17 @@ void ModelBuilder::processnode(aiNode *node, const aiScene *scene, int id)
         aiMesh *mesh = scene->mMeshes[i];
 
         Mesh* tmpmesh = new Mesh;
-        *tmpmesh = processmesh(mesh,  id);
+        *tmpmesh = processmesh(scene, mesh, id);
        
+        if (mesh->mMaterialIndex >= 0) {
+            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+            aiString texturepath;
+            material->GetTexture(aiTextureType_DIFFUSE, 0, &texturepath);
+            models[id].texturepath = texturepath.C_Str();
+
+            printf("------ [%d] assimp model texture path: %s \n\n", id, models[id].texturepath.c_str());
+        }
+
         models[id].meshbase[i] = totalvert;
         totalvert += mesh->mNumVertices;
         models[id].vert2bones.resize(totalvert);

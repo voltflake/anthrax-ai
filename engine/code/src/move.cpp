@@ -77,7 +77,6 @@ void Engine::mousepicking() {
     std::memset(storagetmp, 0, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
     vkUnmapMemory(Builder.getdevice(), Builder.descriptors.getstoragebuffer()[FrameIndex].devicememory);
 
-
     bool selected = false;
     RenderObject* rq = Builder.getrenderqueue().data();
     for (int i = 0; i < Builder.getrenderqueue().size(); i++)
@@ -120,13 +119,13 @@ void Engine::update3d() {
     }
 
     if ((Mouse.posdelta.x < -1 || Mouse.posdelta.x > 1) && gizmomove.axis == AXIS_X) {
-        model_it->pos.x -= 0.06 *  Mouse.posdelta.x ;
+        model_it->pos.x -= 0.01*  Mouse.posdelta.x ;
     }
     if ((Mouse.posdelta.y < -1 || Mouse.posdelta.y > 1) && gizmomove.axis == AXIS_Y) {
-        model_it->pos.y += 0.06 *  Mouse.posdelta.y ;
+        model_it->pos.y += 0.01 *  Mouse.posdelta.y ;
     }
     if ((Mouse.posdelta.y < -1 || Mouse.posdelta.y > 1) && gizmomove.axis == AXIS_Z) {
-        model_it->pos.z += 0.06 *  Mouse.posdelta.y;
+        model_it->pos.z += 0.01 *  Mouse.posdelta.y;
     }
     model_it->selected = true;
     

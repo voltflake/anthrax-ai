@@ -52,21 +52,21 @@ Material* PipelineBuilder::creatematerial(VkPipeline pipelinew, VkPipelineLayout
 	return &materials[name];
 }
 
-void PipelineBuilder::recreatepipeline(bool check) {
-	clearpipeline();
+void PipelineBuilder::recreatepipeline(VkDevice device, bool check) {
+	clearpipeline(device);
 	vertexdescription.attributes.clear();
 	vertexdescription.bindings.clear();
 	shaderstages.clear();
 	buildpipeline(check);
 }
 
-void PipelineBuilder::clearpipeline() {
-	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayoutsread, nullptr);
-	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineread, nullptr);
+void PipelineBuilder::clearpipeline(VkDevice device) {
+	vkDestroyPipelineLayout(device, pipelayoutsread, nullptr);
+	vkDestroyPipeline(device, pipelineread, nullptr);
 	
 	// for (int i = 0; i < 3; ++i) {
-	// 	vkDestroyPipelineLayout(devicehandler->getlogicaldevice(), pipelayouts[i], nullptr);
-	// 	vkDestroyPipeline(devicehandler->getlogicaldevice(), pipelineswrite[i], nullptr);
+	// 	vkDestroyPipelineLayout(device, pipelayouts[i], nullptr);
+	// 	vkDestroyPipeline(device, pipelineswrite[i], nullptr);
 	// }
 }
 
@@ -169,6 +169,9 @@ void PipelineBuilder::buildpipeline(bool check) {
 	creatematerial(pipelineswrite[ind], pipelayouts[ind], "monkey");
 
 // animated model pipeline
+	VkDescriptorSetLayout setLayoutsanim[] = { descriptors->getgloballayout(), descriptors->getsamplerlayout(), descriptors->getstoragelayout(), descriptors->getstoragelayout() };
+	pipelinelayoutinfo.setLayoutCount = 4;
+	pipelinelayoutinfo.pSetLayouts = setLayoutsanim;
 	ind = 2;
 	shaderstages.clear();
 	shaderstages.push_back(pipelineshadercreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshaderanimated));

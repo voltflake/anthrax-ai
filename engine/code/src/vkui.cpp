@@ -48,6 +48,7 @@ void Engine::initimgui() {
 	init_info.MinImageCount = 3;
 	init_info.ImageCount = 3;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init_info.Subpass = 1;
 
 	ImGui_ImplVulkan_Init(&init_info, Builder.getrenderpass());
 
@@ -358,7 +359,9 @@ void Engine::ui() {
 
 	ImGui::Begin("Engine ;p", &active, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
     
-	ImGuiStyle& style = Debug.EditorStyle;
+	ImGuiStyle& style = ImGui::GetStyle();
+	//stylem = Debug.EditorStyle;
+	style = Debug.EditorStyle;
 	float alpha = style.Colors[ImGuiCol_WindowBg].w;
 
     ImGui::SliderFloat("Editor Alpha", &alpha, 0.0, 1.0, "%.1f");

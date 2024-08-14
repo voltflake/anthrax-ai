@@ -33,8 +33,8 @@ public:
 	void 									setuppipelinemodel();
 	void 									setuppipelinedebug();
 	void 									buildpipeline(bool check);
-	void 									clearpipeline();
-	void									recreatepipeline(bool check);
+	void 									clearpipeline(VkDevice device);
+	void									recreatepipeline(VkDevice device, bool check);
 
 	VkPipeline& 							getreadpipeline() 	{ return pipelineread; };
 	VkPipelineLayout& 						getreadpipelayout() 	{ return pipelayoutsread; };

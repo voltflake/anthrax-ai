@@ -38,13 +38,13 @@ void Engine::load2dresources()
 void Engine::load3dresources()
 {
     Resources.add(TYPE_MODEL, 
-	    Data("zeroone.png", {0, 0, -10}, false, false));
+	    Data(Builder.getmodel(TYPE_MODEL)->texturepath, {0, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL)->texturepath.empty()));
     Resources.add(TYPE_MODEL + 1, 
-	    Data("bg2.png", {2, 0, -10}, false, false));
+	    Data(Builder.getmodel(TYPE_MODEL + 1)->texturepath, {2, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL + 1)->texturepath.empty()));
     Resources.add(TYPE_MODEL + 2, 
-	    Data("floor.jpg", {3, 0, -5}, false, false));
-    Resources.add(TYPE_MODEL + 3, 
-	    Data("dummy.png", {5, 0, 0}, false, false));
+	    Data(Builder.getmodel(TYPE_MODEL + 2)->texturepath, {3, 0, -5}, false, false, !Builder.getmodel(TYPE_MODEL + 2)->texturepath.empty()));
+    Resources.add(TYPE_MODEL + 3,
+	    Data("bg3.png", {5, 0, 0}, false, false));
     Resources.add(TYPE_MODEL + 4, 
 	    Data("dummy.png", {8, 0, 0}, false, false));
 
@@ -79,8 +79,8 @@ void Engine::initmeshes()
 		Builder.loadmodel("models/gizmoz.obj", TYPE_GIZMO + 2);
 		
 		Debug.startms = getcurtime();
-		Builder.loadmodel("models/forgiving-mesh-anim.dae", TYPE_MODEL + 3);
-		animator.init({"models/forgiving-mesh-anim.dae", "models/body-jab-cross.dae", "models/double-kick-anim.dae"} , TYPE_MODEL + 3);
+		Builder.loadmodel("models/Defeated.dae", TYPE_MODEL + 3);
+		animator.init({"models/Defeated.dae", "models/body-jab-cross.dae", "models/double-kick-anim.dae"} , TYPE_MODEL + 3);
 		
 		Builder.loadmodel("models/Walking-mesh-anim.dae", TYPE_MODEL + 4);
 		animator.init({"models/Walking-mesh-anim.dae", "models/Dying-anim.dae"} , TYPE_MODEL + 4);

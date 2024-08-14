@@ -125,7 +125,7 @@ public:
 	PipelineBuilder pipeline;
 	void initpipelinebuilder()	{ pipeline.init(&devicehandler, renderer, &descriptors, &deletorhandler);};
 	void buildpipeline(bool check)		{ pipeline.buildpipeline(check);			};
-	void clearpipeline()		{ pipeline.clearpipeline();			};
+	void clearpipeline()		{ pipeline.clearpipeline(getdevice());			};
 
 	MeshBuilder meshhandler;
 	ModelBuilder modelhandler;

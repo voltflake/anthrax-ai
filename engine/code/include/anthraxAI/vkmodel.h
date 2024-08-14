@@ -34,7 +34,7 @@ public:
 	Model* getmodel(int id);
 
     void loadmodel(std::string path, int id);
-    Mesh processmesh(aiMesh* aimesh,int id);
+    Mesh processmesh(const aiScene *scene, aiMesh* aimesh,int id);
     void processnode(aiNode *node, const aiScene *scene, int id);
     void processbones(std::vector<Vertex>& vert, int id, aiMesh* aimesh);
     int  getboneid(int modelind, const aiBone* bone);

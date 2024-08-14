@@ -14,7 +14,7 @@
 #ifdef AAI_LINUX
 void Camera::checkmovement(xcb_keysym_t k, float delta)
 {
-    const float cameraSpeed = 15.0f * delta;	
+    const float cameraSpeed = 1.5f * delta;	
     if (k == W_KEY) {
         Position += cameraSpeed * Front;
     }

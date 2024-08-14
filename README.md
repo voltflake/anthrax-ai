@@ -8,25 +8,18 @@ The Vulkan-Based Game Engine
 my youtube channel where I present my engine:
 https://youtu.be/SPF7VJPwy3w?si=xls0e43Iry86vWob 
 
-github repo:
-https://gitlab.com/svatostop/engine-2-0
-
-# how to test
-launch via Visual Studio Code (not tested properly for windows)
-optional for the linux systems:
- engine/assets/ $> ../build/demos/demo-models/anthraxAI-demo-models
-
 # usage
 
-1. in the game engine editor window press "3d" button
-2. Select "Load Level"
-3. In the text input field write "3" and press "Load"
-4. Move the camera using WASD and mouse left button
-5. In the editor window additionally select "Animation" checkbox to be able to change/debug animation
-6. Additionally try to load "2" in the Level input field, to load 2d level
+WARNING ! Issues remains !
+
+1. Press 2D or 3D button (changes debug functionality)
+2. Type '0' in the input field to load 2D level 
+3. Type '1' in the inputfield to load 3D level
+4. Use WASD to move camera, for rotation use LMB
+5. Press ESC to switch between 'Editor' and 'Play' mode
 
 <div align="center">
-<img alt="Preview" src="assets/textures/engine.png" width=80% />
+<img alt="Preview" src="assets/textures/engine1.jpg" width=80% />
 </div>
 
 [TOC]

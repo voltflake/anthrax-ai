@@ -422,7 +422,8 @@ void Engine::runlinux() {
 		end = getcurtime();
     	if(end - start > 0) {
         	Debug.fps = CLOCKS_PER_SEC / (end - start);
-			delta = float(double(end - start)) / CLOCKS_PER_SEC;
+			delta = float(double(end - start)) / CLOCKS_PER_SEC * 5000;
+			//printf("delta: %f \n\n\n", delta);
 		}
 	}
 }

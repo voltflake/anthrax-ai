@@ -21,17 +21,21 @@ void Engine::preparecamerabuffer() {
     glm::mat4 view = glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
 	glm::mat4 projection = glm::perspective(glm::radians(45.f), float(Builder.getswapchainextent().width) / float(Builder.getswapchainextent().height), 0.01f, 100.0f);
 	projection[1][1] *= -1;
-	glm::mat4 modell = glm::mat4(1.0f);
-	modell = glm::translate(modell, glm::vec3(camdata.lightpos.x,camdata.lightpos.y,camdata.lightpos.z));
-	modell = glm::scale(modell, glm::vec3(0.2f));
 
-	camdata.model = modell;
 	camdata.proj = projection;
 	camdata.view = view;
 	camdata.viewproj = projection * view;
-	camdata.viewpos = glm::vec4(0, 0, 0, 1.0);
+	camdata.viewpos = glm::vec4(EditorCamera.getposition(), 1.0);
 	camdata.mousepos = {Mouse.pos.x, Mouse.pos.y, 0, 0};
 	camdata.viewport = {WindowExtend.width, WindowExtend.height, 0, 0};
+    camdata.dir_light_pos = glm::vec4(DirectionLight.position, 1.0);
+    camdata.dir_light_color = glm::vec4(DirectionLight.color, 1.0);
+
+    for (int i = 0; i < pointlightamount; i++) {
+        camdata.point_light_pos[i] = glm::vec4(PointLights[i].position, 1.0);
+        camdata.point_light_color[i] = glm::vec4(PointLights[i].color, 1.0);
+    }
+   camdata.pointlightamount = pointlightamount;
 
 	char* datadst;
    	const size_t sceneParamBufferSize = MAX_FRAMES_IN_FLIGHT * Builder.descriptors.paduniformbuffersize(sizeof(CameraData));
@@ -83,15 +87,15 @@ void Engine::mousepicking() {
     {
         RenderObject& object = rq[i];
 
-        if (object.type == TYPE_MODEL || object.type == TYPE_GIZMO) {
+        if ((object.type == TYPE_MODEL || object.type == TYPE_GIZMO)) {
             if (object.ID == selectedID) {
                 object.selected = true;
                 selected = true;
-                if (object.type != TYPE_GIZMO) {
+                if (object.type != TYPE_GIZMO && object.type != TYPE_LIGHT) {
                     gizmomove.objecthandler = selectedID;
                     gizmomove.visible = true;
                 }
-                else {
+                else if (object.type != TYPE_LIGHT) {
                     gizmomove.axis = static_cast<GizmoAxis>(object.ID);
                 }
             }
@@ -109,10 +113,29 @@ void Engine::update3d() {
 	   
     std::vector<RenderObject>& rq = Builder.getrenderqueue();
     
-    std::vector<RenderObject>::iterator gizmo_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.type == TYPE_GIZMO; } );
+    std::vector<RenderObject>::iterator gizmo_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == AXIS_Z; } );
     if (gizmo_it == rq.end()) {
         return;
     }
+
+    std::vector<RenderObject>::iterator light_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == TYPE_LIGHT; } );
+    if (light_it == rq.end()) {
+        return;
+    }
+    light_it->pos.x = camdata.dir_light_pos.x;
+    light_it->pos.y = camdata.dir_light_pos.y;
+    light_it->pos.z = camdata.dir_light_pos.z;
+
+    for (int i = 0; i < pointlightamount; i++) {
+        std::vector<RenderObject>::iterator pointlight_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == TYPE_LIGHT + i + 1; } );
+        if (pointlight_it == rq.end()) {
+            return;
+        }
+        pointlight_it->pos.x = camdata.point_light_pos[i].x;
+        pointlight_it->pos.y = camdata.point_light_pos[i].y;
+        pointlight_it->pos.z = camdata.point_light_pos[i].z;
+    }
+
     std::vector<RenderObject>::iterator model_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == gizmomove.objecthandler && val.type == TYPE_MODEL; } );;
     if (model_it == rq.end()) {
         return;
@@ -128,13 +151,19 @@ void Engine::update3d() {
         model_it->pos.z += 0.01 *  Mouse.posdelta.y;
     }
     model_it->selected = true;
-    
+   // printf("1: %d | %d------------------\n", gizmo_it->ID, gizmo_it->type);
     gizmo_it->pos = model_it->pos;
     gizmo_it->pos.y += GIZMO_HEIGHT;
-    ++gizmo_it;
+    gizmo_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == AXIS_Y; } );   
+  //  printf("2: %d | %d------------------\n", gizmo_it->ID, gizmo_it->type);
+
     gizmo_it->pos = model_it->pos;
     gizmo_it->pos.y += GIZMO_HEIGHT;
-    ++gizmo_it;
+    //++gizmo_it;
+    gizmo_it = std::find_if(rq.begin(), rq.end(), [&](const RenderObject& val){ return val.ID == AXIS_X; } );   
+
+   // printf("3: %d | %d------------------\n", gizmo_it->ID, gizmo_it->type);
+
     gizmo_it->pos = model_it->pos;
     gizmo_it->pos.y += GIZMO_HEIGHT;
 

@@ -53,7 +53,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 
 #define MAX_FPS 120
 #define FPS_SAMPLER 100
-
+#define MAX_POINT_LIGHTS 4
 
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
@@ -211,20 +211,28 @@ struct Vertex {
 };
 
 struct CameraData {
-
-	glm::mat4 model;
-	glm::mat4 view;
-	glm::mat4 proj;
-	glm::mat4 viewproj;
 	glm::vec4 viewpos;
 	glm::vec4 mousepos;
 	glm::vec4 viewport;
 
-	glm::vec4 lightcolor = glm::vec4(0.63f, 0.82f, 0.48f, 1);
-	glm::vec4 lightpos= glm::vec4(1.2f, 1.0f, 2.0f, 1);
+	glm::vec4 dir_light_pos = glm::vec4(0.63f, 0.82f, 0.48f, 1);
+	glm::vec4 dir_light_dir = glm::vec4(1);
+	glm::vec4 dir_light_color = glm::vec4(-2.2f, 1.0f, 2.0f, 1);
+
+	glm::vec4 point_light_pos[MAX_POINT_LIGHTS] = { glm::vec4(1.0) };
+	glm::vec4 point_light_dir[MAX_POINT_LIGHTS] = { glm::vec4(1) };
+	glm::vec4 point_light_color[MAX_POINT_LIGHTS] = { glm::vec4(1.0) };
+
+	glm::mat4 view;
+	glm::mat4 proj;
+	glm::mat4 viewproj;
+
 	float ambient = 0.1;
 	float diffuse = 0.5;
 	float specular = 0.5;
+
+    bool hasdirectional = 1;
+    int pointlightamount;
 };
 
 #define DEPTH_ARRAY_SCALE 512
@@ -270,6 +278,7 @@ struct Positions3 {
 	Positions3() {};
 	Positions3(const Positions3& tmp) { x = tmp.x; y = tmp.y; z = tmp.z; };
 	Positions3(int tmpx, int tmpy, int tmpz) { x = tmpx; y = tmpy; z = tmpz; };
+	Positions3(float tmpx, float tmpy, float tmpz) { x = tmpx; y = tmpy; z = tmpz; };
 };
 
 #define GIZMO_HEIGHT 3
@@ -301,7 +310,7 @@ typedef std::unordered_map<int, Data> ResourcesMap;
 
 
 const std::vector<const char *> validationlayer = {"VK_LAYER_KHRONOS_validation"};
-const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+const std::vector<const char*> deviceextenstions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_dynamic_rendering" };
 #if defined(AAI_WINDOWS)
 const std::vector<const char*> instanceextensions = 
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};

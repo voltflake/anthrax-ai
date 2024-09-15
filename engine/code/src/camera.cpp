@@ -14,7 +14,7 @@
 #ifdef AAI_LINUX
 void Camera::checkmovement(xcb_keysym_t k, float delta)
 {
-    const float cameraSpeed = 1.5f * delta;	
+    const float cameraSpeed = 0.5f * delta;	
     if (k == W_KEY) {
         Position += cameraSpeed * Front;
     }
@@ -51,7 +51,7 @@ void Camera::checkdirection(Positions mousepos, float delta)
 {
     Positions mousemove = mousepos;
     if (mousepos.x == 0 && mousepos.y == 0) return;
-    float rotateSpeed = delta * 0.03f;
+    float rotateSpeed = delta * 0.0003f;
 
     if (mousemove.x || mousemove.y) {
         float yaw = rotateSpeed * mousemove.x;

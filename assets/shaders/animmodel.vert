@@ -1,6 +1,7 @@
 #version 450 core
 
 #include "vertdef.h"
+#include "defines.h"
 
 layout(set = 3, binding = 0) buffer readonly StorageArray
 {
@@ -24,5 +25,4 @@ void main()
     outweight = vweight;
     outboneid = vboneid;
     outnormal =  mat3(bonetransforms) * vnormal ;
-
 }

@@ -91,8 +91,8 @@ void VkBuilder::resizewindow(bool& winprepared, VkExtent2D windowextendh, bool c
 	devicehandler.recreateswapchain(winprepared, windowextendh);
 	builddepthbuffer();
 	buildmainimage();
-	renderer.recreateframebuffer(devicehandler);
-	pipeline.recreatepipeline(getdevice(), check);
+	//renderer.recreateframebuffer(devicehandler);
+	pipeline.recreatepipeline(&devicehandler, getdevice(), check);
 
 	descriptors.updateattachmentdescriptors(devicehandler);
 
@@ -149,63 +149,29 @@ bool VkBuilder::validationlayerssupport() {
 	return true;
 }
 
-void VkBuilder::copycheck(uint32_t swapchainimageindex) {
+void VkBuilder::copycheck(VkCommandBuffer cmd, AllocatedImage target, uint32_t swapchainimageindex) {
 
-		renderer.submit([&](VkCommandBuffer cmd) {
+	//	renderer.submit([&](VkCommandBuffer cmd) {
+	{
 		VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+	barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = texturehandler.gettexture("check/back.jpg")->image;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-  		 barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-            sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-       
-
-        vkCmdPipelineBarrier(
-            cmd,
-             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-
-	});
-		renderer.submit([&](VkCommandBuffer cmd) {
-		VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
         barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = getswapchainimage()[swapchainimageindex];
+        barrier.image =  target.texture->image;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		barrier.subresourceRange.baseMipLevel = 0;
 		barrier.subresourceRange.levelCount = 1;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = 1;
 
-        VkPipelineStageFlags sourceStage;
-        VkPipelineStageFlags destinationStage;
-		barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-  	 	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-
-        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-       
+        // VkPipelineStageFlags sourceStage;
+        // VkPipelineStageFlags destinationStage;
+  		// barrier.srcAccessMask = 0;
+        //barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
         vkCmdPipelineBarrier(
             cmd,
@@ -215,10 +181,44 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
             0, nullptr,
             1, &barrier
         );
+	}
+	//});
+	//	renderer.submit([&](VkCommandBuffer cmd) {
+	// {
+	// 	VkImageMemoryBarrier barrier{};
+    //     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    //     barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    //     barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    //     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    //     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    //     barrier.image = getswapchainimage()[swapchainimageindex];
+    //     barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	// 	barrier.subresourceRange.baseMipLevel = 0;
+	// 	barrier.subresourceRange.levelCount = 1;
+	// 	barrier.subresourceRange.baseArrayLayer = 0;
+	// 	barrier.subresourceRange.layerCount = 1;
 
-	});
+    //     VkPipelineStageFlags sourceStage;
+    //     VkPipelineStageFlags destinationStage;
+	// 	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+  	//  	barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+    //     sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    //     destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+       
+
+    //     vkCmdPipelineBarrier(
+    //         cmd,
+    //          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    //         0,
+    //         0, nullptr,
+    //         0, nullptr,
+    //         1, &barrier
+    //     );
+	// }
+	//});
 			
-	renderer.submit([&](VkCommandBuffer cmd){
+	//renderer.submit([&](VkCommandBuffer cmd){
 
 	VkOffset3D blitSize;
 	blitSize.x = getswapchainextent().width;
@@ -234,78 +234,120 @@ void VkBuilder::copycheck(uint32_t swapchainimageindex) {
 
 	vkCmdBlitImage(
 		cmd,
-		getswapchainimage()[swapchainimageindex], VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-		texturehandler.gettexture("check/back.jpg")->image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		target.texture->image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		getswapchainimage()[swapchainimageindex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		1,
 		&imageBlitRegion,
 		VK_FILTER_NEAREST);
-	});
+	//});
 
-	renderer.submit([&](VkCommandBuffer cmd) {
-	VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    barrier.newLayout =  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = texturehandler.gettexture("check/back.jpg")->image;
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    barrier.subresourceRange.baseMipLevel = 0;
-    barrier.subresourceRange.levelCount = 1;
-    barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+   VkImageMemoryBarrier memBarrier = {};
+    memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    memBarrier.pNext = NULL;
+    memBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    memBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    memBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    memBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    memBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    memBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    memBarrier.subresourceRange.baseMipLevel = 0;
+    memBarrier.subresourceRange.levelCount = 1;
+    memBarrier.subresourceRange.baseArrayLayer = 0;
+    memBarrier.subresourceRange.layerCount = 1;
+    memBarrier.image = getswapchainimage()[swapchainimageindex];
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+                         &memBarrier);
 
-    VkPipelineStageFlags sourceStage;
-    VkPipelineStageFlags destinationStage;
+	// vkCmdCopyImage(info.cmd, bltSrcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, bltDstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    //                1, &cregion);
 
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;//VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+    VkImageMemoryBarrier prePresentBarrier = {};
+    prePresentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    prePresentBarrier.pNext = NULL;
+    prePresentBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    prePresentBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    prePresentBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    prePresentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    prePresentBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    prePresentBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    prePresentBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    prePresentBarrier.subresourceRange.baseMipLevel = 0;
+    prePresentBarrier.subresourceRange.levelCount = 1;
+    prePresentBarrier.subresourceRange.baseArrayLayer = 0;
+    prePresentBarrier.subresourceRange.layerCount = 1;
+    prePresentBarrier.image = getswapchainimage()[swapchainimageindex];
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1,
+                         &prePresentBarrier);
 
-    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	//renderer.submit([&](VkCommandBuffer cmd) {
+	// {
+	// VkImageMemoryBarrier barrier{};
+    // barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    // barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    // barrier.newLayout =  VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    // barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    // barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    // barrier.image = target.texture->image; //texturehandler.gettexture("check/back.jpg")->image;
+    // barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    // barrier.subresourceRange.baseMipLevel = 0;
+    // barrier.subresourceRange.levelCount = 1;
+    // barrier.subresourceRange.baseArrayLayer = 0;
+    // barrier.subresourceRange.layerCount = 1;
 
-    vkCmdPipelineBarrier(
-        cmd,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier
-    );
-	});
+    // VkPipelineStageFlags sourceStage;
+    // VkPipelineStageFlags destinationStage;
 
-	renderer.submit([&](VkCommandBuffer cmd) {
-	VkImageMemoryBarrier barrier{};
-    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = getswapchainimage()[swapchainimageindex];
-    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
+    // barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    // barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;//VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
 
-    VkPipelineStageFlags sourceStage;
-    VkPipelineStageFlags destinationStage;
-	barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-	barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+    // sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    // destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
-    sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    // vkCmdPipelineBarrier(
+    //     cmd,
+    //     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    //     0,
+    //     0, nullptr,
+    //     0, nullptr,
+    //     1, &barrier
+    // );
+	// }
+	// //});
+
+	// //renderer.submit([&](VkCommandBuffer cmd) {
+	// {
+	// VkImageMemoryBarrier barrier{};
+    // barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    // barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    // barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    // barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    // barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    // barrier.image = getswapchainimage()[swapchainimageindex];
+    // barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	// barrier.subresourceRange.baseMipLevel = 0;
+	// barrier.subresourceRange.levelCount = 1;
+	// barrier.subresourceRange.baseArrayLayer = 0;
+	// barrier.subresourceRange.layerCount = 1;
+
+    // VkPipelineStageFlags sourceStage;
+    // VkPipelineStageFlags destinationStage;
+	// barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+	// barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+
+    // sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+    // destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
    
 
-    vkCmdPipelineBarrier(
-        cmd,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier
-    );
-
-	});
+    // vkCmdPipelineBarrier(
+    //     cmd,
+    //     VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+    //     0,
+    //     0, nullptr,
+    //     0, nullptr,
+    //     1, &barrier
+    // );
+	// }
+	//});
 }
 

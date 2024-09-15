@@ -7,23 +7,7 @@ layout(location = 1) in vec3 infar;
 
 layout (location = 0) out vec4 outfragcolor;
 
-layout(set = 0, binding = 0) uniform  CameraBuffer {
-
-    mat4 model;
-    mat4 view;
-    mat4 proj;
-    mat4 viewproj;
-
-	vec4 viewpos;
-    vec4 mousepos;
-    vec4 viewport;
-
-    vec4 lightcolor;
-	vec4 lightpos;
-	float ambient;
-	float diffuse;
-	float specular;
-} cameraData;
+#include "defines.h"
 
 vec4 grid(vec3 pos, float scale, float div, vec3 col) {
     vec2 coord = pos.xz * scale;
@@ -46,7 +30,6 @@ vec4 grid(vec3 pos, float scale, float div, vec3 col) {
     return color;
 }
 
-
 void main()
 {
     float y = -innear.y / (infar.y - innear.y); // parametric equation of a line (y axis)
@@ -56,9 +39,9 @@ void main()
         outfragcolor = vec4(0);
         return ;
     }
-    gl_FragDepth = ClipSpaceDepth(clippos, cameraData.proj, cameraData.view);
+    gl_FragDepth = ClipSpaceDepth(clippos, cameradata.proj, cameradata.view);
 
-    float lineardepth = LinearDepth(clippos, cameraData.proj, cameraData.view);
+    float lineardepth = LinearDepth(clippos, cameradata.proj, cameradata.view);
     float fading = smoothstep(1, 0, lineardepth);
 
     outfragcolor.rgba = (grid(clippos, 1, 1, vec3(0.6, 0.6, 0.6))).rgba;

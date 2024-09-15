@@ -17,6 +17,10 @@ void Engine::init() {
 
 	initengine(Level);
 	initvulkan();
+
+	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Builder.getinstance(), "vkCmdBeginRenderingKHR");
+	vkCmdEndRenderingKHR   = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Builder.getinstance(), "vkCmdEndRenderingKHR");
+
 	initscene();
 	initimgui();
 
@@ -46,9 +50,9 @@ void Engine::initvulkan() {
 
 	Builder.builddepthbuffer();
 	Builder.buildmainimage();
-	Builder.buildrenderpass();
+//	Builder.buildrenderpass();
 
-	Builder.builframebuffers();
+//	Builder.builframebuffers();
 	
 	Builder.startsync();
 
@@ -65,9 +69,24 @@ void Engine::initvulkan() {
 	Builder.loadmeshes();
 }
 
+float rand_float(float a, float b)
+{
+	float r = (float)rand() / (float)RAND_MAX;
+	float diff = b - a;
+	return a + (r * diff);
+}
+
 void Engine::initengine(LevelManager &levels) {
 	EditorCamera.setposition({ 0.f, 0.f, 3.0f});
 	EditorCamera.setdirections();
+
+	DirectionLight.init(glm::vec3(-2.2f, 1.0f, 2.0f), glm::vec3(0.63f, 0.82f, 0.48f), LIGHT_DIRECTIONAL);
+	printf("------------\n");
+	for (int i = 0; i < MAX_POINT_LIGHTS; i++) {
+		glm::vec3 randpos(rand_float(-10.0f, 10.0f), rand_float(-10.0f, 10.0f), rand_float(-10.0f, 10.0f));
+		printf("point light [%d] x: %f, y: %f, z: %f \n", i, randpos.x,  randpos.y,  randpos.z);
+		PointLights[i].init(randpos, glm::vec3(0.63f, 0.82f, 0.48f), LIGHT_POINT);
+	}
 
 	Level.getbackground().setposition({0, 0});
 	Level.getbackground().setpath("placeholder.jpg");
@@ -147,7 +166,7 @@ void Engine::cleanup() {
 
 	Builder.clearpipeline();
 	Builder.cleanswapchain();
-	Builder.clearframebuffers();
+//	Builder.clearframebuffers();
 	Builder.cleanall();
 	for (int i = 0; i < Level.getobject().size(); i++) {
 		delete Level.getobject()[i];

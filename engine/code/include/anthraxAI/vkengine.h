@@ -15,6 +15,7 @@
 #include "anthraxAI/vkcmdhandler.h"
 
 #include "anthraxAI/camera.h"
+#include "anthraxAI/lights.h"
 
 #include "anthraxAI/vkdebug.h"
 
@@ -66,6 +67,10 @@ public:
 	Camera 						EditorCamera;
 	Gizmo						gizmomove;
 	Animator 					animator;
+	
+	Light						DirectionLight;
+	int pointlightamount = 0;
+	Light						PointLights[MAX_POINT_LIGHTS];
 
 	Debug::DebugManager			Debug;
 	Debug::Mouse				Mouse;
@@ -76,6 +81,7 @@ public:
 // builder candidate 
 	VkExtent2D 					WindowExtend = {1200, 800};
 	bool 						winprepared = false;
+	bool 						onwinresize = false;
 //-----
 	bool 						running = true;
 	long long 					getcurtime();
@@ -115,6 +121,7 @@ private:
 
 	void 						mousepicking();
 	void 						render();
+	void						copytarget(VkCommandBuffer cmd, AllocatedImage& target, uint32_t swapchainindex);
 	void 						render3d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial);
 	void 						render2d(VkCommandBuffer cmd, RenderObject& object, Mesh* lastMesh, Material* lastMaterial);
 	void 						renderscene(VkCommandBuffer cmd);
@@ -138,5 +145,9 @@ private:
 	std::vector<std::string> 	checkimgs = {"1.raw", "2.raw", "3.raw", "4.raw", "5.raw", "6.raw", "7.raw", "8.raw", "9.raw", "10.raw"};
 	int 						checkimg = 0;
 	bool 						checkupdate = false;	
+
+		
+	PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR{VK_NULL_HANDLE};
+	PFN_vkCmdEndRenderingKHR   vkCmdEndRenderingKHR{VK_NULL_HANDLE};
 };
 

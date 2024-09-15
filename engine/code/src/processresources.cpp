@@ -57,6 +57,17 @@ void Engine::load3dresources()
     Resources.add(TYPE_MODEL + 4, 
 	    Data("dummy.png", {8, 0, 0}, false, false));
 
+	Resources.add(TYPE_MODEL + 5,
+	    Data("dummy.png", {0.2f, 0.0f, 0.0f}, false, false));
+
+	Resources.add(TYPE_LIGHT, 
+	    Data("dummy.png", {camdata.dir_light_pos.x, camdata.dir_light_pos.y, camdata.dir_light_pos.z}, false, false));
+	
+	for (int i = 1; i < MAX_POINT_LIGHTS + 1; i++) {
+		Resources.add(TYPE_LIGHT + i, 
+			Data("dummy.png", {camdata.point_light_pos[i].x, camdata.point_light_pos[i].y, camdata.point_light_pos[i].z}, false, false));
+	}
+	
     Resources.add(TYPE_GIZMO + 0, 
 	    Data("dummy.png", {0, 0, 0}, false, false));
     Resources.add(TYPE_GIZMO + 1, 
@@ -82,6 +93,11 @@ void Engine::initmeshes()
 		Builder.loadmodel("models/monkeytextured.obj", TYPE_MODEL + 0);
 		Builder.loadmodel("models/cube.obj", TYPE_MODEL + 1);
 		Builder.loadmodel("models/sphere.obj", TYPE_MODEL + 2);
+		
+		Builder.loadmodel("models/sphere.obj", TYPE_LIGHT);
+		for (int i = 1; i < MAX_POINT_LIGHTS + 1; i++) {
+			Builder.loadmodel("models/sphere.obj", TYPE_LIGHT + i);
+		}
 
 		Builder.loadmodel("models/gizmox.obj", TYPE_GIZMO + 0);
 		Builder.loadmodel("models/gizmoy.obj", TYPE_GIZMO + 1);
@@ -94,14 +110,23 @@ void Engine::initmeshes()
 		Builder.loadmodel("models/Walking-mesh-anim.dae", TYPE_MODEL + 4);
 		animator.init({"models/Walking-mesh-anim.dae", "models/Dying-anim.dae"} , TYPE_MODEL + 4);
 
+		Builder.loadmodel("models/surface.obj", TYPE_MODEL + 5);
+
 		Debug.animprepared = true;
 		
-		for (int i = TYPE_MODEL; i < TYPE_MODEL + 5; i++) {
+		for (int i = TYPE_MODEL; i < TYPE_MODEL + 6; i++) {
 			Builder.updatemodel(Builder.getmodel(i));
 		}
 		for (int i = TYPE_GIZMO; i < TYPE_GIZMO + 3; i++) {
 			Builder.updatemodel(Builder.getmodel(i));
 		}
+
+		Builder.updatemodel(Builder.getmodel(TYPE_LIGHT));
+		for (int i = 1; i < MAX_POINT_LIGHTS + 1; i++) {
+			Builder.updatemodel(Builder.getmodel(TYPE_LIGHT + i));
+		}
+
+		//Builder.updatemodel(Builder.getmodel(TYPE_LIGHT + 1));
 	}
     else {
     	Builder.loadmeshes();

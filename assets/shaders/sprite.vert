@@ -1,6 +1,7 @@
 #version 450
 
 #include "vertdef.h"
+#include "defines.h"
 
 void main()
 {

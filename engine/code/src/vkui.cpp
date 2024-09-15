@@ -50,7 +50,7 @@ void Engine::initimgui() {
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.Subpass = 1;
 
-	ImGui_ImplVulkan_Init(&init_info, Builder.getrenderpass());
+	ImGui_ImplVulkan_Init(&init_info, nullptr);
 
 	Builder.renderer.submit([&](VkCommandBuffer cmd) {
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -261,16 +261,42 @@ void Engine::debuglight()
 {
     Editor.beginwindow( { -500, 40 }, { 500, 400 }, ImGuiWindowFlags_NoSavedSettings, "Lighting");
 
-	ImGui::TextUnformatted("light position");
-	ImGui::SliderFloat("x", &camdata.lightpos.x, -5.0f, 5.0f, "%.2f"); 
-	ImGui::SliderFloat("y", &camdata.lightpos.y, -5.0f, 5.0f, "%.2f"); 
-	ImGui::SliderFloat("z", &camdata.lightpos.z, -5.0f, 5.0f, "%.2f");
-	ImGui::Separator();
-	
-	ImGui::TextUnformatted("light color");
-	ImGui::SliderFloat("r", &camdata.lightcolor.x, -5.0f, 5.0f, "%.2f");
-	ImGui::SliderFloat("g", &camdata.lightcolor.y, -5.0f, 5.0f, "%.2f");
-	ImGui::SliderFloat("b", &camdata.lightcolor.z, -5.0f, 5.0f, "%.2f");
+    if (ImGui::CollapsingHeader("Directional Light")) {
+		ImGui::Checkbox("visible", &camdata.hasdirectional);
+		ImGui::TextUnformatted("light position");
+		ImGui::SliderFloat("x", &DirectionLight.position.x, -15.0f, 15.0f, "%.2f"); 
+		ImGui::SliderFloat("y", &DirectionLight.position.y, -15.0f, 15.0f, "%.2f"); 
+		ImGui::SliderFloat("z", &DirectionLight.position.z, -15.0f, 15.0f, "%.2f");
+		ImGui::Separator();
+		
+		ImGui::TextUnformatted("light color");
+		ImGui::SliderFloat("r", &DirectionLight.color.x, -5.0f, 5.0f, "%.2f");
+		ImGui::SliderFloat("g", &DirectionLight.color.y, -5.0f, 5.0f, "%.2f");
+		ImGui::SliderFloat("b", &DirectionLight.color.z, -5.0f, 5.0f, "%.2f");
+		ImGui::Separator();
+	}
+    if (ImGui::CollapsingHeader("Point Lights")) {
+		ImGui::InputInt("amount", &pointlightamount);
+		if (pointlightamount < 0) {
+			pointlightamount = 0;
+		}
+		if (pointlightamount > MAX_POINT_LIGHTS) {
+			pointlightamount = MAX_POINT_LIGHTS;
+		}
+		for (int i = 0; i < pointlightamount; i++) {
+			ImGui::TextUnformatted("point light position:");
+			ImGui::SliderFloat(std::string("x " + std::to_string(i)).c_str(), &PointLights[i].position.x, -15.0f, 15.0f, "%.2f"); 
+			ImGui::SliderFloat(std::string("y " + std::to_string(i)).c_str(), &PointLights[i].position.y, -15.0f, 15.0f, "%.2f"); 
+			ImGui::SliderFloat(std::string("z " + std::to_string(i)).c_str(), &PointLights[i].position.z, -15.0f, 15.0f, "%.2f");
+
+			ImGui::TextUnformatted("light color");
+			ImGui::SliderFloat(std::string("r " + std::to_string(i)).c_str(), &PointLights[i].color.x, -5.0f, 5.0f, "%.2f");
+			ImGui::SliderFloat(std::string("g " + std::to_string(i)).c_str(), &PointLights[i].color.y, -5.0f, 5.0f, "%.2f");
+			ImGui::SliderFloat(std::string("b " + std::to_string(i)).c_str(), &PointLights[i].color.z, -5.0f, 5.0f, "%.2f");
+			ImGui::Separator();
+		}
+	}
+
 	ImGui::Separator();
 	ImGui::SliderFloat("ambient", &camdata.ambient, -5.0f, 5.0f, "%.2f");
 	ImGui::SliderFloat("specular", &camdata.specular, -5.0f, 5.0f, "%.2f");

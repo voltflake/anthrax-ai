@@ -3,7 +3,6 @@
 void VkBuilder::procscene(ResourcesMap& resmap, Animator& animator) 
 {
     int i = 0;
-
 	for (auto& list : resmap) {
 		if (list.second.texturepath == "") {
             continue;
@@ -17,7 +16,16 @@ void VkBuilder::procscene(ResourcesMap& resmap, Animator& animator)
 
         if (list.first >= TYPE_MODEL) {
 			obj.model = getmodel(list.first);
-            type = list.first >= TYPE_GIZMO ? TYPE_GIZMO : TYPE_MODEL;
+            if (list.first >= TYPE_LIGHT) {
+                type = TYPE_LIGHT;
+            }
+            if (list.first >= TYPE_GIZMO && list.first < TYPE_LIGHT) {
+                type = TYPE_GIZMO;
+            }
+            else {
+                type = TYPE_MODEL;
+            }
+            //type = (list.first >= TYPE_GIZMO && list.first < TYPE_LIGHT) ? TYPE_GIZMO : TYPE_MODEL;
 			id = list.first;
             material = "monkey";
         }

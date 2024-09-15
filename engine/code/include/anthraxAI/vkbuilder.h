@@ -146,7 +146,8 @@ public:
 	Mesh* 		getmesh(int id) 								{ return meshhandler.getmesh(id);};
 	Texture* 	gettexture(const std::string& name) 			{ return texturehandler.gettexture(name);};
 
-	void copycheck(uint32_t swapchainimageindex);
+	void copycheck(VkCommandBuffer cmd, AllocatedImage target, uint32_t swapchainimageindex);
 	bool instanceextensionssupport();
 	bool validationlayerssupport();
+
 };

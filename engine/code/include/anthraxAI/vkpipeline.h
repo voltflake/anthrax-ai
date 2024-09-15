@@ -13,6 +13,7 @@ struct Material {
 };
 
 struct MeshPushConstants {
+	glm::mat4 model;
 	glm::mat4 rendermatrix;
 
 	int objectID;
@@ -34,7 +35,7 @@ public:
 	void 									setuppipelinedebug();
 	void 									buildpipeline(bool check);
 	void 									clearpipeline(VkDevice device);
-	void									recreatepipeline(VkDevice device, bool check);
+	void									recreatepipeline(DeviceBuilder* devh, VkDevice device, bool check);
 
 	VkPipeline& 							getreadpipeline() 	{ return pipelineread; };
 	VkPipelineLayout& 						getreadpipelayout() 	{ return pipelayoutsread; };

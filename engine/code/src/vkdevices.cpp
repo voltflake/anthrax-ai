@@ -25,6 +25,11 @@ void DeviceBuilder::findphysicaldevice() {
 	ASSERT(physicaldevbuilder == VK_NULL_HANDLE, "failed to find a suitable GPU");
 }
 
+constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicrenderingfeature {
+    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
+    .dynamicRendering = VK_TRUE,
+};
+
 void DeviceBuilder::buildlogicaldevice() {
  	
  	QueueFamilyIndex indices = findqueuefamilies(physicaldevbuilder);
@@ -48,7 +53,7 @@ void DeviceBuilder::buildlogicaldevice() {
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
+    createInfo.pNext = &dynamicrenderingfeature,
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
 

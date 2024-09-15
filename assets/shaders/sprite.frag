@@ -1,6 +1,7 @@
 #version 450
 
 #include "fragdef.h"
+#include "defines.h"
 
 void main()
 {

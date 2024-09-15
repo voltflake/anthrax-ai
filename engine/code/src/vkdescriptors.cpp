@@ -62,7 +62,7 @@ void DescriptorBuilder::builddescriptors() {
 	BufferBuilder buffer;
 	BufferBuilder storagebuffer;
 
-	std::array<VkDescriptorPoolSize, 6> sizes{};
+	std::array<VkDescriptorPoolSize, 7> sizes{};
 	sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	sizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	sizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;

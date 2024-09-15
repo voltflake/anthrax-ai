@@ -17,6 +17,7 @@ enum DataTypes {
 	TYPE_OBJECT,
 	TYPE_MODEL = 100,
 	TYPE_GIZMO = 200,
+	TYPE_LIGHT = 500
 };
 
 enum MouseState {

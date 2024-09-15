@@ -370,6 +370,7 @@ bool Engine::eventhandler(const xcb_generic_event_t *event, float delta)
 		    return true;
 		}
 		case XCB_CONFIGURE_NOTIFY: {
+			onwinresize = true;
 			const xcb_configure_notify_event_t *cfgEvent = (const xcb_configure_notify_event_t *)event;
 			if ((winprepared) && ((cfgEvent->width != WindowExtend.width) || (cfgEvent->height != WindowExtend.height))) {
 				WindowExtend.width = cfgEvent->width;
@@ -400,13 +401,19 @@ void Engine::runlinux() {
 	xcb_flush(connection);
 
 	state |= ENGINE_EDITOR;
-	long long start, end = 0;
-	float delta;
+	int start, end = 0;
+	float delta, deltams = 0;
 
 	while (running) {
-		start = getcurtime();
+		start = clock();
+		checkstate(deltams);
 
-		checkstate(delta);
+		while (delta < CLOCKS_PER_SEC / MAX_FPS) {
+			if (onwinresize) break;
+			start = clock();
+			delta = (float(start - end));
+		}
+		Debug.fps = CLOCKS_PER_SEC / delta;
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplX11_NewFrame();
@@ -419,12 +426,10 @@ void Engine::runlinux() {
 			xcb_key_symbols_free(KeySyms);
 		}
 
-		end = getcurtime();
-    	if(end - start > 0) {
-        	Debug.fps = CLOCKS_PER_SEC / (end - start);
-			delta = float(double(end - start)) / CLOCKS_PER_SEC * 5000;
-			//printf("delta: %f \n\n\n", delta);
-		}
+		end = clock();
+		delta = (float(end - start));
+		deltams = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
+		onwinresize = false;
 	}
 }
 #endif

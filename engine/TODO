@@ -1,44 +1,31 @@
-(1. process material loading; connection between model class and resource data structure
+Engine::Gfx() -- Vukan() -- Renderer() --
+Engine::Core()::Windows()
+Engine::Core()::Sync()
 
-1.1. descriptor layout error after 3d -> 2d 
-1.2. starting engine -> 2d -> editor color messed up) --> probably done !
+Engine::Assets() - ? 
 
-1. please get rid of test3d variable 
+Engine::Editor()
+Engine::Scene() -- Resources()
 
-2. parser for 3d levels? improve 2d/3d modes handling
+1. Engine class - basic class that handles singleton instances and modes (Vulkan class,Renderer class, Debug class, Scene class, UI class, engine state)
 
-3. fix lighting; direction ligting; point lights
+- starting from creation of instances for classes
+- handling destroy
 
-----------
+2. Vulkan:
+- vulkan instance
+- surface
+- log & phys dev
+- swapchain
+- image views
+- command pool
+- depth & main image (render targets)
+- renderpass + framebuffers -> dynamic rendering
+- sync
+- descriptors
 
-Ambitious:
-- completely rewrite engine architecture
-(probably combine this with streams, but at separate time work on the features for anthraxAI and make videos)
+3. Renderer handles rendering and command buffers
 
-----------
+4. Scene: handles what resources are used by scene, uploads models and stuff
 
-
-parser thoughts:
-
-- two folders: levels/2d and levels/3d
-
-- if we are in 2d mode -> parse 2d level
-- if we are in 3d mode -> parse 3d level
-
-- 3d level text: 
-    - model path
-    - input texture (also check whether model contains material)
-    - position (x y z)
-    - is animation
-        - path to other animations
-        - speed
-
-(add some basic assertions eg if we are passing correct node names)
-
-implementation details:
-    - GetRootNode()
-    -> GetNextChild() -> GetElement<std::string>(ELEM_PATH) etc
-
-    - array of strings? bind iterator with particular node
-    - arrayy of NodeStruct ? bind iterator with nodestruct element which has root and next child 
-    
+5. UI - everything with imgui

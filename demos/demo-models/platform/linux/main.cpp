@@ -1,8 +1,9 @@
-#include <anthraxAI/vkengine.h>
+#include <anthraxAI/engine.h>
 
 int main(int argc, char **argv) {
-	Engine engine;
-	engine.start();
-	engine.run();
+
+	Engine::GetInstance()->Init();
+	Engine::GetInstance()->Run();
+	
 	return 0;
 }

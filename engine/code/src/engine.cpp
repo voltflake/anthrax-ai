@@ -23,4 +23,13 @@ void Engine::Run()
 #else
     Core::WindowManager::GetInstance()->RunWindows();
 #endif
+
+    if (State & ENGINE_STATE_EXIT) {
+        CleanUp();
+    }
+}
+
+void Engine::CleanUp()
+{
+    Gfx::Vulkan::GetInstance()->CleanUp();
 }

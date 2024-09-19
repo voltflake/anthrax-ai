@@ -45,6 +45,9 @@ Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
     Submit([&](VkCommandBuffer cmd) {
         texture.MemoryBarrier(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     });
+    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), stagingbuffer.Buffer, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), stagingbuffer.DeviceMemory, nullptr);
+
     return texture;
 }
 

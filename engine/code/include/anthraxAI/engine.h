@@ -1,8 +1,8 @@
 #pragma once
 
 #include "anthraxAI/utils/defines.h"
-
 #include "anthraxAI/core/windowmanager.h"
+
 #include "anthraxAI/gfx/vkbase.h"
 
 enum EngineState {
@@ -16,6 +16,7 @@ class Engine : public Utils::Singleton<Engine>
     public:
         void Init();
         void Run();
+        void CleanUp();
 
         EngineState GetState() const { return State; }
         void SetState(EngineState state) { State = state; }

@@ -29,9 +29,9 @@ void Gfx::Mesh::CreateMeshes()
     TestMesh.Vertices.resize(4);
 
     TestMesh.Vertices[0].position = {0, 0, 0.0f};
-    TestMesh.Vertices[1].position = {0, 0 + Gfx::Renderer::GetInstance()->GetRT("placeholder.jpg").GetSize().y, 0.0f};
-    TestMesh.Vertices[2].position = {0 + Gfx::Renderer::GetInstance()->GetRT("placeholder.jpg").GetSize().x, 0+Gfx::Renderer::GetInstance()->GetRT("placeholder.jpg").GetSize().y, 0.0f};
-    TestMesh.Vertices[3].position ={0 + Gfx::Renderer::GetInstance()->GetRT("placeholder.jpg").GetSize().x, 0, 0.0f};
+    TestMesh.Vertices[1].position = {0, 0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().y, 0.0f};
+    TestMesh.Vertices[2].position = {0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().x, 0+Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().y, 0.0f};
+    TestMesh.Vertices[3].position ={0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().x, 0, 0.0f};
 
     TestMesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
     TestMesh.Vertices[1].color = { 0.f, 1.f, 0.0f };

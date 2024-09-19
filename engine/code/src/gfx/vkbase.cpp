@@ -11,11 +11,33 @@ void Gfx::Vulkan::Init()
 	Gfx::Renderer::GetInstance()->Sync();
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
+	Gfx::Pipeline::GetInstance()->Init();
+	
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 
-	Gfx::Descriptors::GetInstance()->Init();
+	Gfx::DescriptorsBase::GetInstance()->Init();
 	// renderer - createtextures and createsamples
 	// map of rendertargets ? 
+}
+
+void Gfx::Vulkan::CleanUp()
+{
+	for (Gfx::FrameData frame : Gfx::Renderer::GetInstance()->Frames) {
+        vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &frame.RenderFence, true, 1000000000);
+    }
+	for (Gfx::FrameData frame : Gfx::Renderer::GetInstance()->Frames) {
+		frame.DynamicDescAllocator->CleanUp();
+	}
+	Gfx::DescriptorsBase::GetInstance()->CleanUp();
+
+	Gfx::Renderer::GetInstance()->CleanResources();
+	Gfx::Device::GetInstance()->CleanUpSwapchain();
+	
+	Core::Deletor::GetInstance()->CleanAll();
+
+	vkDestroySurfaceKHR(Instance, Gfx::Device::GetInstance()->GetSurface(), nullptr);
+	vkDestroyDevice(Gfx::Device::GetInstance()->GetDevice(), nullptr);
+	vkDestroyInstance(Instance, nullptr);
 }
 
 void Gfx::Vulkan::CreateVkInstance()
@@ -55,7 +77,6 @@ void Gfx::Vulkan::CreateVkInstance()
 	Debug.Setup(Instance, ValidationLayersOn);
 
 	Core::Deletor::GetInstance()->Push([=, this]() {
-		vkDestroyInstance(Instance, nullptr);
 		if (ValidationLayersOn) {
 			Debug.Destroy(Instance, nullptr);
 		}

@@ -53,6 +53,10 @@ namespace Gfx
             bool IsDeviceSuitable(VkPhysicalDevice device);
 
             VkQueue GetQueue(QueuesEnum q);
+
+            void CleanUpSwapchain();
+            
+	        size_t MinUniformBufferOffsetAlignment;
         private:
 #ifdef AAI_LINUX
             void CreateLinuxSurface();
@@ -71,7 +75,5 @@ namespace Gfx
             SwapchainInfo Swapchain;
 
             Queues Queue;
-
-	        size_t MinUniformBufferOffsetAlignment;
     };
 }

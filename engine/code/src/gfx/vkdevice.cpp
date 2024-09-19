@@ -16,6 +16,15 @@ void Gfx::Device::Init()
     CreateSwapchainImageViews();
 }
 
+void Gfx::Device::CleanUpSwapchain()
+{
+	vkDestroySwapchainKHR(LogicalDevice, Swapchain.Swapchain, nullptr);
+
+	for (size_t i = 0; i < Swapchain.Images.size(); i++) {
+		vkDestroyImageView(LogicalDevice, Swapchain.ImageViews[i], nullptr);
+	}
+}
+
 void Gfx::Device::CreatePhysicalDevice()
 {
 	uint32_t devicecount = 0;
@@ -79,10 +88,6 @@ void Gfx::Device::CreateDevice()
 
 	vkGetDeviceQueue(LogicalDevice, indices.Graphics.value(), 0, &Queue.Graphics);
 	vkGetDeviceQueue(LogicalDevice, indices.Present.value(), 0, &Queue.Present);
-
-	Core::Deletor::GetInstance()->Push([=, this]() {
-	    vkDestroyDevice(LogicalDevice, nullptr);
-	});
 }
 
 void Gfx::Device::CreateSwapchain()
@@ -165,9 +170,6 @@ void Gfx::Device::CreateLinuxSurface()
 	info.window = Core::WindowManager::GetInstance()->GetWindow();
 
 	VK_ASSERT(vkCreateXcbSurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), &info, NULL, &Surface), "failed to create window surface!");
-	Core::Deletor::GetInstance()->Push([=, this]() {
-	    vkDestroySurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), Surface, nullptr);
-	});
 }
 #else
 void Gfx::Device::CreateWindowsSurface()
@@ -178,10 +180,6 @@ void Gfx::Device::CreateWindowsSurface()
 	info.hinstance = hinstance;
 
 	VK_ASSERT(vkCreateWin32SurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), &info, nullptr, &Surface), "failed to create window surface!");
-
-	Core::Deletor::GetInstance()->Push([=, this]() {
-	    vkDestroySurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), Surface, nullptr);
-	});
 }
 #endif
 

@@ -7,6 +7,9 @@
 #include "anthraxAI/core/deletor.h"
 #include "anthraxAI/utils/singleton.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
 {                                                               \

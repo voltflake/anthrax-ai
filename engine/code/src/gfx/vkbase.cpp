@@ -8,6 +8,14 @@ void Gfx::Vulkan::Init()
 	
 	Gfx::Renderer::GetInstance()->CreateCommands();
 	Gfx::Renderer::GetInstance()->CreateRenderTargets();
+	Gfx::Renderer::GetInstance()->Sync();
+	Gfx::Renderer::GetInstance()->CreateTextures();
+
+	Gfx::Mesh::GetInstance()->CreateMeshes();
+
+	Gfx::Descriptors::GetInstance()->Init();
+	// renderer - createtextures and createsamples
+	// map of rendertargets ? 
 }
 
 void Gfx::Vulkan::CreateVkInstance()

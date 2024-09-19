@@ -5,6 +5,8 @@
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkdebug.h"
 #include "anthraxAI/gfx/vkrenderer.h"
+#include "anthraxAI/gfx/vkmesh.h"
+#include "anthraxAI/gfx/vkdescriptors.h"
 
 namespace Gfx
 {

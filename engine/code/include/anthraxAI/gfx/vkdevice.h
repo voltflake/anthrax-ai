@@ -22,6 +22,11 @@ namespace Gfx
         std::vector<VkPresentModeKHR>	Presentmodes;
     };
 
+    enum QueuesEnum {
+        GRAPHICS_QUEUE = 0,
+        PRESENT_QUEUE
+    };
+
     struct Queues {
         VkQueue Graphics;
         VkQueue Present;
@@ -47,6 +52,7 @@ namespace Gfx
             QueueFamilyIndex FindQueueFimilies(VkPhysicalDevice device);
             bool IsDeviceSuitable(VkPhysicalDevice device);
 
+            VkQueue GetQueue(QueuesEnum q);
         private:
 #ifdef AAI_LINUX
             void CreateLinuxSurface();

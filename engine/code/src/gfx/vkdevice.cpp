@@ -211,6 +211,14 @@ Gfx::QueueFamilyIndex Gfx::Device::FindQueueFimilies(VkPhysicalDevice device)
 	return index;
 }
 
+VkQueue Gfx::Device::GetQueue(QueuesEnum q)
+{
+	if (q == GRAPHICS_QUEUE) {
+		return Queue.Graphics;
+	}
+	return Queue.Present;
+}
+
 bool Gfx::Device::IsDeviceSuitable(VkPhysicalDevice device) 
 {	
 	QueueFamilyIndex index;

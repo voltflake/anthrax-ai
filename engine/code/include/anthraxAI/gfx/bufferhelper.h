@@ -9,7 +9,9 @@ namespace BufferHelper
         void* UniformMapedMemory;
     };
 
-    void 	CopyBuffer(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize size);
+    void    MapMemory(Buffer& buffer, VkDeviceSize size, VkDeviceSize offset, const void* datasrc);
+
+    void 	CopyBuffer(VkBuffer& srcbuffer, VkBuffer& dstbuffer, VkDeviceSize size);
 	void 	AllocateBuffer(Buffer& bufhandler, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
 	void 	CreateBuffer(Buffer& bufferhandler, VkBufferUsageFlags flags[2], VkDeviceSize buffersize, const void *datasrc);
 

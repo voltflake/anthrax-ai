@@ -7,7 +7,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL Gfx::DebugCallback(
     void* pUserData)
 {
     if (pCallbackData->messageIdNumber != 3357201678) {
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        std::cerr << "validation layer: " << pCallbackData->pMessage << "\n----------------------------------\n" << std::endl;
     }
     return VK_FALSE;
 }

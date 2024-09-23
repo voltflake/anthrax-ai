@@ -64,7 +64,12 @@ void BufferHelper::CreateBuffer(Buffer& bufferhandler, VkBufferUsageFlags flags[
 
 void BufferHelper::CreateBuffer(Buffer& bufferhandler, VkDeviceSize buffersize, VkBufferUsageFlagBits usage)
 {
-
+    if (usage == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
+        AllocateBuffer(bufferhandler, buffersize, usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    }
+    else {
+        AllocateBuffer(bufferhandler, buffersize, usage, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    }
 }
 void BufferHelper::CreateTextureBuffer(Buffer& bufferhandler, VkDeviceSize buffersize, void *pixels)
 {

@@ -11,11 +11,10 @@ void Gfx::Vulkan::Init()
 	Gfx::Renderer::GetInstance()->Sync();
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
-	Gfx::Pipeline::GetInstance()->Init();
-	
+	Gfx::DescriptorsBase::GetInstance()->Init();
+	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 
-	Gfx::DescriptorsBase::GetInstance()->Init();
 	// renderer - createtextures and createsamples
 	// map of rendertargets ? 
 }

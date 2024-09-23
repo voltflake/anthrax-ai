@@ -28,25 +28,31 @@ void Gfx::DescriptorsBase::Init()
 	Allocator = new Gfx::DescriptorAllocator{};
 	LayoutCache = new Gfx::DescriptorLayoutCache{};
 
-	VkDescriptorSetLayoutBinding texturebind = DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	std::array<VkDescriptorSetLayoutBinding, 3> texturebind = {DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0), DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 1), DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 2)};
 	VkDescriptorSetLayoutCreateInfo setinfo = {};
-	setinfo.bindingCount = 1;
+	setinfo.bindingCount = texturebind.size();
 	setinfo.flags = 0;
 	setinfo.pNext = nullptr;
 	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	setinfo.pBindings = &texturebind;
+	setinfo.pBindings = texturebind.data();
 
 	TextureSetLayout = LayoutCache->CreateDescriptorLayout(&setinfo);
+	
+	VkDescriptorSetLayoutBinding cambufferbinding = DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
+	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	setinfo.pNext = nullptr;
+	setinfo.bindingCount = 1; 
+	setinfo.flags = 0;
+	setinfo.pBindings = &cambufferbinding;
+
+	GlobalSetLayout = LayoutCache->CreateDescriptorLayout(&setinfo);
 
 	const size_t camerabuffersize = MAX_FRAMES * PadUniformBufferSize(sizeof(CameraData));
 	for (int i = 0; i < MAX_FRAMES; i++) {		
 		Gfx::Renderer::GetInstance()->Frames[i].DynamicDescAllocator = new Gfx::DescriptorAllocator{};
-
-	// 	// auto dynamicDataBuffer = create_buffer(1000000, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-	// 	// _frames[i].dynamicData.init(_allocator, dynamicDataBuffer, _gpuProperties.limits.minUniformBufferOffsetAlignment); 
-
-	// 	// //20 megabyte of debug output
-	// 	// _frames[i].debugOutputBuffer = create_buffer(200000000, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_TO_CPU);
+	
+		const size_t cambuffersize = MAX_FRAMES * PadUniformBufferSize(sizeof(CameraData));
+		BufferHelper::CreateBuffer(CameraBuffer[i], cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 	}
 }
 

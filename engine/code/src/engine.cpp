@@ -13,6 +13,8 @@ void Engine::Init()
 
     Gfx::Vulkan::GetInstance()->Init();
 
+    Core::Scene::GetInstance()->LoadResources();
+
     State = ENGINE_STATE_EDITOR;
 }
 

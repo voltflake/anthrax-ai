@@ -2,6 +2,9 @@
 
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/gfx/vkdefines.h"
+
+#include "anthraxAI/gfx/bufferhelper.h"
+
 #include <unordered_map>
 #include <algorithm>
 
@@ -84,16 +87,28 @@ namespace Gfx
             DescriptorAllocator* Allocator;
     };
     
+    typedef std::array<BufferHelper::Buffer, MAX_FRAMES> UboArray;
+
     class DescriptorsBase : public Utils::Singleton<DescriptorsBase>
     {
         public:
             void Init();
             void CleanUp();
 
+            VkDeviceMemory GetCameraBufferMemory(int ind) { return CameraBuffer[ind].DeviceMemory; }
+            VkBuffer GetCameraBuffer(int ind) { return CameraBuffer[ind].Buffer; }
+
+            VkDescriptorSetLayout& GetTextureLayout() { return TextureSetLayout; }
+            VkDescriptorSetLayout& GetGlobalLayout() { return GlobalSetLayout; }
             size_t PadUniformBufferSize(size_t originalsize);
 
+            DescriptorAllocator* GetAllocator() { return Allocator; }
+            DescriptorLayoutCache* GetLayoutCache() { return LayoutCache; }
         private:
             VkDescriptorSetLayout TextureSetLayout;
+            VkDescriptorSetLayout GlobalSetLayout;
+
+            UboArray CameraBuffer;
 
             DescriptorAllocator* Allocator;
 	        DescriptorLayoutCache* LayoutCache;

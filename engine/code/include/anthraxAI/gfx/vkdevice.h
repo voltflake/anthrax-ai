@@ -54,6 +54,12 @@ namespace Gfx
 
             VkQueue GetQueue(QueuesEnum q);
 
+            VkFormat* GetSwapchainFormat() { return &Swapchain.Format; }
+            VkSwapchainKHR& GetSwapchain() { return Swapchain.Swapchain; }
+            VkExtent2D GetSwapchainExtent() const { return Swapchain.Extent; }
+            VkImageView GetSwapchainImageView(uint32_t ind) { return Swapchain.ImageViews[ind]; }
+            VkImage GetSwapchainImage(uint32_t ind) { return Swapchain.Images[ind]; }
+            
             void CleanUpSwapchain();
             
 	        size_t MinUniformBufferOffsetAlignment;

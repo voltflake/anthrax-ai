@@ -2,6 +2,7 @@
 
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/core/scene.h"
 
 #include "anthraxAI/gfx/vkbase.h"
 

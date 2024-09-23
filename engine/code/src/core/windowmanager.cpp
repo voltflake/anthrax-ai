@@ -1,5 +1,7 @@
 #include "anthraxAI/core/windowmanager.h"
 
+#include "anthraxAI/core/scene.h"
+
 #ifdef AAI_LINUX
 void Core::WindowManager::InitLinuxWindow()
 {
@@ -142,6 +144,8 @@ void Core::WindowManager::RunLinux()
 
 	while (running) {
         Events();
+
+		Core::Scene::GetInstance()->RenderScene();
 
 		if (Engine::GetInstance()->GetState() & ENGINE_STATE_EXIT) {
 			xcb_key_symbols_free(KeySymbols);

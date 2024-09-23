@@ -15,6 +15,16 @@ namespace Gfx
         // float weights[4];
     };
 
+    struct MeshPushConstants {
+        glm::mat4 model;
+        glm::mat4 rendermatrix;
+
+        int objectID;
+        int boneind = -1;
+        int debug = 0;
+        int debugbones = 0;
+    };
+
     struct MeshInfo {
         std::string Path;
 
@@ -35,6 +45,8 @@ namespace Gfx
         public:
             void CreateMeshes();
             void UpdateMesh(MeshInfo& mesh);
+
+            MeshInfo* GetMesh() { return &TestMesh; }            
         private:
             MeshInfo TestMesh;
     };

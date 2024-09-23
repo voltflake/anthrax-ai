@@ -6,6 +6,7 @@
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/gfx/bufferhelper.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
+#include "anthraxAI/gfx/vkcmdhelper.h"
 
 namespace Gfx
 {
@@ -67,18 +68,37 @@ namespace Gfx
             RenderTarget* GetMainRT() { return MainRT; }
             RenderTarget* GetDepthRT() { return DepthRT; }
 
+            void CopyToSwapchain(VkCommandBuffer cmd, RenderTarget* rt, uint32_t swapchainimageindex);
+            void PrepareCameraBuffer();
+
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
             void Sync();
 
+            int GetFrameInd() { return FrameIndex; }
+            FrameData& GetFrame() { return Frames[FrameIndex]; }
+            uint32_t SyncFrame();
+            void SetFrameInd() { FrameIndex = (FrameIndex + 1) % MAX_FRAMES; }
+            void FinalizeRendering(CommandBuffer& cmd);
+
         	FrameArray Frames;
+
+            void BeginRendering(VkCommandBuffer cmd, const VkRenderingInfoKHR* renderinfo) { vkCmdBeginRenderingKHR(cmd, renderinfo); }
+            void EndRendering(VkCommandBuffer cmd) { vkCmdEndRenderingKHR(cmd); }
 
         private:
             RenderTarget* DepthRT;
             RenderTarget* MainRT;
 
             TexturesMap Textures;
-
+	        
+            CameraData 	camdata;
             UploadContext Upload;
+
+	        int FrameIndex = 0;
+
+            PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR{VK_NULL_HANDLE};
+        	PFN_vkCmdEndRenderingKHR   vkCmdEndRenderingKHR{VK_NULL_HANDLE};
+
     };
 }

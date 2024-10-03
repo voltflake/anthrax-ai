@@ -12,11 +12,9 @@ void Gfx::Vulkan::Init()
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
 	Gfx::DescriptorsBase::GetInstance()->Init();
+	Gfx::DescriptorsBase::GetInstance()->AllocateDataBuffers();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
-
-	// renderer - createtextures and createsamples
-	// map of rendertargets ? 
 }
 
 void Gfx::Vulkan::CleanUp()
@@ -24,9 +22,7 @@ void Gfx::Vulkan::CleanUp()
 	for (Gfx::FrameData frame : Gfx::Renderer::GetInstance()->Frames) {
         vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &frame.RenderFence, true, 1000000000);
     }
-	for (Gfx::FrameData frame : Gfx::Renderer::GetInstance()->Frames) {
-		frame.DynamicDescAllocator->CleanUp();
-	}
+
 	Gfx::DescriptorsBase::GetInstance()->CleanUp();
 
 	Gfx::Renderer::GetInstance()->CleanResources();

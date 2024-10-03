@@ -131,7 +131,7 @@ void Core::WindowManager::Events()
 {
 	xcb_generic_event_t *event;
 	while ((event = xcb_poll_for_event(Connection))) {
-		//ImGui_ImplX11_Event(event);
+		ImGui_ImplX11_Event(event);
 		Event = CatchEvent(event);
 		free(event);
 	}
@@ -145,6 +145,11 @@ void Core::WindowManager::RunLinux()
 	while (running) {
         Events();
 
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplX11_NewFrame();
+		ImGui::NewFrame();
+
+	  	Core::WindowManager::GetInstance()->ViewEditor();
 		Core::Scene::GetInstance()->RenderScene();
 
 		if (Engine::GetInstance()->GetState() & ENGINE_STATE_EXIT) {

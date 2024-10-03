@@ -11,7 +11,6 @@
 
 namespace Gfx
 {
-
     class Vulkan : public Utils::Singleton<Vulkan>
     {
         public:

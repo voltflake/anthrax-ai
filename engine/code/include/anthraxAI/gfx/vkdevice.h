@@ -57,6 +57,7 @@ namespace Gfx
             VkFormat* GetSwapchainFormat() { return &Swapchain.Format; }
             VkSwapchainKHR& GetSwapchain() { return Swapchain.Swapchain; }
             VkExtent2D GetSwapchainExtent() const { return Swapchain.Extent; }
+            Vector2<int> GetSwapchainSize() const { return { static_cast<int>(Swapchain.Extent.width), static_cast<int>(Swapchain.Extent.height) }; }
             VkImageView GetSwapchainImageView(uint32_t ind) { return Swapchain.ImageViews[ind]; }
             VkImage GetSwapchainImage(uint32_t ind) { return Swapchain.Images[ind]; }
             

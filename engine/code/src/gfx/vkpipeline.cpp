@@ -152,7 +152,6 @@ Gfx::Material* Gfx::Pipeline::CreateMaterial(VkPipeline pipelinew, VkPipelineLay
 
 void Gfx::Pipeline::Build() 
 {
-
 	VkShaderModule fragshadersprite;
 	std::string fragshaderstr;
 	fragshaderstr = "./shaders/sprite.frag.spv";
@@ -172,7 +171,7 @@ void Gfx::Pipeline::Build()
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
 
-	VkDescriptorSetLayout setLayouts[] = { Gfx::DescriptorsBase::GetInstance()->GetGlobalLayout(), Gfx::DescriptorsBase::GetInstance()->GetTextureLayout() };
+	VkDescriptorSetLayout setLayouts[] = {  Gfx::DescriptorsBase::GetInstance()->GetBindlessLayout(), Gfx::DescriptorsBase::GetInstance()->GetDescriptorSetLayout()};
 	pipelinelayoutinfo.setLayoutCount = 2;
 	pipelinelayoutinfo.pSetLayouts = setLayouts;
 
@@ -192,7 +191,7 @@ void Gfx::Pipeline::Build()
 	Viewport.maxDepth = 1.0f;
 
 	Scissor.offset = { 0, 0 };
-	Scissor.extent = { Core::WindowManager::GetInstance()->GetScreenResolution().x, Core::WindowManager::GetInstance()->GetScreenResolution().y };
+	Scissor.extent = { (uint32_t)Core::WindowManager::GetInstance()->GetScreenResolution().x, (uint32_t)Core::WindowManager::GetInstance()->GetScreenResolution().y };
 
 	Rasterizer = RasterezationCreateInfo(VK_POLYGON_MODE_FILL);
 	Multisampling = MultiSamplingCreateInfo();
@@ -202,18 +201,39 @@ void Gfx::Pipeline::Build()
     Setup(0);
 	CreateMaterial(Pipeline, PipelineLayout, "sprite");
 
+// intro
+	
+	VkPipelineVertexInputStateCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	info.pNext = nullptr;
+	VertexInputInfo = info;
+
+	ShaderStages.clear();
+	ASSERT(!LoadShader("./shaders/intro.frag.spv", &fragshadersprite), "Error: fragment shader module");
+	ASSERT(!LoadShader("./shaders/vbase.vert.spv", &vertexshadersprite), "Error: vertex shader module");
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshadersprite));
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshadersprite));
+    
+	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
+	pipelinelayoutinfo.pushConstantRangeCount = 1;	
+	pipelinelayoutinfo.setLayoutCount = 0;
+	pipelinelayoutinfo.pSetLayouts = nullptr;
+
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	
+	Setup(0);
+	CreateMaterial(Pipeline, PipelineLayout, "intro");
+
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshadersprite, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshadersprite, nullptr);
 }
 
 void Gfx::Pipeline::Setup(int ind) {
 
-// Pipeline for subpass 0
-VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
-VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
-VkFormat formats[2] = {VK_FORMAT_R16G16B16A16_SFLOAT};
+	VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
 
-VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
+	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
     pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     pipelineRenderingCreateInfo.colorAttachmentCount = 1;
     pipelineRenderingCreateInfo.pColorAttachmentFormats = Gfx::Device::GetInstance()->GetSwapchainFormat();

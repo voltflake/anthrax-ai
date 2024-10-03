@@ -8,6 +8,10 @@ void Gfx::Renderer::CreateTextures()
     std::string path = "./textures/placeholder.jpg";
 	Textures["placeholder.jpg"] = CreateTexture(path);
     CreateSampler(Textures["placeholder.jpg"]);
+
+    path = "./textures/kote-v-bote.jpg";
+	Textures["kote-v-bote.jpg"] = CreateTexture(path);
+    CreateSampler(Textures["kote-v-bote.jpg"]);
 }
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
@@ -24,10 +28,6 @@ Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
     BufferHelper::Buffer stagingbuffer;
     BufferHelper::AllocateBuffer(stagingbuffer, imagesize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     BufferHelper::MapMemory(stagingbuffer, imagesize, 0, pixels);
-    // void* datadst;
-    // vkMapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, 0, imagesize, 0, &datadst);
-    //     memcpy(datadst, pixels, (size_t)imagesize);
-    // vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory);
    
     stbi_image_free(pixels);
 

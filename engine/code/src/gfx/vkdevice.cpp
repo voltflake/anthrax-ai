@@ -67,13 +67,28 @@ void Gfx::Device::CreateDevice()
     VkPhysicalDeviceFeatures devicefeatures{};
 	devicefeatures.samplerAnisotropy = VK_TRUE;
     devicefeatures.fragmentStoresAndAtomics = VK_TRUE;
+	
+	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynfeature{};
+	dynfeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+    dynfeature.dynamicRendering = VK_TRUE;
+
+	VkPhysicalDeviceDescriptorIndexingFeatures descindeing{};
+	descindeing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	descindeing.pNext = &dynfeature;
+
+	VkPhysicalDeviceFeatures2 devfeatures2{};
+	devfeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	devfeatures2.pNext = &descindeing;
+	devfeatures2.features = devicefeatures;
+
+	vkGetPhysicalDeviceFeatures2(PhysicalDevice, &devfeatures2);
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pNext = &DynamicRenderingFeature,
+    createInfo.pNext = &devfeatures2;// &DynamicRenderingFeature,
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueinfos.size());
     createInfo.pQueueCreateInfos = queueinfos.data();
-    createInfo.pEnabledFeatures = &devicefeatures;
+   // createInfo.pEnabledFeatures = &devicefeatures;
     createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXT.size());
     createInfo.ppEnabledExtensionNames = DEVICE_EXT.data();
 

@@ -2,6 +2,17 @@
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 
+Gfx::MeshInfo* Gfx::Mesh::GetMesh(const std::string& name)
+{
+    MeshMap::iterator it = Meshes.find(name);
+	if (it == Meshes.end()) {
+		return nullptr;
+	}
+	else {
+		return &(*it).second;
+	}
+}
+
 void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
 {
     VkBufferUsageFlags flags[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
@@ -25,23 +36,28 @@ void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
 
 void Gfx::Mesh::CreateMeshes()
 {
-    TestMesh.Path = "placeholder.jpg";//list.second.texturepath;
-    TestMesh.Vertices.resize(4);
+    Gfx::TexturesMap texturemap = Gfx::Renderer::GetInstance()->GetTextureMap();
 
-    TestMesh.Vertices[0].position = {0, 0, 0.0f};
-    TestMesh.Vertices[1].position = {0, 0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().y, 0.0f};
-    TestMesh.Vertices[2].position = {0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().x, 0+Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().y, 0.0f};
-    TestMesh.Vertices[3].position ={0 + Gfx::Renderer::GetInstance()->GetTexture("placeholder.jpg").GetSize().x, 0, 0.0f};
-
-    TestMesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
-    TestMesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
-    TestMesh.Vertices[2].color = { 0.f, 1.f, 0.0f };
-    TestMesh.Vertices[3].color = { 1.f, 0.f, 0.0f };
-
-    TestMesh.Vertices[0].uv = {0.0f, 0.0f};
-    TestMesh.Vertices[1].uv = {0.0f, 1.0f};
-    TestMesh.Vertices[2].uv = {1.0f, 1.0f};
-    TestMesh.Vertices[3].uv = {1.0f, 0.0f};
-
-    UpdateMesh(TestMesh);
+    Gfx::MeshInfo mesh;
+    mesh.Vertices.resize(4);
+    for (auto it : texturemap) {
+        mesh.Path = it.first;
+        mesh.Vertices[0].position = {0, 0, 0.0f};
+        mesh.Vertices[1].position = {0, 0 + it.second.GetSize().y, 0.0f};
+        mesh.Vertices[2].position = {0 + it.second.GetSize().x, 0 + it.second.GetSize().y, 0.0f};
+        mesh.Vertices[3].position ={0 + it.second.GetSize().x, 0, 0.0f};
+     
+        mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
+        mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
+        mesh.Vertices[2].color = { 0.f, 1.f, 0.0f };
+        mesh.Vertices[3].color = { 1.f, 0.f, 0.0f };
+        
+        mesh.Vertices[0].uv = {0.0f, 0.0f};
+        mesh.Vertices[1].uv = {0.0f, 1.0f};
+        mesh.Vertices[2].uv = {1.0f, 1.0f};
+        mesh.Vertices[3].uv = {1.0f, 0.0f};
+        
+        UpdateMesh(mesh);
+        Meshes[it.first] = mesh;
+    }
 }

@@ -19,10 +19,8 @@ namespace Gfx
         glm::mat4 model;
         glm::mat4 rendermatrix;
 
-        int objectID;
-        int boneind = -1;
-        int debug = 0;
-        int debugbones = 0;
+        int texturebind = 0;
+        int bufferbind = 0; 
     };
 
     struct MeshInfo {
@@ -39,6 +37,7 @@ namespace Gfx
 
         BufferHelper::Buffer IndexBuffer;
     };
+    typedef std::unordered_map<std::string, MeshInfo> MeshMap;
 
     class Mesh : public Utils::Singleton<Mesh>
     {
@@ -46,8 +45,8 @@ namespace Gfx
             void CreateMeshes();
             void UpdateMesh(MeshInfo& mesh);
 
-            MeshInfo* GetMesh() { return &TestMesh; }            
+            MeshInfo* GetMesh(const std::string& name);   
         private:
-            MeshInfo TestMesh;
+            MeshMap Meshes;
     };
 }

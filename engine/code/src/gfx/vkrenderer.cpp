@@ -2,8 +2,159 @@
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
-
 #include "anthraxAI/core/windowmanager.h"
+
+void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
+{
+	vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
+
+	Gfx::MeshPushConstants constants;
+	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
+
+	vkCmdDraw(Cmd.GetCmd(), 6, 1, 0, 0);
+}
+
+void Gfx::Renderer::Draw(Gfx::RenderObject& object, bool bindpipe, bool bindindex)
+{
+	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+
+	if (bindpipe) {
+		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
+    	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 1, 1, Gfx::DescriptorsBase::GetInstance()->GetDescriptorSet(), 1, &object.BindlessOffset);
+	}
+	Gfx::MeshPushConstants constants;
+	constants.texturebind = object.TextureBind;
+	constants.bufferbind = object.BufferBind;
+	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
+
+	if (bindindex) {
+		VkDeviceSize offset = {0};
+		vkCmdBindVertexBuffers(Cmd.GetCmd(), 0, 1, &object.Mesh->VertexBuffer.Buffer, &offset);
+		vkCmdBindIndexBuffer(Cmd.GetCmd(), object.Mesh->IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
+	}
+	vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(object.Mesh->Indices.size()), 1, 0, 0, 0);
+}
+
+VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag)
+{
+	VkClearValue clearvalue;
+	if (flag == Gfx::RENDER_ATTACHMENT_COLOR) {
+		clearvalue.color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+
+        AttachmentInfos[flag].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        AttachmentInfos[flag].imageView = MainRT->GetImageView();
+        AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
+        AttachmentInfos[flag].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        AttachmentInfos[flag].clearValue = clearvalue;
+
+	}
+	if (flag == Gfx::RENDER_ATTACHMENT_DEPTH) {
+		clearvalue.depthStencil = {1.0f, 0};
+
+		AttachmentInfos[flag].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		AttachmentInfos[flag].imageView = DepthRT->GetImageView();
+		AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
+		AttachmentInfos[flag].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		AttachmentInfos[flag].clearValue = clearvalue;
+	}
+	return &AttachmentInfos[flag];
+}
+
+void Gfx::Renderer::StartFrame(AttachmentFlags attachmentflags)
+{
+	ImGui::Render();
+
+	SwapchainIndex = SyncFrame();
+
+    Cmd.SetCmd(GetFrame().MainCommandBuffer);
+	Cmd.BeginCmd(Cmd.InfoCmd(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
+
+	std::vector<RenderingAttachmentInfo> attachmentinfo;
+	attachmentinfo.reserve(Gfx::RENDER_ATTACHMENT_SIZE);
+	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {
+		Gfx::RenderingAttachmentInfo info;
+		info.IsDepth = false;
+		info.Image = MainRT->GetImage();
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR);
+		attachmentinfo.push_back(info);
+	}
+	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_DEPTH) == Gfx::RENDER_ATTACHMENT_DEPTH) {
+		Gfx::RenderingAttachmentInfo info;
+		info.IsDepth = true;
+		info.Image = DepthRT->GetImage();
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_DEPTH);
+		attachmentinfo.push_back(info);
+	}
+	
+	const VkRenderingInfo renderinfo = Cmd.GetRenderingInfo(attachmentinfo, Core::WindowManager::GetInstance()->GetScreenResolution());    
+	BeginRendering(Cmd.GetCmd(), &renderinfo);
+}
+
+void Gfx::Renderer::EndFrame()
+{
+ 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Cmd.GetCmd());
+
+    EndRendering(Cmd.GetCmd());
+	
+	Cmd.CopyImage(	GetMainRT()->GetImage(),
+					GetMainRT()->GetSize(),
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
+					Core::WindowManager::GetInstance()->GetScreenResolution(),
+					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+					Cmd.GetSubresourceMainRange());
+
+    Cmd.EndCmd();
+
+    VkSubmitInfo submit = {};
+	submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit.pNext = nullptr;
+	VkPipelineStageFlags waitstage2 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	submit.pWaitDstStageMask = &waitstage2;
+	submit.waitSemaphoreCount = 1;
+	submit.pWaitSemaphores = &GetFrame().PresentSemaphore;
+	submit.signalSemaphoreCount = 1;
+	submit.pSignalSemaphores = &GetFrame().RenderSemaphore;
+	submit.commandBufferCount = 1;
+	VkCommandBuffer cmd = Cmd.GetCmd();
+	submit.pCommandBuffers = &cmd;
+	VK_ASSERT(vkQueueSubmit(Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE), 1, &submit, GetFrame().RenderFence), "failed to submit queue!");
+
+	VkResult presentresult = Cmd.Present(
+		Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE),
+		Cmd.PresentInfo(
+			&Gfx::Device::GetInstance()->GetSwapchain(),
+			&GetFrame().RenderSemaphore,
+			&SwapchainIndex
+		)
+	);
+
+	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
+        // for resizzing
+
+        //winprepared = true; 
+	}
+
+   SetFrameInd();
+}
+
+Gfx::RenderTarget* Gfx::Renderer::GetTexture(const std::string& name)
+{
+	TexturesMap::iterator it = Textures.find(name);
+	if (it == Textures.end()) {
+		return nullptr;
+	}
+	else {
+		return &(*it).second;
+	}
+}
 
 void Gfx::Renderer::PrepareCameraBuffer()
 {
@@ -26,14 +177,16 @@ void Gfx::Renderer::PrepareCameraBuffer()
 //     }
 //    camdata.pointlightamount = pointlightamount;
 
-	char* datadst;
-   	const size_t sceneParamBufferSize = MAX_FRAMES * Gfx::DescriptorsBase::GetInstance()->PadUniformBufferSize(sizeof(CameraData));
-  	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory(FrameIndex), 0, sceneParamBufferSize, 0, (void**)&datadst);
-   	int frameind = FrameIndex % MAX_FRAMES;
-	datadst += Gfx::DescriptorsBase::GetInstance()->PadUniformBufferSize(sizeof(CameraData)) * frameind;
-    memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
-  	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory(FrameIndex));
 
+   	const size_t sceneParamBufferSize = (sizeof(CameraData));
+   // BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(FrameIndex), sceneParamBufferSize, 0, camdata);
+
+
+	char* datadst;
+  	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory(), 0, sceneParamBufferSize, 0, (void**)&datadst);
+   	int frameind = FrameIndex % MAX_FRAMES;
+    memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
+  	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory());
 }
 
 VkFenceCreateInfo FenceCreateInfo(VkFenceCreateFlags flags)
@@ -192,104 +345,6 @@ VkCommandBufferAllocateInfo CommandBufferCreateInfo(VkCommandPool pool, uint32_t
 	info.commandBufferCount = count;
 	info.level = level;
 	return info;
-}
-
-void Gfx::Renderer::CopyToSwapchain(VkCommandBuffer cmd, RenderTarget* rt, uint32_t swapchainimageindex)
-{
-	{
-		VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-	barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = rt->GetImage();
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
-		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
-
-        // VkPipelineStageFlags sourceStage;
-        // VkPipelineStageFlags destinationStage;
-  		// barrier.srcAccessMask = 0;
-        //barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-        vkCmdPipelineBarrier(
-            cmd,
-             VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-            0,
-            0, nullptr,
-            0, nullptr,
-            1, &barrier
-        );
-	}
-
-
-	VkOffset3D blitSize;
-	blitSize.x = Gfx::Device::GetInstance()->GetSwapchainExtent().width;
-	blitSize.y = Gfx::Device::GetInstance()->GetSwapchainExtent().height;
-	blitSize.z = 1;
-	std::cout << "swapchain size: " << blitSize.x << "-----" << blitSize.y << std::endl;
-	VkImageBlit imageBlitRegion{};
-	imageBlitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	imageBlitRegion.srcSubresource.layerCount = 1;
-	imageBlitRegion.srcOffsets[1] = blitSize;
-	imageBlitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	imageBlitRegion.dstSubresource.layerCount = 1;
-	imageBlitRegion.dstOffsets[1] = blitSize;
-
-	vkCmdBlitImage(
-		cmd,
-		rt->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-		Gfx::Device::GetInstance()->GetSwapchainImage(swapchainimageindex), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&imageBlitRegion,
-		VK_FILTER_NEAREST);
-	//});
-
-   VkImageMemoryBarrier memBarrier = {};
-    memBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    memBarrier.pNext = NULL;
-    memBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    memBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    memBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    memBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    memBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    memBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    memBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    memBarrier.subresourceRange.baseMipLevel = 0;
-    memBarrier.subresourceRange.levelCount = 1;
-    memBarrier.subresourceRange.baseArrayLayer = 0;
-    memBarrier.subresourceRange.layerCount = 1;
-    memBarrier.image = Gfx::Device::GetInstance()->GetSwapchainImage(swapchainimageindex);
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
-                         &memBarrier);
-
-	// vkCmdCopyImage(info.cmd, bltSrcImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, bltDstImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    //                1, &cregion);
-
-    VkImageMemoryBarrier prePresentBarrier = {};
-    prePresentBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    prePresentBarrier.pNext = NULL;
-    prePresentBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    prePresentBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-    prePresentBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    prePresentBarrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    prePresentBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    prePresentBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    prePresentBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    prePresentBarrier.subresourceRange.baseMipLevel = 0;
-    prePresentBarrier.subresourceRange.levelCount = 1;
-    prePresentBarrier.subresourceRange.baseArrayLayer = 0;
-    prePresentBarrier.subresourceRange.layerCount = 1;
-    prePresentBarrier.image = Gfx::Device::GetInstance()->GetSwapchainImage(swapchainimageindex);
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1,
-                         &prePresentBarrier);
-
-	
 }
 
 void Gfx::Renderer::CreateCommands()

@@ -5,5 +5,5 @@
 
 void main()
 {
-    outfragcolor = texture(texturesampler, incoord.xy).xyzw;
+    outfragcolor = texture(textures[pushconstants.bindtexture], incoord.xy).xyzw;
 }

@@ -4,306 +4,203 @@
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
 {
-	size_t minUboAlignment = Gfx::Device::GetInstance()->MinUniformBufferOffsetAlignment;
-	size_t alignedSize = originalsize;
-	if (minUboAlignment > 0) {
-		alignedSize = (alignedSize + minUboAlignment - 1) & ~(minUboAlignment - 1);
+	size_t minalignment = Gfx::Device::GetInstance()->MinUniformBufferOffsetAlignment;
+	size_t alignedsize = originalsize;
+	if (minalignment > 0) {
+		alignedsize = (alignedsize + minalignment - 1) & ~(minalignment - 1);
 	}
-	return alignedSize;
+	return alignedsize;
 }
 
 VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkShaderStageFlags stageFlags, uint32_t binding)
 {
 	VkDescriptorSetLayoutBinding setbind = {};
 	setbind.binding = binding;
-	setbind.descriptorCount = 1;
+	setbind.descriptorCount = 100;
 	setbind.descriptorType = type;
 	setbind.pImmutableSamplers = nullptr;
 	setbind.stageFlags = stageFlags;
 	return setbind;
 }
 
-void Gfx::DescriptorsBase::Init()
+uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler)
 {
-	Allocator = new Gfx::DescriptorAllocator{};
-	LayoutCache = new Gfx::DescriptorLayoutCache{};
-
-	std::array<VkDescriptorSetLayoutBinding, 3> texturebind = {DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT, 0), DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 1), DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT, 2)};
-	VkDescriptorSetLayoutCreateInfo setinfo = {};
-	setinfo.bindingCount = texturebind.size();
-	setinfo.flags = 0;
-	setinfo.pNext = nullptr;
-	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	setinfo.pBindings = texturebind.data();
-
-	TextureSetLayout = LayoutCache->CreateDescriptorLayout(&setinfo);
-	
-	VkDescriptorSetLayoutBinding cambufferbinding = DescriptorLayoutBinding(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0);
-	setinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	setinfo.pNext = nullptr;
-	setinfo.bindingCount = 1; 
-	setinfo.flags = 0;
-	setinfo.pBindings = &cambufferbinding;
-
-	GlobalSetLayout = LayoutCache->CreateDescriptorLayout(&setinfo);
-
-	const size_t camerabuffersize = MAX_FRAMES * PadUniformBufferSize(sizeof(CameraData));
-	for (int i = 0; i < MAX_FRAMES; i++) {		
-		Gfx::Renderer::GetInstance()->Frames[i].DynamicDescAllocator = new Gfx::DescriptorAllocator{};
-	
-		const size_t cambuffersize = MAX_FRAMES * PadUniformBufferSize(sizeof(CameraData));
-		BufferHelper::CreateBuffer(CameraBuffer[i], cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-	}
-}
-
-bool Gfx::DescriptorAllocator::Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout)
-{
-	if (Pool == VK_NULL_HANDLE) {
-		Pool = GrabPool();
-		UsedPools.push_back(Pool);
-	}
-
-	VkDescriptorSetAllocateInfo allocinfo = {};
-	allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocinfo.pNext = nullptr;
-	allocinfo.pSetLayouts = &layout;
-	allocinfo.descriptorPool = Pool;
-	allocinfo.descriptorSetCount = 1;
-
-	VkResult result = vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, set);
-	bool needreallocate = false;
-	switch (result) {
-		case VK_SUCCESS:
-			return true;
-		case VK_ERROR_FRAGMENTED_POOL:
-		case VK_ERROR_OUT_OF_POOL_MEMORY:
-			needreallocate = true;
-			break;
-		default:
-			return false;
-	}
-
-	if (needreallocate) {
-		Pool = GrabPool();
-		UsedPools.push_back(Pool);
-		result = vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, set);
-	}
-	return result == VK_SUCCESS;
-}
-
-void Gfx::DescriptorAllocator::ResetPools()
-{
-	for (VkDescriptorPool pool : UsedPools) {
-		vkResetDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), pool, 0);
-		FreePools.push_back(pool);
-	}
-	UsedPools.clear();
-	Pool = VK_NULL_HANDLE;
-}
-
-void Gfx::DescriptorAllocator::CleanUp()
-{
-	for (VkDescriptorPool pool : FreePools) {
-		vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), pool, nullptr);
-	}
-	for (VkDescriptorPool pool : UsedPools) {
-		vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), pool, nullptr);
-	}
-}
-
-VkDescriptorPool Gfx::DescriptorAllocator::GrabPool()
-{
-	// if we can reuse pool
-	if (FreePools.size() > 0) {
-		VkDescriptorPool pool = FreePools.back();
-		FreePools.pop_back();
-		return pool;
-	}
-	else {
-		return CreatePool(1000, DescriptorPoolSizes);
-	}
-}
-
-VkDescriptorPool Gfx::DescriptorAllocator::CreatePool(int count, const DescriptorAllocator::PoolSizes& poolsizes)
-{
-	std::vector<VkDescriptorPoolSize> sizes;
-	sizes.reserve(poolsizes.Sizes.size());
-	for (auto poolsz : poolsizes.Sizes) {
-		sizes.push_back({ poolsz.first, uint32_t(poolsz.second * count) });
-	}
-	VkDescriptorPoolCreateInfo poolinfo = {};
-	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolinfo.flags = 0;
-	poolinfo.maxSets = count;
-	poolinfo.poolSizeCount = (uint32_t)sizes.size();
-	poolinfo.pPoolSizes = sizes.data();
-
-	VkDescriptorPool pool;
-	vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &pool);
-	return pool;
-}
-
-void Gfx::DescriptorLayoutCache::CleanUp(){
-	for (auto pair : LayoutCache){
-		vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), pair.second, nullptr);
-	}
-}
-
-VkDescriptorSetLayout Gfx::DescriptorLayoutCache::CreateDescriptorLayout(VkDescriptorSetLayoutCreateInfo* info)
-{
-	DescriptorLayoutInfo layoutinfo;
-	layoutinfo.Bindings.reserve(info->bindingCount);
-	bool issorted = true;
-	int lastbinding = -1;
-
-	for (int i = 0; i < info->bindingCount; i++) {
-		layoutinfo.Bindings.push_back(info->pBindings[i]);
-		if (info->pBindings[i].binding > lastbinding) {
-			lastbinding = info->pBindings[i].binding;
-		}
-		else {
-			issorted = false;
-		}
-	}
-
-	if (!issorted){
-		std::sort(layoutinfo.Bindings.begin(), layoutinfo.Bindings.end(), [](VkDescriptorSetLayoutBinding& a, VkDescriptorSetLayoutBinding& b ) {
-			return a.binding < b.binding;
-		});
-	}
-
-	VkDescriptorSetLayout layout;
-	auto it = LayoutCache.find(layoutinfo);
-	if (it != LayoutCache.end()){
-		return (*it).second;
-	}
-	else {
-		vkCreateDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), info, nullptr, &layout);
-		LayoutCache[layoutinfo] = layout;
-		return layout;
-	}
-	return layout;
-}
-
-bool Gfx::DescriptorLayoutCache::DescriptorLayoutInfo::operator==(const DescriptorLayoutInfo& other) const
-{
-	if (other.Bindings.size() != Bindings.size()){
-		return false;
-	}
-	else {
-		for (int i = 0; i < Bindings.size(); i++) {
-			if (other.Bindings[i].binding != Bindings[i].binding){
-				return false;
-			}
-			if (other.Bindings[i].descriptorType != Bindings[i].descriptorType){
-				return false;
-			}
-			if (other.Bindings[i].descriptorCount != Bindings[i].descriptorCount){
-				return false;
-			}
-			if (other.Bindings[i].stageFlags != Bindings[i].stageFlags){
-				return false;
-			}
-		}
-		return true;
-	}
-}
-
-size_t Gfx::DescriptorLayoutCache::DescriptorLayoutInfo::Hash() const
-{
-	using std::size_t;
-	using std::hash;
-
-	size_t result = hash<size_t>()(Bindings.size());
-	for (const VkDescriptorSetLayoutBinding& b : Bindings)
-	{
-		//pack the binding data into a single int64
-		size_t binding_hash = b.binding | b.descriptorType << 8 | b.descriptorCount << 16 | b.stageFlags << 24;
-		//shuffle the packed binding data and xor it with the main hash
-		result ^= hash<size_t>()(binding_hash);
-	}
-	return result;
-}
-
-Gfx::Descriptors Gfx::Descriptors::Begin(DescriptorLayoutCache* layoutcache, DescriptorAllocator* allocator)
-{
-	Descriptors desc;
-	desc.Cache = layoutcache;
-	desc.Allocator = allocator;
-	return desc;
-}
-
-Gfx::Descriptors& Gfx::Descriptors::BindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferinfo, VkDescriptorType type, VkShaderStageFlags stageflags)
-{
-	VkDescriptorSetLayoutBinding newbinding{};
-	newbinding.descriptorCount = 1;
-	newbinding.descriptorType = type;
-	newbinding.pImmutableSamplers = nullptr;
-	newbinding.stageFlags = stageflags;
-	newbinding.binding = binding;
-	Bindings.push_back(newbinding);
+	VkDescriptorImageInfo imageinfo{};
+	imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	imageinfo.imageView = imageview;
+	imageinfo.sampler = sampler;
 
 	VkWriteDescriptorSet write{};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write.pNext = nullptr;
+	write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	write.dstBinding = TextureBinding;
+	write.dstSet = BindlessDescriptor;
 	write.descriptorCount = 1;
-	write.descriptorType = type;
-	write.pBufferInfo = bufferinfo;
-	write.dstBinding = binding;
-	Writes.push_back(write);
-	return *this;
+	write.dstArrayElement = TextureHandle;
+	write.pImageInfo = &imageinfo;
+
+	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
+	TextureHandle++;
+
+	return TextureHandle - 1;
 }
 
-Gfx::Descriptors& Gfx::Descriptors::BindImage(uint32_t binding, VkDescriptorImageInfo* imageinfo, VkDescriptorType type, VkShaderStageFlags stageflags)
+uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage)
 {
-	VkDescriptorSetLayoutBinding bind{};
-	bind.descriptorCount = 1;
-	bind.descriptorType = type;
-	bind.pImmutableSamplers = nullptr;
-	bind.stageFlags = stageflags;
-	bind.binding = binding;
-	Bindings.push_back(bind);
+	VkWriteDescriptorSet writes{};
+	VkDescriptorBufferInfo bufferinfo{};
+	bufferinfo.buffer = buffer;
+	bufferinfo.offset = 0;
+	bufferinfo.range = VK_WHOLE_SIZE;
+	writes.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writes.dstSet = BindlessDescriptor;
+	writes.descriptorCount = 1;
+	writes.dstArrayElement = BufferHandle;
+	writes.pBufferInfo = &bufferinfo;
+
+	if ((usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) == VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) {
+		writes.dstBinding = UniformBinding;
+		writes.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	}
+	if ((usage & VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) == VK_BUFFER_USAGE_STORAGE_BUFFER_BIT) {
+		writes.dstBinding = StorageBinding;
+		writes.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	}
+
+	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &writes, 0, nullptr);
+	BufferHandle++;
+
+	return BufferHandle - 1;
+}
+
+void Gfx::DescriptorsBase::Build()
+{
+	BufferHelper::CreateBuffer(BindlessBuffer, LastOffset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+
+	uint8_t* data = nullptr;
+	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, 0, LastOffset, 0, (void**)&data);
+    for (const auto& range : Ranges) {
+		memcpy(data + range.offset, range.data, range.size);
+	}
+  	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory);
+	
+	uint32_t maxrangesize = 0;
+	for (auto& range : Ranges) {
+		maxrangesize = std::max(range.size, maxrangesize);
+	}
+
+	VkDescriptorBufferInfo bufinfo{};
+	bufinfo.buffer = BindlessBuffer.Buffer;
+	bufinfo.offset = 0;
+	bufinfo.range = maxrangesize;
 
 	VkWriteDescriptorSet write{};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write.pNext = nullptr;
+	write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	write.dstBinding = 0;
+	write.dstSet = GlobalDescriptor;
 	write.descriptorCount = 1;
-	write.descriptorType = type;
-	write.pImageInfo = imageinfo;
-	write.dstBinding = binding;
-	Writes.push_back(write);
-	return *this;
+	write.dstArrayElement = 0;
+	write.pBufferInfo = &bufinfo;
+	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
 }
 
-bool Gfx::Descriptors::Build(VkDescriptorSet& set)
+void Gfx::DescriptorsBase::AllocateDataBuffers()
 {
-	VkDescriptorSetLayout layout;
-	return Build(set, layout);
-}
-
-bool Gfx::Descriptors::Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout){
-	VkDescriptorSetLayoutCreateInfo layoutinfo{};
-	layoutinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutinfo.pNext = nullptr;
-	layoutinfo.pBindings = Bindings.data();
-	layoutinfo.bindingCount = Bindings.size();
-
-	layout = Cache->CreateDescriptorLayout(&layoutinfo);
-
-	bool success = Allocator->Allocate(&set, layout);
-	if (!success) { 
-		return false;
-	};
-
-	for (VkWriteDescriptorSet& w : Writes) {
-		w.dstSet = set;
-	}
-	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), Writes.size(), Writes.data(), 0, nullptr);
-	return true;
+	const size_t cambuffersize = (sizeof(CameraData));
+	BufferHelper::CreateBuffer(CameraBuffer, cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 }
 
 void Gfx::DescriptorsBase::CleanUp()
 {
-	Allocator->CleanUp();
-	LayoutCache->CleanUp();
+	vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool, nullptr);
+	
+	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), BindlessLayout, nullptr);
+	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), GlobalLayout, nullptr);
+}
+
+void Gfx::DescriptorsBase::Init()
+{
+	// bindless descriptor setup
+
+	VkDescriptorSetLayoutBinding bindings[MAX_BINDING];
+	VkShaderStageFlags stageflags[MAX_BINDING] = {
+		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		VK_SHADER_STAGE_FRAGMENT_BIT
+	};
+	VkDescriptorBindingFlags flags[MAX_BINDING];
+	VkDescriptorType types[MAX_BINDING] = {
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+	};
+
+// descriptor pool
+
+	VkDescriptorPoolSize sizes[MAX_BINDING] = {
+		{ types[0], 1000 }, { types[1], 1000 }, { types[2], 1000 }
+	};
+
+	VkDescriptorPoolCreateInfo poolinfo{};
+	poolinfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolinfo.maxSets = 1000;
+	poolinfo.poolSizeCount = MAX_BINDING;
+	poolinfo.pPoolSizes = sizes;
+	vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Pool);
+
+// bindless layout
+
+	for (int i = 0; i < MAX_BINDING; i++) {
+		bindings[i] = DescriptorLayoutBinding(types[i], stageflags[i], i);
+		flags[i] = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+	}
+
+	VkDescriptorSetLayoutBindingFlagsCreateInfo bindingflags{};
+	bindingflags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+	bindingflags.pNext = nullptr;
+	bindingflags.pBindingFlags = flags;
+	bindingflags.bindingCount = MAX_BINDING;
+
+	VkDescriptorSetLayoutCreateInfo createinfo{};
+	createinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	createinfo.bindingCount = MAX_BINDING;
+	createinfo.pBindings = bindings;
+	createinfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+	createinfo.pNext = &bindingflags;
+
+	vkCreateDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), &createinfo, nullptr, &BindlessLayout);
+
+// bindless descriptor
+
+	VkDescriptorSetAllocateInfo allocinfo{};
+	allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocinfo.pNext = nullptr;
+	allocinfo.descriptorPool = Pool;
+	allocinfo.pSetLayouts = &BindlessLayout;
+	allocinfo.descriptorSetCount = 1;
+	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, &BindlessDescriptor);
+
+// dynamic buffer layout for final global descriptor which stores bindless resources
+
+	VkDescriptorSetLayoutBinding binding{};
+	binding.binding = 0;
+	binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	binding.descriptorCount = 1;
+	binding.stageFlags = VK_SHADER_STAGE_ALL;
+
+	VkDescriptorSetLayoutCreateInfo createinfo2{};
+	createinfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	createinfo2.bindingCount = 1;
+	createinfo2.pBindings = &binding;
+	vkCreateDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), &createinfo2, nullptr, &GlobalLayout);
+
+	VkDescriptorSetAllocateInfo allocateinfo{};
+	allocateinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocateinfo.pNext = nullptr;
+	allocateinfo.descriptorPool = Pool;
+	allocateinfo.pSetLayouts = &GlobalLayout;
+	allocateinfo.descriptorSetCount = 1;
+	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocateinfo, &GlobalDescriptor);
 }

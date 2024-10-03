@@ -824,8 +824,17 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     dynamic_state.dynamicStateCount = (uint32_t)IM_ARRAYSIZE(dynamic_states);
     dynamic_state.pDynamicStates = dynamic_states;
 
+    VkFormat swapchainformat = VK_FORMAT_B8G8R8A8_SRGB;
+    VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
+	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
+    pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = &swapchainformat;
+    pipelineRenderingCreateInfo.depthAttachmentFormat = depthformat;
+
     VkGraphicsPipelineCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    info.pNext = &pipelineRenderingCreateInfo;
     info.flags = bd->PipelineCreateFlags;
     info.stageCount = 2;
     info.pStages = stage;
@@ -980,7 +989,7 @@ bool    ImGui_ImplVulkan_Init(ImGui_ImplVulkan_InitInfo* info, VkRenderPass rend
     IM_ASSERT(info->DescriptorPool != VK_NULL_HANDLE);
     IM_ASSERT(info->MinImageCount >= 2);
     IM_ASSERT(info->ImageCount >= info->MinImageCount);
-    IM_ASSERT(render_pass != VK_NULL_HANDLE);
+   // IM_ASSERT(render_pass != VK_NULL_HANDLE);
 
     bd->VulkanInitInfo = *info;
     bd->RenderPass = render_pass;

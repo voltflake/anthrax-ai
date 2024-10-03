@@ -79,9 +79,4 @@ namespace Gfx
             return extent;
         }
     }
-
-    constexpr VkPhysicalDeviceDynamicRenderingFeaturesKHR DynamicRenderingFeature {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
-        .dynamicRendering = VK_TRUE,
-    };
 }

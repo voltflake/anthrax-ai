@@ -10,6 +10,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <imgui_impl_vulkan.h>
+
+
 #define VK_ASSERT(x, s)                                         \
 do                                                              \
 {                                                               \

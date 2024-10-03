@@ -12,9 +12,10 @@ void Engine::Init()
 #endif
 
     Gfx::Vulkan::GetInstance()->Init();
+    Core::WindowManager::GetInstance()->InitImGui();
 
-    Core::Scene::GetInstance()->LoadResources();
-
+    Core::Scene::GetInstance()->Init();
+    
     State = ENGINE_STATE_EDITOR;
 }
 
@@ -34,4 +35,11 @@ void Engine::Run()
 void Engine::CleanUp()
 {
     Gfx::Vulkan::GetInstance()->CleanUp();
+
+#if defined(AAI_LINUX)
+    ImGui_ImplX11_Shutdown();
+#elif defined(AAI_WINDOWS)
+	ImGui_ImplWin32_Shutdown();
+#endif
+    ImGui::DestroyContext();
 }

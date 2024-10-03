@@ -8,6 +8,12 @@
 #include <unordered_map>
 #include <algorithm>
 
+#define MAX_BINDING 3
+
+static constexpr uint32_t UniformBinding = 0;
+static constexpr uint32_t StorageBinding = 1;
+static constexpr uint32_t TextureBinding = 2;
+
 namespace Gfx
 {
     enum DescriptorSetLayoutEnum {
@@ -16,78 +22,12 @@ namespace Gfx
         DESC_SET_LAYOUT_STORAGE,
         DESC_SET_LAYOUT_TRANSFORMS
     };
-    
-    class DescriptorAllocator
-    {
-        public:
-            struct PoolSizes {
-                std::vector<std::pair<VkDescriptorType,float>> Sizes =
-                { // multiplier of the number of descriptor sets allocated for the pools
-                    { VK_DESCRIPTOR_TYPE_SAMPLER, 0.5f },
-                    { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1.f },
-                    { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1.f },
-                    { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1.f },
-                    { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1.f },
-                    { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1.f },
-                    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1.f },
-                    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1.f },
-                    { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1.f },
-                    { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1.f },
-                    { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 0.5f }
-                };
-		    };
-
-            void ResetPools();
-            bool Allocate(VkDescriptorSet* set, VkDescriptorSetLayout layout);
-            void CleanUp();
-
-        private:
-            VkDescriptorPool CreatePool(int count, const DescriptorAllocator::PoolSizes& poolsizes);
-            VkDescriptorPool GrabPool();
-
-            VkDescriptorPool Pool{VK_NULL_HANDLE};
-            PoolSizes DescriptorPoolSizes;
-            std::vector<VkDescriptorPool> UsedPools;
-            std::vector<VkDescriptorPool> FreePools;
+ 
+    struct Range {
+        uint32_t offset;
+        uint32_t size;
+        void* data;
     };
-
-    class DescriptorLayoutCache {
-        public:
-            struct DescriptorLayoutInfo {
-                std::vector<VkDescriptorSetLayoutBinding> Bindings;
-                bool operator==(const DescriptorLayoutInfo& other) const;
-                size_t Hash() const;
-            };
-            void CleanUp();
-            VkDescriptorSetLayout CreateDescriptorLayout(VkDescriptorSetLayoutCreateInfo* info);
-        private:
-            struct DescriptorLayoutHash {
-                std::size_t operator()(const DescriptorLayoutInfo& k) const{
-                    return k.Hash();
-                }
-            };
-            std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> LayoutCache;
-    };
-    
-    class Descriptors
-    {
-        public:
-            static Descriptors Begin(DescriptorLayoutCache* layoutcache, DescriptorAllocator* allocator );
-
-            Descriptors& BindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferinfo, VkDescriptorType type, VkShaderStageFlags stageflags);
-            Descriptors& BindImage(uint32_t binding, VkDescriptorImageInfo* imageinfo, VkDescriptorType type, VkShaderStageFlags stageflags);
-
-            bool Build(VkDescriptorSet& set, VkDescriptorSetLayout& layout);
-            bool Build(VkDescriptorSet& set);
-        private:
-            std::vector<VkWriteDescriptorSet> Writes;
-            std::vector<VkDescriptorSetLayoutBinding> Bindings;
-
-            DescriptorLayoutCache* Cache;
-            DescriptorAllocator* Allocator;
-    };
-    
-    typedef std::array<BufferHelper::Buffer, MAX_FRAMES> UboArray;
 
     class DescriptorsBase : public Utils::Singleton<DescriptorsBase>
     {
@@ -95,23 +35,53 @@ namespace Gfx
             void Init();
             void CleanUp();
 
-            VkDeviceMemory GetCameraBufferMemory(int ind) { return CameraBuffer[ind].DeviceMemory; }
-            VkBuffer GetCameraBuffer(int ind) { return CameraBuffer[ind].Buffer; }
+            void AllocateDataBuffers();
 
-            VkDescriptorSetLayout& GetTextureLayout() { return TextureSetLayout; }
-            VkDescriptorSetLayout& GetGlobalLayout() { return GlobalSetLayout; }
+            VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
+            VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
+            BufferHelper::Buffer GetCameraUBO() const { return CameraBuffer; }
+
             size_t PadUniformBufferSize(size_t originalsize);
 
-            DescriptorAllocator* GetAllocator() { return Allocator; }
-            DescriptorLayoutCache* GetLayoutCache() { return LayoutCache; }
+            uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler);
+            uint32_t UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage);
+
+            template<class TData>
+            uint32_t AddRange(TData&& data) {
+                size_t datasize = sizeof(TData);
+                auto* bytes = new TData;
+                *bytes = data;
+
+                uint32_t curoffset = LastOffset;
+                Ranges.push_back({ curoffset, static_cast<uint32_t>(datasize), bytes });
+
+                LastOffset += PadUniformBufferSize(datasize);
+                return curoffset;
+            }
+
+            void Build();
+
+            VkDescriptorSet* GetBindlessSet() { return &BindlessDescriptor; }
+            VkDescriptorSetLayout GetBindlessLayout() { return BindlessLayout; }
+
+            VkDescriptorSet* GetDescriptorSet() { return &GlobalDescriptor; }
+            VkDescriptorSetLayout GetDescriptorSetLayout() { return GlobalLayout; }
+
         private:
-            VkDescriptorSetLayout TextureSetLayout;
-            VkDescriptorSetLayout GlobalSetLayout;
+            VkDescriptorSet GlobalDescriptor;
+            VkDescriptorSetLayout GlobalLayout;
 
-            UboArray CameraBuffer;
+            BufferHelper::Buffer CameraBuffer;
 
-            DescriptorAllocator* Allocator;
-	        DescriptorLayoutCache* LayoutCache;
+            VkDescriptorPool Pool;
+	        VkDescriptorSetLayout BindlessLayout = VK_NULL_HANDLE;
+            VkDescriptorSet BindlessDescriptor;
 
+            uint32_t TextureHandle = 0;
+            uint32_t BufferHandle = 0;
+
+            uint32_t LastOffset = 0;
+            std::vector<Range> Ranges;
+            BufferHelper::Buffer BindlessBuffer;
     };
 }

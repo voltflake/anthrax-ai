@@ -16,6 +16,9 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 	xcb_intern_atom_cookie_t cookie = xcb_intern_atom(connection, onlyifexist, strlen(str), str);
 	return xcb_intern_atom_reply(connection, cookie, NULL);
 }
+
+#include <imgui_impl_x11.h>
+static ImGui_ImplVulkanH_Window MainWindowData;
 #endif
 
 enum WindowEvents {
@@ -53,6 +56,9 @@ namespace Core
             void InitWindowsWindow();
 #endif
         public:
+            void InitImGui();
+            void ViewEditor();
+
             Vector2<int> GetScreenResolution() const { return Extents; }
 
         private:
@@ -62,6 +68,7 @@ namespace Core
             void Events();
             void ProcessEvents();
             WindowEvents CatchEvent(xcb_generic_event_t *event);
+            ImGuiStyle 	EditorStyle;
 
             bool running = true;
     };

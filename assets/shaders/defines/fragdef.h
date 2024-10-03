@@ -7,4 +7,4 @@ layout (location = 3) in vec2 incoord;
 
 layout (location = 0) out vec4 outfragcolor;
 
-layout(set = 1, binding = 0) uniform sampler2D texturesampler;
+//layout(set = 1, binding = 0) uniform sampler2D texturesampler;

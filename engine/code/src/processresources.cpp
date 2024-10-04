@@ -46,12 +46,17 @@ void Engine::load3dresources()
 	    Data("floor.jpg", {3, 0, -5}, false, false));
 #else
     Resources.add(TYPE_MODEL, 
-	    Data(Builder.getmodel(TYPE_MODEL)->texturepath, {0, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL)->texturepath.empty()));
+	    Data("zeroone.png", {0, 0, -10}, false, false, false));
     Resources.add(TYPE_MODEL + 1, 
-	    Data(Builder.getmodel(TYPE_MODEL + 1)->texturepath, {2, 0, -10}, false, false, !Builder.getmodel(TYPE_MODEL + 1)->texturepath.empty()));
+	    Data("bg2.png", {2, 0, -10}, false, false,  false));
     Resources.add(TYPE_MODEL + 2, 
-	    Data(Builder.getmodel(TYPE_MODEL + 2)->texturepath, {3, 0, -5}, false, false, !Builder.getmodel(TYPE_MODEL + 2)->texturepath.empty()));
+	    Data("floor.jpg", {3, 0, -5}, false, false, false));
 #endif
+    Resources.add(TYPE_MODEL + 3,
+	    Data("bg3.png", {5, 0, 0}, false, false));
+    Resources.add(TYPE_MODEL + 4, 
+	    Data("dummy.png", {8, 0, 0}, false, false));
+
     Resources.add(TYPE_MODEL + 3,
 	    Data("bg3.png", {5, 0, 0}, false, false));
     Resources.add(TYPE_MODEL + 4, 

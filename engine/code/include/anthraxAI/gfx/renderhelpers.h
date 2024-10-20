@@ -1,12 +1,13 @@
 #pragma once
 #include "anthraxAI/gfx/vkrendertarget.h"
-
+#include "anthraxAI/gfx/model.h"
 namespace Gfx
 {
     struct RenderObject {
-	    Gfx::MeshInfo* Mesh;
-	    Gfx::Material* Material;
-        Gfx::RenderTarget* Texture;
+	    Gfx::MeshInfo* Mesh = nullptr;
+	    Gfx::ModelInfo* Model = nullptr;
+	    Gfx::Material* Material = nullptr;
+        Gfx::RenderTarget* Texture = nullptr;
 
         uint32_t BindlessOffset = 0;    
 	    Vector3<float> Position;
@@ -21,6 +22,8 @@ namespace Gfx
         glm::vec4 viewpos;
         glm::vec4 mousepos;
         glm::vec4 viewport;
+
+        glm::mat4 model;
         glm::mat4 view;
         glm::mat4 proj;
         glm::mat4 viewproj;

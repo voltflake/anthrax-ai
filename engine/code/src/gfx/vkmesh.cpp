@@ -34,6 +34,49 @@ void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
     });
 }
 
+void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
+{
+   // Gfx::MeshInfo meshinfo;
+    meshinfo->Vertices.reserve(aimesh->mNumVertices);
+    for(int i = 0; i < aimesh->mNumVertices; i++) {
+        Gfx::Vertex vertex;
+       
+		glm::vec3 data; 
+		data.x = aimesh->mVertices[i].x;
+		data.y = aimesh->mVertices[i].y;
+		data.z = aimesh->mVertices[i].z; 
+		vertex.position = data;
+
+		data.x = aimesh->mNormals[i].x;
+		data.y = aimesh->mNormals[i].y;
+		data.z = aimesh->mNormals[i].z;
+		vertex.normal = data;
+		if(aimesh->mTextureCoords[0]) {
+			glm::vec2 vec;
+			vec.x = aimesh->mTextureCoords[0][i].x; 
+			vec.y = aimesh->mTextureCoords[0][i].y;
+			vertex.uv = vec;
+		}
+		else {
+			vertex.uv = glm::vec2(0);
+		}
+		vertex.color = {1.0f, 1.0f, 1.0f};
+        vertex.color = vertex.normal;
+
+		meshinfo->Vertices.push_back(vertex);
+    }
+    
+    meshinfo->AIindices.reserve(aimesh->mNumFaces);
+	for(unsigned int i = 0; i < aimesh->mNumFaces; i++) {
+		aiFace face = aimesh->mFaces[i];
+		for(unsigned int j = 0; j < face.mNumIndices; j++) {
+			meshinfo->AIindices.push_back(face.mIndices[j]);
+		}
+	}
+
+    UpdateMesh(*meshinfo);
+}
+
 void Gfx::Mesh::CreateMeshes()
 {
     Gfx::TexturesMap texturemap = Gfx::Renderer::GetInstance()->GetTextureMap();

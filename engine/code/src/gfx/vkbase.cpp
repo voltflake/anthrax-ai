@@ -15,6 +15,8 @@ void Gfx::Vulkan::Init()
 	Gfx::DescriptorsBase::GetInstance()->AllocateDataBuffers();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
+	Gfx::Model::GetInstance()->LoadModel("models/monkeytextured.obj");
+	
 }
 
 void Gfx::Vulkan::CleanUp()

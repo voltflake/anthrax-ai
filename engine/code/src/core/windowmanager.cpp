@@ -91,15 +91,30 @@ void Core::WindowManager::InitLinuxWindow()
 WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 {
     switch (event->response_type & ~0x80) {
-		case XCB_KEY_PRESS:
+		case XCB_KEY_PRESS: {
+			xcb_key_press_event_t* e = (xcb_key_press_event_t*)event;
+        	PressedKey = xcb_key_press_lookup_keysym(KeySymbols, e, 0);
 			return WINDOW_EVENT_KEY_PRESSED;
+		}
 		case XCB_KEY_RELEASE:
-        	return WINDOW_EVENT_KEY_PRESSED;
-		case XCB_MOTION_NOTIFY:
+        	return WINDOW_EVENT_KEY_RELEASED;
+		case XCB_MOTION_NOTIFY: {
+			xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
+			
+			if (Mouse.Pressed) {
+				Mouse.Position.x = motion->event_x;
+				Mouse.Position.y = motion->event_y;
+				Mouse.Delta.x = Mouse.Begin.x - motion->event_x;
+				Mouse.Delta.y = Mouse.Begin.y - motion->event_y;
+				Mouse.Begin = Mouse.Position;
+			}
         	return WINDOW_EVENT_MOUSE_MOVE;
+		}
 	  	case XCB_BUTTON_PRESS:
+			Mouse.Pressed = true;
             return WINDOW_EVENT_MOUSE_PRESSED;
         case XCB_BUTTON_RELEASE:
+			Mouse.Pressed = false;
             return WINDOW_EVENT_MOUSE_RELEASED;
 		case XCB_EXPOSE:
 		    xcb_flush(Connection);
@@ -121,6 +136,12 @@ WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 
 void Core::WindowManager::ProcessEvents()
 {
+	if (Event & WINDOW_EVENT_KEY_PRESSED) {
+		Core::Scene::GetInstance()->UpdateCameraPosition();
+	}
+	if (Event & WINDOW_EVENT_MOUSE_MOVE && Mouse.Pressed) {
+		Core::Scene::GetInstance()->UpdateCameraDirection();
+	}
     if (Event & WINDOW_EVENT_EXIT) {
         Engine::GetInstance()->SetState(ENGINE_STATE_EXIT);
         running = false;

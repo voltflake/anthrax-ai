@@ -6,6 +6,7 @@
 #include "anthraxAI/gfx/vkdebug.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkmesh.h"
+#include "anthraxAI/gfx/model.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/vkpipeline.h"
 

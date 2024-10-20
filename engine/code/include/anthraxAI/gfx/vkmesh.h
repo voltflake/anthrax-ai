@@ -3,6 +3,11 @@
 #include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/bufferhelper.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/anim.h>
+
 namespace Gfx
 {
     #define BONE_INFLUENCE 4
@@ -43,6 +48,8 @@ namespace Gfx
     {
         public:
             void CreateMeshes();
+            void CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo);
+
             void UpdateMesh(MeshInfo& mesh);
 
             MeshInfo* GetMesh(const std::string& name);   

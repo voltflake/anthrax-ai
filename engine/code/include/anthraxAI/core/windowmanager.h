@@ -34,6 +34,13 @@ enum WindowEvents {
 
 namespace Core
 {
+    struct MouseInfo {
+        Vector2<int> Position = { 0, 0};
+        Vector2<int> Delta = { 0, 0};
+        Vector2<int> Begin = { 0, 0};
+        bool Pressed = false;
+    };
+
     class WindowManager : public Utils::Singleton<WindowManager>
     {
 #ifdef AAI_LINUX
@@ -44,7 +51,7 @@ namespace Core
             xcb_atom_t 					WMProtocols;
             xcb_atom_t 					WMDeleteWin;
             xcb_key_symbols_t   		*KeySymbols;
-
+            xcb_keysym_t                PressedKey;
         public:
             void InitLinuxWindow();
             void RunLinux();
@@ -61,8 +68,12 @@ namespace Core
 
             Vector2<int> GetScreenResolution() const { return Extents; }
 
+            Vector2<int> GetMousePos() const { return Mouse.Position; }
+            Vector2<int> GetMouseDelta() const { return Mouse.Delta; }
+            xcb_keysym_t GetPressedKey() const { return PressedKey; }
         private:
             WindowEvents Event;
+            MouseInfo Mouse;
             Vector2<int> Extents = { 1000, 800 };
 
             void Events();

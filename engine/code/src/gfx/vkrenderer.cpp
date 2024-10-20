@@ -3,6 +3,7 @@
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/core/camera.h"
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -11,11 +12,26 @@ void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 	Gfx::MeshPushConstants constants;
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 
+	VkDeviceSize offset = {0};
+	vkCmdBindVertexBuffers(Cmd.GetCmd(), 0, 1, &object.Mesh->VertexBuffer.Buffer, &offset);
+
 	vkCmdDraw(Cmd.GetCmd(), 6, 1, 0, 0);
 }
 
-void Gfx::Renderer::Draw(Gfx::RenderObject& object, bool bindpipe, bool bindindex)
+void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 {
+	const int meshsize = object.Model->Meshes.size();
+	for (int i = 0; i < meshsize; i++) {
+		
+		DrawMesh(object, object.Model->Meshes[i], true);
+	} 
+}
+
+void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel)
+{
+	bool bindpipe, bindindex = false;
+	CheckTmpBindings(mesh, object.Material, &bindpipe, &bindindex);
+
 	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
 
 	if (bindpipe) {
@@ -25,14 +41,32 @@ void Gfx::Renderer::Draw(Gfx::RenderObject& object, bool bindpipe, bool bindinde
 	Gfx::MeshPushConstants constants;
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0));
+	constants.rendermatrix = CamData.proj * CamData.view * model;
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 
 	if (bindindex) {
 		VkDeviceSize offset = {0};
-		vkCmdBindVertexBuffers(Cmd.GetCmd(), 0, 1, &object.Mesh->VertexBuffer.Buffer, &offset);
-		vkCmdBindIndexBuffer(Cmd.GetCmd(), object.Mesh->IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindVertexBuffers(Cmd.GetCmd(), 0, 1, &mesh->VertexBuffer.Buffer, &offset);
+		vkCmdBindIndexBuffer(Cmd.GetCmd(), mesh->IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	}
-	vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(object.Mesh->Indices.size()), 1, 0, 0, 0);
+	if (ismodel) {
+		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->AIindices.size()), 1, 0, 0, 0);
+	}
+	else {
+		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);		
+	}
+}
+
+void Gfx::Renderer::Draw(Gfx::RenderObject& object)
+{
+    bool bindpipe, bindindex = false;
+	if (object.Model) {
+		DrawMeshes(object);
+	}
+	else {
+		DrawMesh(object, object.Mesh, false);
+	}
 }
 
 VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag)
@@ -62,6 +96,20 @@ VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags f
 		AttachmentInfos[flag].clearValue = clearvalue;
 	}
 	return &AttachmentInfos[flag];
+}
+
+void Gfx::Renderer::CheckTmpBindings(Gfx::MeshInfo* mesh, Gfx::Material* material, bool* bindpipe, bool* bindindex)
+{
+	*bindpipe = TmpBindMaterial != material;
+    *bindindex = TmpBindMesh != mesh;
+    TmpBindMaterial = *bindpipe ? material : TmpBindMaterial;
+	TmpBindMesh = *bindindex ? mesh : TmpBindMesh;
+}
+
+void Gfx::Renderer::NullTmpBindings()
+{
+    TmpBindMaterial = nullptr;
+	TmpBindMesh = nullptr;
 }
 
 void Gfx::Renderer::StartFrame(AttachmentFlags attachmentflags)
@@ -156,18 +204,19 @@ Gfx::RenderTarget* Gfx::Renderer::GetTexture(const std::string& name)
 	}
 }
 
-void Gfx::Renderer::PrepareCameraBuffer()
+void Gfx::Renderer::PrepareCameraBuffer(Core::Camera& camera)
 {
-	glm::mat4 view = glm::mat4(1.0f);//glm::lookAt(EditorCamera.getposition(), EditorCamera.getposition() + EditorCamera.getfront(), EditorCamera.getup());
-	glm::mat4 projection =  glm::mat4(1.0f);//glm::perspective(glm::radians(45.f), float(Builder.getswapchainextent().width) / float(Builder.getswapchainextent().height), 0.01f, 100.0f);
+	glm::mat4 view = glm::lookAt(camera.GetPos(), camera.GetPos() + camera.GetFront(), camera.GetUp());
+	glm::mat4 projection = glm::perspective(glm::radians(45.f), float(Gfx::Device::GetInstance()->GetSwapchainSize().x) / float(Gfx::Device::GetInstance()->GetSwapchainSize().y), 0.01f, 100.0f);
 	projection[1][1] *= -1;
 
-	camdata.proj = projection;
-	camdata.view = view;
-	camdata.viewproj = projection * view;
-	camdata.viewpos = glm::vec4(1.0);//glm::vec4(EditorCamera.getposition(), 1.0);
-	camdata.mousepos = glm::vec4(1.0);//{Mouse.pos.x, Mouse.pos.y, 0, 0};
-	camdata.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
+	CamData.model = glm::mat4(1.0f);
+	CamData.proj = projection;
+	CamData.view = view;
+	CamData.viewproj = projection * view;
+	CamData.viewpos = glm::vec4(1.0);//glm::vec4(EditorCamera.getposition(), 1.0);
+	CamData.mousepos = glm::vec4(1.0);//{Mouse.pos.x, Mouse.pos.y, 0, 0};
+	CamData.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
 //     camdata.dir_light_pos = glm::vec4(DirectionLight.position, 1.0);
 //     camdata.dir_light_color = glm::vec4(DirectionLight.color, 1.0);
 
@@ -185,7 +234,7 @@ void Gfx::Renderer::PrepareCameraBuffer()
 	char* datadst;
   	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory(), 0, sceneParamBufferSize, 0, (void**)&datadst);
    	int frameind = FrameIndex % MAX_FRAMES;
-    memcpy( datadst, &camdata, (size_t)sizeof(CameraData));
+    memcpy( datadst, &CamData, (size_t)sizeof(CameraData));
   	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory());
 }
 

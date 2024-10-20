@@ -47,6 +47,7 @@ RegisterUniform(Camera, {
     vec4 mousepos;
     vec4 viewport;
     
+    mat4 model;
     mat4 view;
     mat4 proj;
     mat4 viewproj;

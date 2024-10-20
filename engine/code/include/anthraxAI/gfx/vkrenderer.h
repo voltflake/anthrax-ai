@@ -29,11 +29,11 @@ namespace Gfx
             RenderTarget* GetMainRT() { return MainRT; }
             RenderTarget* GetDepthRT() { return DepthRT; }
 
-            void PrepareCameraBuffer();
+            void PrepareCameraBuffer(Core::Camera& camera);
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
-           VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag);
+            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag);
 
             int GetFrameInd() { return FrameIndex; }
             FrameData& GetFrame() { return Frames[FrameIndex]; }
@@ -44,8 +44,12 @@ namespace Gfx
             void StartFrame(AttachmentFlags attachmentflags);
             void EndFrame();
 
-            void Draw(Gfx::RenderObject& object, bool bindpipe, bool bindindex);
+            void Draw(Gfx::RenderObject& object);
+            void DrawMeshes(Gfx::RenderObject& object);
+            void DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel);
             void DrawSimple(Gfx::RenderObject& object);
+            void NullTmpBindings();
+            void CheckTmpBindings(Gfx::MeshInfo* mesh, Gfx::Material* material, bool* bindpipe, bool* bindindex);
 
         	FrameArray Frames;
 
@@ -58,7 +62,7 @@ namespace Gfx
 
             TexturesMap Textures;
 	        
-            CameraData 	camdata;
+            CameraData 	CamData;
             UploadContext Upload;
 
 	        int FrameIndex = 0;
@@ -69,5 +73,8 @@ namespace Gfx
         	PFN_vkCmdEndRenderingKHR   vkCmdEndRenderingKHR{VK_NULL_HANDLE};
 
             Gfx::CommandBuffer Cmd;
+
+            Gfx::Material* TmpBindMaterial = nullptr;
+	        Gfx::MeshInfo* TmpBindMesh = nullptr;
     };
 }

@@ -12,6 +12,10 @@ void Gfx::Renderer::CreateTextures()
     path = "./textures/kote-v-bote.jpg";
 	Textures["kote-v-bote.jpg"] = CreateTexture(path);
     CreateSampler(Textures["kote-v-bote.jpg"]);
+
+    path = "./textures/zeroone.png";
+	Textures["zeroone.png"] = CreateTexture(path);
+    CreateSampler(Textures["zeroone.png"]);
 }
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)

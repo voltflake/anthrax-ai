@@ -1,9 +1,26 @@
 #include "anthraxAI/engine.h"
+#include "anthraxAI/utils/debug.h"
+
+long long Engine::GetTime() const {
+#ifdef AAI_WINDOWS
+    return GetTickCount();
+#else
+    timeval t;
+    gettimeofday(&t, NULL);
+    long long tim = t.tv_sec * 1000 + t.tv_usec / 1000;
+	  return (tim);
+#endif
+}
+
+bool Engine::OnResize()
+{
+    return Gfx::Vulkan::GetInstance()->OnResize();
+}
 
 void Engine::Init()
 {
-    State = ENGINE_STATE_INIT;
-	ASSERT(State != ENGINE_STATE_INIT, "How is it possible?");
+    SetState(ENGINE_STATE_INIT);
+  	ASSERT(!Utils::IsBitSet(State, ENGINE_STATE_INIT), "How is it possible?");
 
 #ifdef AAI_LINUX
     Core::WindowManager::GetInstance()->InitLinuxWindow();
@@ -11,23 +28,26 @@ void Engine::Init()
     Core::WindowManager::GetInstance()->InitWindowsWindow();
 #endif
 
-    Gfx::Vulkan::GetInstance()->Init();
-    Core::WindowManager::GetInstance()->InitImGui();
-
-    Core::Scene::GetInstance()->Init();
+    Core::Scene::GetInstance()->Init(); 
     
-    State = ENGINE_STATE_EDITOR;
+    Gfx::Vulkan::GetInstance()->Init();
+
+    Core::Scene::GetInstance()->Update();
+    Core::ImGuiHelper::GetInstance()->Init();
+    
+    SetState(ENGINE_STATE_EDITOR);
 }
 
 void Engine::Run()
 {
+    StartTime = GetTime();
 #ifdef AAI_LINUX
     Core::WindowManager::GetInstance()->RunLinux();
 #else
     Core::WindowManager::GetInstance()->RunWindows();
 #endif
 
-    if (State & ENGINE_STATE_EXIT) {
+    if (Utils::IsBitSet(State, ENGINE_STATE_EXIT)) {
         CleanUp();
     }
 }
@@ -35,11 +55,4 @@ void Engine::Run()
 void Engine::CleanUp()
 {
     Gfx::Vulkan::GetInstance()->CleanUp();
-
-#if defined(AAI_LINUX)
-    ImGui_ImplX11_Shutdown();
-#elif defined(AAI_WINDOWS)
-	ImGui_ImplWin32_Shutdown();
-#endif
-    ImGui::DestroyContext();
 }

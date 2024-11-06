@@ -15,8 +15,20 @@ void Gfx::Vulkan::Init()
 	Gfx::DescriptorsBase::GetInstance()->AllocateDataBuffers();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
-	Gfx::Model::GetInstance()->LoadModel("models/monkeytextured.obj");
+	Gfx::Model::GetInstance()->LoadModels();
 	
+}
+
+bool Gfx::Vulkan::OnResize()
+{
+    if (Gfx::Renderer::GetInstance()->IsOnResize() && Core::WindowManager::GetInstance()->GetScreenResolution().x > 0 && Core::WindowManager::GetInstance()->GetScreenResolution().y > 0) {
+        Gfx::Device::GetInstance()->RecreateSwapchain();
+
+        Gfx::Renderer::GetInstance()->CreateRenderTargets();
+        Gfx::Pipeline::GetInstance()->Build();
+        return true;
+    }
+    return false;
 }
 
 void Gfx::Vulkan::CleanUp()
@@ -27,6 +39,7 @@ void Gfx::Vulkan::CleanUp()
 
 	Gfx::DescriptorsBase::GetInstance()->CleanUp();
 
+    Core::PipelineDeletor::GetInstance()->CleanAll();
 	Gfx::Renderer::GetInstance()->CleanResources();
 	Gfx::Device::GetInstance()->CleanUpSwapchain();
 	

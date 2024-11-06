@@ -103,4 +103,25 @@ void Gfx::Mesh::CreateMeshes()
         UpdateMesh(mesh);
         Meshes[it.first] = mesh;
     }
+    
+    Vector2<int> res = { 1920, 1080 };
+    mesh.Path = "dummy";
+    mesh.Vertices[0].position = {0, 0, 0.0f};
+    mesh.Vertices[1].position = {0, 0 + res.y, 0.0f};
+    mesh.Vertices[2].position = {0 + res.x, 0 + res.y, 0.0f};
+    mesh.Vertices[3].position ={0 + res.x, 0, 0.0f};
+
+    mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[2].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[3].color = { 1.f, 0.f, 0.0f };
+
+    mesh.Vertices[1].uv = {0.0f, 0.0f};
+    mesh.Vertices[0].uv = {0.0f, 1.0f};
+    mesh.Vertices[3].uv = {1.0f, 1.0f};
+    mesh.Vertices[2].uv = {1.0f, 0.0f};
+
+    UpdateMesh(mesh);
+    Meshes["dummy"] = mesh;
+
 }

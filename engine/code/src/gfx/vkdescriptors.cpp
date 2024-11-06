@@ -1,6 +1,5 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/vkdevice.h"
-#include "anthraxAI/gfx/vkrenderer.h"
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
 {
@@ -75,7 +74,11 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 
 void Gfx::DescriptorsBase::Build()
 {
-	BufferHelper::CreateBuffer(BindlessBuffer, LastOffset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    // this destroying and recreation seems odd
+	vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.Buffer, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, nullptr);
+	
+    BufferHelper::CreateBuffer(BindlessBuffer, LastOffset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
 
 	uint8_t* data = nullptr;
 	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, 0, LastOffset, 0, (void**)&data);
@@ -83,7 +86,7 @@ void Gfx::DescriptorsBase::Build()
 		memcpy(data + range.offset, range.data, range.size);
 	}
   	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory);
-	
+    
 	uint32_t maxrangesize = 0;
 	for (auto& range : Ranges) {
 		maxrangesize = std::max(range.size, maxrangesize);
@@ -109,6 +112,10 @@ void Gfx::DescriptorsBase::AllocateDataBuffers()
 {
 	const size_t cambuffersize = (sizeof(CameraData));
 	BufferHelper::CreateBuffer(CameraBuffer, cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+	Core::Deletor::GetInstance()->Push([=, this]() {
+		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.Buffer, nullptr);
+    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.DeviceMemory, nullptr);
+	});
 }
 
 void Gfx::DescriptorsBase::CleanUp()
@@ -117,6 +124,9 @@ void Gfx::DescriptorsBase::CleanUp()
 	
 	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), BindlessLayout, nullptr);
 	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), GlobalLayout, nullptr);
+
+	vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.Buffer, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, nullptr);
 }
 
 void Gfx::DescriptorsBase::Init()

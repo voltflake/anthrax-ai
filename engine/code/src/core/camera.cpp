@@ -1,5 +1,6 @@
 #include "anthraxAI/core/camera.h"
 #include "anthraxAI/core/windowmanager.h"
+#include <cstdio>
 
 void Core::Camera::SetDirections()
 {
@@ -13,7 +14,8 @@ void Core::Camera::SetDirections()
 
 void Core::Camera::UpdateMovement()
 {
-    const float camspeed = 1.5f * 0.01;	
+    float delta = Utils::Debug::GetInstance()->DeltaMs;
+    const float camspeed = 0.1f * delta;	
     if (Core::WindowManager::GetInstance()->GetPressedKey() == W_KEY) {
         Position += camspeed * Front;
     }
@@ -30,11 +32,11 @@ void Core::Camera::UpdateMovement()
 
 void Core::Camera::UpdateDirection()
 {
-    float delta = 0.01f;
+    float delta = Utils::Debug::GetInstance()->DeltaMs; 
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
     Vector2<int> curmousepos = Core::WindowManager::GetInstance()->GetMouseDelta();
     if (curmousepos.x == 0 && curmousepos.y == 0) return;
-    float rotspeed = delta * 0.03f;
+    float rotspeed = delta * 0.0003f;
 
     if (mousemove.x || mousemove.y) {
         float yaw = rotspeed * mousemove.x;

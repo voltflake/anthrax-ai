@@ -1,31 +1,46 @@
-Engine::Gfx() -- Vukan() -- Renderer() --
-Engine::Core()::Windows()
-Engine::Core()::Sync()
+`Parser:`
+<!-- - lookup for possible elements -> key value -->
 
-Engine::Assets() - ? 
+1. load the file to the vector of strings
+2. check if contains root node `Scene:` --> root node = file.begin()
+3. check if contains child eg `Object:` --> when we want to find child we will check for the iterater from `RootNode + ElementLookup_key`, we will parse retrieved data `Object:` to `ElementLookup_value('Object')`, also check for errors (eg if ':' is missing, '\t' is missing)
+4. if yes -> set up `RootChildNode` -> use this iterator to find other elements of this child (positions, textures, anim)
+5. do the same as in `3.` to gather info for `RootChildNode` children -> `ChildNode`
 
-Engine::Editor()
-Engine::Scene() -- Resources()
+`template for level:`
 
-1. Engine class - basic class that handles singleton instances and modes (Vulkan class,Renderer class, Debug class, Scene class, UI class, engine state)
+Scene: models
+    Object:
+        ID: 0
+        Position:
+            x: 10
+            y: 10
+            z: 5
+        Material:
+            name: models
+            frag: model.frag
+            vert: model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: monkeytextured.obj
 
-- starting from creation of instances for classes
-- handling destroy
+------------
 
-2. Vulkan:
-- vulkan instance
-- surface
-- log & phys dev
-- swapchain
-- image views
-- command pool
-- depth & main image (render targets)
-- renderpass + framebuffers -> dynamic rendering
-- sync
-- descriptors
-
-3. Renderer handles rendering and command buffers
-
-4. Scene: handles what resources are used by scene, uploads models and stuff
-
-5. UI - everything with imgui
+Scene: sprites
+    Object:
+        ID: 0
+        Material:
+            name: sprites
+            frag: sprite.frag
+            vert: sprite.vert
+        Texture:
+            name: kote-v-bote.jpg
+    Object:
+        ID: 1
+        Material:
+            name: sprites
+            frag: sprite.frag
+            vert: sprite.vert
+        Texture:
+            name: placeholder.jpg

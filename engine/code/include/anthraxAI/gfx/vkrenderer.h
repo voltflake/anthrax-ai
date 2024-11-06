@@ -55,7 +55,8 @@ namespace Gfx
 
             void BeginRendering(VkCommandBuffer cmd, const VkRenderingInfoKHR* renderinfo) { vkCmdBeginRenderingKHR(cmd, renderinfo); }
             void EndRendering(VkCommandBuffer cmd) { vkCmdEndRenderingKHR(cmd); }
-
+            bool IsOnResize() const { return OnResize; }
+            void SetOnResize(bool ison) { OnResize = ison; }
         private:
             RenderTarget* DepthRT;
             RenderTarget* MainRT;
@@ -64,7 +65,8 @@ namespace Gfx
 	        
             CameraData 	CamData;
             UploadContext Upload;
-
+            
+            bool OnResize = false;
 	        int FrameIndex = 0;
             uint32_t SwapchainIndex = 0;
             

@@ -16,10 +16,9 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 	xcb_intern_atom_cookie_t cookie = xcb_intern_atom(connection, onlyifexist, strlen(str), str);
 	return xcb_intern_atom_reply(connection, cookie, NULL);
 }
-
-#include <imgui_impl_x11.h>
-static ImGui_ImplVulkanH_Window MainWindowData;
 #endif
+
+#define MAX_FPS 60
 
 enum WindowEvents {
     WINDOW_EVENT_RUN            = 1 << 0,	/* 0000 0001 */
@@ -38,6 +37,7 @@ namespace Core
         Vector2<int> Position = { 0, 0};
         Vector2<int> Delta = { 0, 0};
         Vector2<int> Begin = { 0, 0};
+        Vector2<int> Event = { 0, 0};
         bool Pressed = false;
     };
 
@@ -57,29 +57,27 @@ namespace Core
             void RunLinux();
 
             xcb_connection_t* GetConnection() const { return Connection; }
-            xcb_window_t GetWindow() const { return Window; }
+            xcb_window_t* GetWindow() { return &Window; }
 #else
         public:
             void InitWindowsWindow();
 #endif
         public:
-            void InitImGui();
-            void ViewEditor();
-
             Vector2<int> GetScreenResolution() const { return Extents; }
 
             Vector2<int> GetMousePos() const { return Mouse.Position; }
             Vector2<int> GetMouseDelta() const { return Mouse.Delta; }
+            bool IsMousePressed() const { return Mouse.Pressed; }
             xcb_keysym_t GetPressedKey() const { return PressedKey; }
         private:
-            WindowEvents Event;
+            int Event;
             MouseInfo Mouse;
             Vector2<int> Extents = { 1000, 800 };
-
+            Vector2<int> OnResizeExtents;
+            
             void Events();
             void ProcessEvents();
-            WindowEvents CatchEvent(xcb_generic_event_t *event);
-            ImGuiStyle 	EditorStyle;
+            int CatchEvent(xcb_generic_event_t *event);
 
             bool running = true;
     };

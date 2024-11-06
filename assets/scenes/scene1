@@ -1,0 +1,15 @@
+Scene: models
+    Object:
+        ID: 0
+        Position:
+            x: 10
+            y: 2
+            z: 5
+        Material:
+            name: models
+            frag: model.frag
+            vert:    model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: monkeytextured.obj

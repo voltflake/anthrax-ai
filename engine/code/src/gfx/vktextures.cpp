@@ -1,21 +1,31 @@
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 void Gfx::Renderer::CreateTextures()
 {
-    std::string path = "./textures/placeholder.jpg";
-	Textures["placeholder.jpg"] = CreateTexture(path);
-    CreateSampler(Textures["placeholder.jpg"]);
+    std::string path = "./textures/";
 
-    path = "./textures/kote-v-bote.jpg";
-	Textures["kote-v-bote.jpg"] = CreateTexture(path);
-    CreateSampler(Textures["kote-v-bote.jpg"]);
+    for (auto& it : Core::Scene::GetInstance()->GetResources()) {
+        for (Core::ObjectInfo& info : it.second) {
+            std::string texture = info.Texture;
+            Textures[texture] = CreateTexture(path + texture);
+            CreateSampler(Textures[texture]);
+        }
+    }
 
-    path = "./textures/zeroone.png";
-	Textures["zeroone.png"] = CreateTexture(path);
-    CreateSampler(Textures["zeroone.png"]);
+	/*Textures["placeholder.jpg"] = CreateTexture(path);*/
+	/*   CreateSampler(Textures["placeholder.jpg"]);*/
+	/**/
+	/*   path = "./textures/kote-v-bote.jpg";*/
+	/*Textures["kote-v-bote.jpg"] = CreateTexture(path);*/
+	/*   CreateSampler(Textures["kote-v-bote.jpg"]);*/
+	/**/
+	path = "./textures/dummy.png";
+	Textures["dummy"] = CreateTexture(path);
+	CreateSampler(Textures["dummy"]);
 }
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)

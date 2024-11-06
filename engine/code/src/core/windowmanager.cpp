@@ -1,6 +1,11 @@
 #include "anthraxAI/core/windowmanager.h"
 
 #include "anthraxAI/core/scene.h"
+#include "anthraxAI/core/imguihelper.h"
+#include "anthraxAI/engine.h"
+#include "anthraxAI/utils/debug.h"
+#include <ctime>
+#include <iostream>
 
 #ifdef AAI_LINUX
 void Core::WindowManager::InitLinuxWindow()
@@ -88,7 +93,7 @@ void Core::WindowManager::InitLinuxWindow()
 	KeySymbols = xcb_key_symbols_alloc(Connection);
 }
 
-WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
+int Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 {
     switch (event->response_type & ~0x80) {
 		case XCB_KEY_PRESS: {
@@ -97,22 +102,18 @@ WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 			return WINDOW_EVENT_KEY_PRESSED;
 		}
 		case XCB_KEY_RELEASE:
+            PressedKey = -1;
         	return WINDOW_EVENT_KEY_RELEASED;
 		case XCB_MOTION_NOTIFY: {
 			xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
-			
-			if (Mouse.Pressed) {
-				Mouse.Position.x = motion->event_x;
-				Mouse.Position.y = motion->event_y;
-				Mouse.Delta.x = Mouse.Begin.x - motion->event_x;
-				Mouse.Delta.y = Mouse.Begin.y - motion->event_y;
-				Mouse.Begin = Mouse.Position;
-			}
+			Mouse.Event = { motion->event_x, motion->event_y };
         	return WINDOW_EVENT_MOUSE_MOVE;
 		}
-	  	case XCB_BUTTON_PRESS:
-			Mouse.Pressed = true;
+	  	case XCB_BUTTON_PRESS: {		
+            xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
+			Mouse.Event = { motion->event_x, motion->event_y };
             return WINDOW_EVENT_MOUSE_PRESSED;
+        }
         case XCB_BUTTON_RELEASE:
 			Mouse.Pressed = false;
             return WINDOW_EVENT_MOUSE_RELEASED;
@@ -126,8 +127,11 @@ WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
                 return WINDOW_EVENT_EXIT;
 			}
 		   	break;
-		case XCB_CONFIGURE_NOTIFY:
-            return WINDOW_EVENT_RESIZE;
+		case XCB_CONFIGURE_NOTIFY: {
+                const xcb_configure_notify_event_t* e = (const xcb_configure_notify_event_t*)event;
+                OnResizeExtents = { e->width, e->height };
+                return WINDOW_EVENT_RESIZE;
+            }
         default:
             break;
 	}
@@ -136,15 +140,48 @@ WindowEvents Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 
 void Core::WindowManager::ProcessEvents()
 {
-	if (Event & WINDOW_EVENT_KEY_PRESSED) {
-		Core::Scene::GetInstance()->UpdateCameraPosition();
-	}
-	if (Event & WINDOW_EVENT_MOUSE_MOVE && Mouse.Pressed) {
-		Core::Scene::GetInstance()->UpdateCameraDirection();
-	}
-    if (Event & WINDOW_EVENT_EXIT) {
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_PRESSED)) {
+        if (PressedKey == ESC_KEY) {
+            Engine::GetInstance()->ToogleEditorMode();
+            Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
+        }
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_RELEASED)) {
+        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
+        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
+    }
+
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
+        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_RELEASED)) {
+            Mouse.Delta = {0, 0};
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_MOVE);
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_RELEASED);
+        }
+        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_PRESSED)) {
+            Mouse.Pressed = true;        
+            Mouse.Begin = Mouse.Event;
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
+        }
+        if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {
+            Mouse.Position.x = Mouse.Event.x;
+            Mouse.Position.y = Mouse.Event.y;
+            Mouse.Delta.x = Mouse.Begin.x - Mouse.Event.x;
+            Mouse.Delta.y = Mouse.Begin.y - Mouse.Event.y;
+            Mouse.Begin = Mouse.Position;
+        }
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_EXIT)) {
         Engine::GetInstance()->SetState(ENGINE_STATE_EXIT);
         running = false;
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE)) {
+        Vector2<int> tmp = Extents;
+        Extents.x = OnResizeExtents.x;
+        Extents.y = OnResizeExtents.y;
+        if (!Engine::GetInstance()->OnResize()) {
+            Extents = tmp;
+        }
+        Utils::ClearBit(&Event, WINDOW_EVENT_RESIZE);
     }
 }
 
@@ -152,9 +189,9 @@ void Core::WindowManager::Events()
 {
 	xcb_generic_event_t *event;
 	while ((event = xcb_poll_for_event(Connection))) {
-		ImGui_ImplX11_Event(event);
-		Event = CatchEvent(event);
-		free(event);
+		Core::ImGuiHelper::GetInstance()->CatchEvent(event);
+		Event |= (CatchEvent(event));
+   	    free(event);
 	}
     ProcessEvents();
 }
@@ -163,19 +200,28 @@ void Core::WindowManager::RunLinux()
 {
     xcb_flush(Connection);
 
+    long long start, end = 0;
+    float delta = 0;
 	while (running) {
+        start = clock();
         Events();
 
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplX11_NewFrame();
-		ImGui::NewFrame();
+        while (delta < CLOCKS_PER_SEC / MAX_FPS) {
+			start = clock();
+			delta = (float(start - end));
+		}
+        Utils::Debug::GetInstance()->FPS = CLOCKS_PER_SEC / delta;
 
-	  	Core::WindowManager::GetInstance()->ViewEditor();
-		Core::Scene::GetInstance()->RenderScene();
+		Core::ImGuiHelper::GetInstance()->UpdateFrame();
+        Core::Scene::GetInstance()->Loop();
 
-		if (Engine::GetInstance()->GetState() & ENGINE_STATE_EXIT) {
+		if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EXIT)) {
 			xcb_key_symbols_free(KeySymbols);
 		}
+        
+        end = clock();
+        delta = (float(end - start));
+        Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
 	}
 }
 #endif

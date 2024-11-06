@@ -22,4 +22,7 @@ namespace Core
                 Deletors.clear();
             }
     };
+
+    class PipelineDeletor : public Deletor
+    {};
 }

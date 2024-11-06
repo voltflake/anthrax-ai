@@ -17,6 +17,8 @@ namespace Gfx
         public:
             void Init();
             void CleanUp();
+            
+            bool OnResize();
 
             VkInstance GetVkInstance() const { return Instance; }
             bool IsValidationLayersOn() const { return ValidationLayersOn; }

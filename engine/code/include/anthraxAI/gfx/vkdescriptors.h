@@ -39,7 +39,7 @@ namespace Gfx
 
             VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
             VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
-            BufferHelper::Buffer GetCameraUBO() const { return CameraBuffer; }
+            BufferHelper::Buffer& GetCameraUBO() { return CameraBuffer; }
 
             size_t PadUniformBufferSize(size_t originalsize);
 

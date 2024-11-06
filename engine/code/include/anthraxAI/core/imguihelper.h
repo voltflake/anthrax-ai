@@ -1,0 +1,124 @@
+#pragma once
+#include "anthraxAI/utils/defines.h"
+#include "anthraxAI/utils/mathdefines.h"
+#include "imgui.h"
+#include <string>
+
+#ifdef AAI_LINUX
+#include <imgui_impl_x11.h>
+static ImGui_ImplVulkanH_Window MainWindowData;
+#endif
+
+#include <map>
+#include <functional>
+#include <atomic>
+namespace UI
+{
+    enum ElementType
+    {
+        TEXT,
+        BUTTON,
+        SEPARATOR,
+        TAB,
+        COMBO,
+        FLOAT,
+        CHECKBOX,
+    };
+   
+    class Element
+    {
+        public:
+            Element(ElementType type, const std::string& label)
+            : Type(type), Label(label) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
+          
+            template<typename T, typename... Args>
+            Element(ElementType type, const std::string& label, T t, Args... args, std::function<void (std::string)> func) 
+            : Type(type), Label(label), Definition(func) { EvaluateArgs(t, args...); }
+            
+            template<typename T, typename... Args>
+            Element(ElementType type, const std::string& label, T t, Args... args, std::function<void (bool)> func) 
+            : Type(type), Label(label), DefinitionBool(func) { EvaluateArgs(t, args...); }
+
+            Element(ElementType type, const std::string& label,std::function<float ()> func) 
+            : Type(type), Label(label), DefinitionFloat(func) { }
+
+            int GetID() const { return ID; }
+            ElementType GetType() const { return Type; }
+            std::string GetLabel() const { return Label; }
+
+            std::vector<const char*> GetComboList() { return ComboList;}
+            
+            std::function<void (std::string)> Definition;
+            std::function<void (bool)> DefinitionBool;
+            std::function<float ()> DefinitionFloat;
+
+            inline bool operator<(const UI::Element& elem) const { return GetID() < elem.GetID(); }
+        private:
+            
+            void GetArg(std::vector<const char*> vec) { ComboList = vec; }
+            void GetArg(void* nu) { }
+            template <typename T>
+            void EvaluateArgs(T t) { GetArg(t); }
+            template<typename T, typename... Args>
+            void EvaluateArgs(T t, Args... args) { EvaluateArgs(args...); }
+
+            std::vector<const char*> ComboList;
+            inline static std::atomic_int IDCounter = 0;
+            int ID = 0;
+            ElementType Type;
+            std::string Label;
+};
+    
+    class Window
+    {
+        public:
+            Window(const std::string& name, Vector2<float> size, Vector2<float>pos, ImGuiWindowFlags flags)
+            : Name(name), Size(size), Position(pos), Flags(flags) {}
+           
+            ImGuiWindowFlags GetFlags() const { return Flags; }
+            std::string GetName() const { return Name; }
+            float GetSizeX() const { return Size.x; }
+            float GetSizeY() const { return Size.y; }
+            float GetPosX() const { return Position.x; }
+            float GetPosY() const { return Position.y; }
+        private:
+            Vector2<float> Size;
+            Vector2<float> Position;
+            ImGuiWindowFlags Flags;
+            std::string Name;
+    };
+
+    typedef std::map<Element, std::vector<Element>> UITabsElementsMap;
+    typedef std::map<std::string, std::vector<Element>> UIElementsMap;
+    typedef std::map<std::string, std::vector<Window>> UIWindowsMap;
+}
+
+
+namespace Core 
+{ 
+    class ImGuiHelper : public Utils::Singleton<ImGuiHelper>
+    {
+        public:
+            ~ImGuiHelper();
+
+            void Init();
+            void InitUIElements();
+            void Render();
+            void UpdateFrame();
+            
+            void Add(UI::Element tab, const UI::Element& element) { UITabs[tab].emplace_back(element); }
+            void Add(const std::string& scene, const UI::Window& window) { UIWindows[scene].emplace_back(window); }
+            void Add(const std::string& scene, const UI::Element& element) { UIElements[scene].emplace_back(element); }
+    
+            void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
+        private:
+            void Combo(UI::Element element) const;
+            void ProcessUI(const UI::Element& element);
+            ImGuiStyle 	EditorStyle;
+            std::string EditorWindow;
+            
+            UI::UITabsElementsMap UITabs;
+            UI::UIElementsMap UIElements;
+            UI::UIWindowsMap UIWindows;
+    };
+}

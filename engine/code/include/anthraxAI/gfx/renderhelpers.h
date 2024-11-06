@@ -3,6 +3,13 @@
 #include "anthraxAI/gfx/model.h"
 namespace Gfx
 {
+    enum BindlessDataType {
+        BINDLESS_DATA_NONE = 0,
+        BINDLESS_DATA_TEXTURE,
+        BINDLESS_DATA_CAM_BUFFER,
+        BINDLESS_DATA_SIZE
+    };
+
     struct RenderObject {
 	    Gfx::MeshInfo* Mesh = nullptr;
 	    Gfx::ModelInfo* Model = nullptr;
@@ -13,6 +20,8 @@ namespace Gfx
 	    Vector3<float> Position;
 
         bool VertexBase = false;
+        bool IsGrid = false;
+        bool IsVisible = true;
 
         uint32_t BufferBind;
         uint32_t TextureBind;
@@ -27,6 +36,11 @@ namespace Gfx
         glm::mat4 view;
         glm::mat4 proj;
         glm::mat4 viewproj;
+
+        float time;
+        float p0;
+        float p1;
+        float p2;
     };
 
     struct FrameData {
@@ -52,16 +66,18 @@ namespace Gfx
     typedef std::array<FrameData, MAX_FRAMES> FrameArray;
     typedef std::unordered_map<std::string, RenderTarget> TexturesMap;
 
-    enum BindlessDataType {
-        BINDLESS_DATA_NONE = 0,
-        BINDLESS_DATA_TEXTURE,
-        BINDLESS_DATA_SIZE
-    };
-
+    
     struct TextureParams {
         uint32_t camerabufer = 0;
         uint32_t texturehandle = 0;
         uint32_t pad0;
         uint32_t pad1;
     };
+    struct CanBufferParams {
+        uint32_t camerabufer = 0;
+        uint32_t pad0;
+        uint32_t pad1;
+        uint32_t pad2;
+    };
+
 }

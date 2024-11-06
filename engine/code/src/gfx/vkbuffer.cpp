@@ -48,10 +48,6 @@ void BufferHelper::CreateBuffer(Buffer& bufferhandler, VkBufferUsageFlags flags[
     Buffer stagingbuffer;
     AllocateBuffer(stagingbuffer, buffersize, flags[0], VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    // void* datadst;
-    // vkMapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory, 0, buffersize, 0, &datadst);
-    //     memcpy(datadst, datasrc, (size_t)buffersize);
-    // vkUnmapMemory(renderer.getdevice()->getlogicaldevice(), stagingbuffer.devicememory);
     MapMemory(stagingbuffer, buffersize, 0, datasrc);
 
     AllocateBuffer(bufferhandler, buffersize, flags[1], VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);

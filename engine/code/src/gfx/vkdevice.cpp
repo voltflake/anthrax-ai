@@ -182,7 +182,7 @@ void Gfx::Device::CreateLinuxSurface()
 	info.pNext = NULL;
 	info.flags = 0;
 	info.connection = Core::WindowManager::GetInstance()->GetConnection();
-	info.window = Core::WindowManager::GetInstance()->GetWindow();
+	info.window = *(Core::WindowManager::GetInstance()->GetWindow());
 
 	VK_ASSERT(vkCreateXcbSurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), &info, NULL, &Surface), "failed to create window surface!");
 }
@@ -222,6 +222,21 @@ Gfx::QueueFamilyIndex Gfx::Device::FindQueueFimilies(VkPhysicalDevice device)
 		ind++;
 	}
 	return index;
+}
+
+void Gfx::Device::RecreateSwapchain()
+{
+    if (!Gfx::Renderer::GetInstance()->IsOnResize()) {
+        return;
+    }
+    Gfx::Renderer::GetInstance()->SetOnResize(false);
+
+    vkDeviceWaitIdle(LogicalDevice);
+    
+    CleanUpSwapchain();
+    CreateSwapchain();
+    CreateSwapchainImageViews();
+    printf("swapchain recreated\n");
 }
 
 VkQueue Gfx::Device::GetQueue(QueuesEnum q)

@@ -1,9 +1,32 @@
+#include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkbase.h"
+#include "anthraxAI/utils/debug.h"
+#include "imgui.h"
+#include <algorithm>
+#include <iterator>
+#include <string>
 
-void Core::WindowManager::InitImGui()
+void Core::ImGuiHelper::UpdateFrame()
+{
+	ImGui_ImplVulkan_NewFrame();
+	ImGui_ImplX11_NewFrame();
+	ImGui::NewFrame();
+}
+
+Core::ImGuiHelper::~ImGuiHelper()
+{
+#if defined(AAI_LINUX)
+    ImGui_ImplX11_Shutdown();
+#elif defined(AAI_WINDOWS)
+	ImGui_ImplWin32_Shutdown();
+#endif
+    ImGui::DestroyContext();
+}
+
+void Core::ImGuiHelper::Init()
 {
     VkDescriptorPoolSize pool_sizes[] =
 	{
@@ -32,7 +55,7 @@ void Core::WindowManager::InitImGui()
 
 	ImGui::CreateContext();
 #if defined(AAI_LINUX)
-    ImGui_ImplX11_Init(Connection, &Window);
+    ImGui_ImplX11_Init(Core::WindowManager::GetInstance()->GetConnection(), Core::WindowManager::GetInstance()->GetWindow());
 #elif defined(AAI_WINDOWS)
 	ImGui_ImplWin32_Init(hwnd);
 #endif
@@ -105,27 +128,138 @@ void Core::WindowManager::InitImGui()
 	style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 	style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
+	style.Colors[ImGuiCol_TabActive] = ImVec4(0.00f, 0.60f, 0.61f, 0.80f);
+	style.Colors[ImGuiCol_Tab] = ImVec4(0.00f, 0.40f, 0.41f, 0.40f);
+	style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.00f, 0.40f, 0.41f, 1.00f);
+
 	EditorStyle = style;
+    InitUIElements();
 }
 
-void Core::WindowManager::ViewEditor()
+void Core::ImGuiHelper::InitUIElements()
+{
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    const ImVec2 pos = viewport->Pos;
+    {
+        EditorWindow = "Engine ;p";
+        Add(EditorWindow, UI::Window(EditorWindow, { 400.0f, Core::WindowManager::GetInstance()->GetScreenResolution().y - 40.0f }, { pos.x, pos.y + 40.0f }, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings ));
+        
+        std::string tablabel = "Editor";
+        UI::Element tab(UI::TAB, tablabel);
+
+        std::vector<const char*> scenes;
+        scenes.reserve(Core::Scene::GetInstance()->GetScenes().size());
+        for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
+            scenes.emplace_back(it.first.c_str());
+        }
+
+        Add(tab, UI::Element(UI::COMBO, "Scenes", scenes, [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
+        
+        Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
+    
+        Add(EditorWindow, UI::Element(UI::BUTTON, "Global Button")); 
+    }
+    
+    UI::Element debugtab(UI::TAB, "Debug");
+    Add(debugtab, UI::Element(UI::TEXT, "This is debug tab"));
+    Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
+    Add(debugtab, UI::Element(UI::FLOAT, "fps", []() -> float { return Utils::Debug::GetInstance()->FPS; }));
+    Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
+    Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
+}
+
+void Core::ImGuiHelper::Combo(UI::Element element) const
+{
+    std::vector<const char*> items = element.GetComboList() ; 
+    auto it = std::find(items.begin(), items.end(), "intro");
+    static int ind = std::distance(items.begin(), it) - 1;
+
+    const char* currvalue = items[ind];  
+    if (ImGui::BeginCombo(element.GetLabel().c_str(), currvalue, 0)) {
+        for (int n = 0; n < items.size(); n++) {
+            const bool is_selected = (ind == n);
+            if (ImGui::Selectable(items[n], is_selected)) {
+                ind = n;
+                element.Definition(items[ind]);
+            }
+
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+}
+
+void Core::ImGuiHelper::ProcessUI(const UI::Element& element)
+{
+    switch (element.GetType()) {
+        case UI::COMBO: {
+            Combo(element);
+            break;
+        }
+        case UI::FLOAT: {
+            ImGui::Text((element.GetLabel() + ": %f").c_str(), element.DefinitionFloat());
+            break;
+        }
+        case UI::BUTTON: {    
+            if (ImGui::Button(element.GetLabel().c_str())) {
+                if (element.Definition) {
+                    element.Definition(element.GetLabel());
+                }
+            }
+            break;
+        }
+        case UI::CHECKBOX: {
+            static bool check = true; 
+            ImGui::Checkbox(element.GetLabel().c_str(), &check);
+            element.DefinitionBool(check);
+            break;
+        }
+        case UI::TEXT:
+            ImGui::TextUnformatted(element.GetLabel().c_str());
+            break;
+        case UI::SEPARATOR:
+            ImGui::Separator();
+        default:
+            break;
+    }
+}
+
+void Core::ImGuiHelper::Render()
 {
     bool active = true;
 
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    const ImVec2 base_pos = viewport->Pos;
-    ImGui::SetNextWindowPos(ImVec2(base_pos.x + 0, base_pos.y + 40), 0);
-	ImGui::SetNextWindowSize(ImVec2(400, viewport->Size.y - 40), ImGuiCond_FirstUseEver);
+    std::vector<UI::Window>& windows = UIWindows[EditorWindow];
+    std::vector<UI::Element>& windowelements = UIElements[EditorWindow];
 
-	ImGui::Begin("Engine ;p", &active, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-    
-    for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
-        const char* tag = it.first.c_str();
-        if (ImGui::Button(tag)) {
-            Core::Scene::GetInstance()->SetCurrentScene(it.first);
+    for (UI::Window& window : windows) {
+        ImGui::SetNextWindowPos(ImVec2(window.GetPosX(), window.GetPosY()), 0);
+        ImGui::SetNextWindowSize(ImVec2(window.GetSizeX(), window.GetSizeY()), ImGuiCond_FirstUseEver);
+
+        ImGui::Begin(window.GetName().c_str(), &active, window.GetFlags());
+        for (auto& it : UITabs) {
+            std::vector<UI::Element>& tabsui = it.second;
+            UI::Element tab = it.first;
+
+            if (ImGui::BeginTabBar("Tabs", ImGuiTabBarFlags_None)){
+                if (ImGui::BeginTabItem(tab.GetLabel().c_str())) {
+                    for (UI::Element& element : tabsui) {
+                        ProcessUI(element);
+                    }
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
         }
-    }
+        
+        for (UI::Element& element : windowelements) {
+            ProcessUI(element);
+        }
 
-    ImGui::End();
-    
+        ImGui::End();
+    }
 }
+
+

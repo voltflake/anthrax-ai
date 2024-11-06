@@ -46,7 +46,7 @@ do                                                              \
 	{        													\
 		std::string vulkan = string_VkResult(err);              \
 		std::string errstr = "Vulkan: Error: " + vulkan;		\
-		errstr += "\n" + str;									\
+		errstr += "\n\n" + str;									\
 		throw std::runtime_error(errstr);						\
 	}                                                           \
 } while (0)
@@ -59,6 +59,7 @@ do                                                              \
 	if (err)                                                   	\
 	{                                                           \
 		std::string errstr = "Error: " + str;					\
+		errstr += "\n\n";										\
 		throw std::runtime_error(errstr);						\
 	}                                                           \
 } while (0)

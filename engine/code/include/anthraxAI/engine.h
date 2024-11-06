@@ -1,15 +1,20 @@
 #pragma once
 
+#include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/core/scene.h"
+#include "anthraxAI/core/imguihelper.h"
 
 #include "anthraxAI/gfx/vkbase.h"
+
+#include <sys/time.h>
 
 enum EngineState {
     ENGINE_STATE_INIT 	= 1 << 0,	/* 0000 0001 */
 	ENGINE_STATE_EDITOR = 1 << 1, 	/* 0000 0010 */
-	ENGINE_STATE_EXIT 	= 1 << 2,	/* 0000 0100 */
+	ENGINE_STATE_PLAY 	= 1 << 2,	/* 0000 0100 */
+	ENGINE_STATE_EXIT 	= 1 << 3,	/* 0000 1000 */
 };
 
 class Engine : public Utils::Singleton<Engine>
@@ -19,9 +24,15 @@ class Engine : public Utils::Singleton<Engine>
         void Run();
         void CleanUp();
 
-        EngineState GetState() const { return State; }
-        void SetState(EngineState state) { State = state; }
+        int GetState() const { return State; }
+        void SetState(int state) { State |= state; }
+        void ToogleEditorMode() { Utils::ToogleBit(&State, ENGINE_STATE_EDITOR);  Utils::ToogleBit(&State, ENGINE_STATE_PLAY);}
 
+        long long GetTime() const;
+        long long GetTimeSinceStart() const { return GetTime() - StartTime; }
+
+        bool OnResize();
     private:
-        EngineState State;
+        int State;
+        long long StartTime;
 };

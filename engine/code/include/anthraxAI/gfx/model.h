@@ -32,7 +32,7 @@ namespace Gfx
                     }
                 }
             }
-
+            void LoadModels();
             void LoadModel(const std::string& path);
             ModelInfo* GetModel(const std::string& path);
 

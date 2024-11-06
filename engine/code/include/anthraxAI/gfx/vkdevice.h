@@ -45,6 +45,7 @@ namespace Gfx
         public:
             void Init();
 
+            void RecreateSwapchain();
             VkDevice GetDevice() const { return LogicalDevice; }
             VkPhysicalDevice GetPhysicalDevice() const { return PhysicalDevice; }
             VkSurfaceKHR GetSurface() const { return Surface; }
@@ -72,7 +73,7 @@ namespace Gfx
 #endif
             void CreatePhysicalDevice();
             void CreateDevice();
-
+            
             void CreateSwapchain();
             void CreateSwapchainImageViews();
 

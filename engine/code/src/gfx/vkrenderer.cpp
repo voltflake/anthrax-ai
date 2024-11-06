@@ -4,16 +4,26 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/core/camera.h"
+#include <algorithm>
+#include <cstddef>
+#include <cstdio>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
-	vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
+    bool bindpipe, bindindex = false;
+	CheckTmpBindings(object.Mesh, object.Material, &bindpipe, &bindindex);
+
+	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+
+    if (bindpipe) {
+		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
+    	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 1, 1, Gfx::DescriptorsBase::GetInstance()->GetDescriptorSet(), 1, &object.BindlessOffset);
+    }
 
 	Gfx::MeshPushConstants constants;
+	constants.texturebind = object.TextureBind;
+	constants.bufferbind = object.BufferBind;
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
-
-	VkDeviceSize offset = {0};
-	vkCmdBindVertexBuffers(Cmd.GetCmd(), 0, 1, &object.Mesh->VertexBuffer.Buffer, &offset);
 
 	vkCmdDraw(Cmd.GetCmd(), 6, 1, 0, 0);
 }
@@ -61,7 +71,7 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 {
     bool bindpipe, bindindex = false;
-	if (object.Model) {
+    if (object.Model) {
 		DrawMeshes(object);
 	}
 	else {
@@ -185,9 +195,7 @@ void Gfx::Renderer::EndFrame()
 	);
 
 	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
-        // for resizzing
-
-        //winprepared = true; 
+       OnResize = true; 
 	}
 
    SetFrameInd();
@@ -217,25 +225,11 @@ void Gfx::Renderer::PrepareCameraBuffer(Core::Camera& camera)
 	CamData.viewpos = glm::vec4(1.0);//glm::vec4(EditorCamera.getposition(), 1.0);
 	CamData.mousepos = glm::vec4(1.0);//{Mouse.pos.x, Mouse.pos.y, 0, 0};
 	CamData.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
-//     camdata.dir_light_pos = glm::vec4(DirectionLight.position, 1.0);
-//     camdata.dir_light_color = glm::vec4(DirectionLight.color, 1.0);
+    CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;
 
-//     for (int i = 0; i < pointlightamount; i++) {
-//         camdata.point_light_pos[i] = glm::vec4(PointLights[i].position, 1.0);
-//         camdata.point_light_color[i] = glm::vec4(PointLights[i].color, 1.0);
-//     }
-//    camdata.pointlightamount = pointlightamount;
+    const size_t buffersize = (sizeof(CameraData));
+    BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(), buffersize, 0, &CamData);
 
-
-   	const size_t sceneParamBufferSize = (sizeof(CameraData));
-   // BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(FrameIndex), sceneParamBufferSize, 0, camdata);
-
-
-	char* datadst;
-  	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory(), 0, sceneParamBufferSize, 0, (void**)&datadst);
-   	int frameind = FrameIndex % MAX_FRAMES;
-    memcpy( datadst, &CamData, (size_t)sizeof(CameraData));
-  	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), Gfx::DescriptorsBase::GetInstance()->GetCameraBufferMemory());
 }
 
 VkFenceCreateInfo FenceCreateInfo(VkFenceCreateFlags flags)
@@ -290,7 +284,7 @@ uint32_t Gfx::Renderer::SyncFrame()
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetSwapchain(), 1000000000, Frames[FrameIndex].PresentSemaphore, VK_NULL_HANDLE, &swapchainimageindex);
 	if (e == VK_ERROR_OUT_OF_DATE_KHR) {
-        //winprepared = true;
+    OnResize = true;
 		return -1;
 	}
 	VK_ASSERT(vkResetFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence), "vkResetFences failed !");

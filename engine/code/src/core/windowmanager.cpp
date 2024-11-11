@@ -154,16 +154,19 @@ void Core::WindowManager::ProcessEvents()
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
         if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_RELEASED)) {
             Mouse.Delta = {0, 0};
+            //printf("------MOUSE RELEASED--------\n");
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_MOVE);
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_RELEASED);
         }
         if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_PRESSED)) {
+            //printf("------MOUSE PRESSED--------\n");
             Mouse.Pressed = true;        
             Mouse.Begin = Mouse.Event;
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
         }
         if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {
             Mouse.Position.x = Mouse.Event.x;
+            //printf("------MOUSE MOVE--------\n");
             Mouse.Position.y = Mouse.Event.y;
             Mouse.Delta.x = Mouse.Begin.x - Mouse.Event.x;
             Mouse.Delta.y = Mouse.Begin.y - Mouse.Event.y;

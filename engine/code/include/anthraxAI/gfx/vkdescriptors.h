@@ -1,5 +1,6 @@
 #pragma once
 
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/gfx/vkdefines.h"
 
@@ -35,12 +36,14 @@ namespace Gfx
             void Init();
             void CleanUp();
 
-            void AllocateDataBuffers();
-
             VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
             VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
             BufferHelper::Buffer& GetCameraUBO() { return CameraBuffer; }
 
+            VkBuffer GetStorageBuffer() const { return StorageBuffer.Buffer; }
+            BufferHelper::Buffer& GetStorageUBO() { return StorageBuffer; }
+            VkDeviceMemory GetStorageBufferMemory() const { return StorageBuffer.DeviceMemory; }
+            
             size_t PadUniformBufferSize(size_t originalsize);
 
             uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler);
@@ -68,10 +71,14 @@ namespace Gfx
             VkDescriptorSetLayout GetDescriptorSetLayout() { return GlobalLayout; }
 
         private:
+            void AllocateDataBuffers();
+            void AllocateStorageBuffers();
+
             VkDescriptorSet GlobalDescriptor;
             VkDescriptorSetLayout GlobalLayout;
 
             BufferHelper::Buffer CameraBuffer;
+            BufferHelper::Buffer StorageBuffer;
 
             VkDescriptorPool Pool;
 	        VkDescriptorSetLayout BindlessLayout = VK_NULL_HANDLE;

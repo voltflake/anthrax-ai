@@ -38,7 +38,11 @@ layout( push_constant ) uniform constants
     mat4 rendermatrix;    
 
     int bindtexture;
+    int bindstorage;
     int bindbuffer;
+
+    int objectID;
+    int selected;
 } pushconstants;
 
 
@@ -57,5 +61,8 @@ RegisterUniform(Camera, {
     float p1;
     float p2;
 });
+
+#define DEPTH_ARRAY_SCALE 512
+const int MAX_BONES = 200;
 
 

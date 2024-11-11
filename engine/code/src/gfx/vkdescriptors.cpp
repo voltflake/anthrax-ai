@@ -117,6 +117,15 @@ void Gfx::DescriptorsBase::AllocateDataBuffers()
     	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.DeviceMemory, nullptr);
 	});
 }
+void Gfx::DescriptorsBase::AllocateStorageBuffers()
+{
+	const size_t buffersize = (sizeof(StorageData));
+	BufferHelper::CreateBuffer(StorageBuffer, buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+	Core::Deletor::GetInstance()->Push([=, this]() {
+		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.Buffer, nullptr);
+    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.DeviceMemory, nullptr);
+	});
+}
 
 void Gfx::DescriptorsBase::CleanUp()
 {
@@ -131,7 +140,7 @@ void Gfx::DescriptorsBase::CleanUp()
 
 void Gfx::DescriptorsBase::Init()
 {
-	// bindless descriptor setup
+// bindless descriptor setup
 
 	VkDescriptorSetLayoutBinding bindings[MAX_BINDING];
 	VkShaderStageFlags stageflags[MAX_BINDING] = {
@@ -213,4 +222,8 @@ void Gfx::DescriptorsBase::Init()
 	allocateinfo.pSetLayouts = &GlobalLayout;
 	allocateinfo.descriptorSetCount = 1;
 	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocateinfo, &GlobalDescriptor);
+
+
+    AllocateDataBuffers();
+    AllocateStorageBuffers();
 }

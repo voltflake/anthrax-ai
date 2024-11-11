@@ -12,7 +12,6 @@ void Gfx::Vulkan::Init()
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
 	Gfx::DescriptorsBase::GetInstance()->Init();
-	Gfx::DescriptorsBase::GetInstance()->AllocateDataBuffers();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();

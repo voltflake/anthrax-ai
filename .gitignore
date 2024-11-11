@@ -1,7 +1,7 @@
 build/
 package/
 .vscode/
-
+.cache/
 # Python output and compilation files
 *.pyc
 *.pyo

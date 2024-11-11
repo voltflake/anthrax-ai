@@ -51,7 +51,7 @@ namespace Utils
             void Load(const std::string& filename);
             NodeIt GetChild(const NodeIt& node, const LevelElements& elem)  const;
             template<typename T>
-            T GetElement(const NodeIt& node, const LevelElements& element) const;
+            T GetElement(const NodeIt& node, const LevelElements& element, T defval) const;
 
             bool IsNodeValid(NodeIt& it) const { return it != Tokens.end(); }
             std::string GetRootElement() const;
@@ -71,7 +71,7 @@ namespace Utils
     };
 
     template<typename T>
-    T Parser::GetElement(const NodeIt& node, const LevelElements& element) const
+    T Parser::GetElement(const NodeIt& node, const LevelElements& element, T defval) const
     {
         std::string elemtstr = GetValue(element); 
         std::string value = "0";
@@ -86,6 +86,7 @@ namespace Utils
 
         if (data == Tokens.end()) {
             printf("Parser::GetElement(): element |%s| not found for |%s| node\n", elemtstr.c_str(), node->first.c_str());
+            return defval;
         }
         else {
             value = data->second;

@@ -11,18 +11,16 @@ void Gfx::Renderer::CreateTextures()
     for (auto& it : Core::Scene::GetInstance()->GetResources()) {
         for (Core::ObjectInfo& info : it.second) {
             std::string texture = info.Texture;
+
+            auto it = Textures.find(texture);
+            if (it != Textures.end()) {
+                continue;
+            }
             Textures[texture] = CreateTexture(path + texture);
             CreateSampler(Textures[texture]);
         }
     }
 
-	/*Textures["placeholder.jpg"] = CreateTexture(path);*/
-	/*   CreateSampler(Textures["placeholder.jpg"]);*/
-	/**/
-	/*   path = "./textures/kote-v-bote.jpg";*/
-	/*Textures["kote-v-bote.jpg"] = CreateTexture(path);*/
-	/*   CreateSampler(Textures["kote-v-bote.jpg"]);*/
-	/**/
 	path = "./textures/dummy.png";
 	Textures["dummy"] = CreateTexture(path);
 	CreateSampler(Textures["dummy"]);

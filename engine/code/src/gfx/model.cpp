@@ -45,7 +45,7 @@ void Gfx::Model::LoadModels()
             LoadModel(path + info.Model);
         }
     }
-
+    LoadModel(path + "axis.obj");
 }
 
 void Gfx::Model::LoadModel(const std::string& path)
@@ -63,7 +63,7 @@ void Gfx::Model::LoadModel(const std::string& path)
 
 Gfx::ModelInfo* Gfx::Model::GetModel(const std::string& path)
 {
-	auto it = Models.find(path);
+	auto it = Models.find("./models/" + path);
 	if (it == Models.end()) {
 		return nullptr;
 	}

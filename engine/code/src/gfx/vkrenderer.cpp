@@ -1,4 +1,6 @@
 #include "anthraxAI/gfx/vkrenderer.h"
+#include "anthraxAI/gfx/bufferhelper.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
@@ -7,6 +9,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
+#include <sys/types.h>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -51,7 +55,18 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 	Gfx::MeshPushConstants constants;
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0));
+    constants.selected = 0;
+    if (object.HasStorage) {
+        constants.storagebind = object.StorageBind;
+       // printf("------- %d \n", object.ID);
+        constants.objectID = object.ID;
+        constants.selected = object.ID == SelectedID ? 1 : 0;
+        if (constants.selected) {
+
+       // printf("!!!!------- %d \n", object.ID);
+        }
+    }
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(object.Position.x, object.Position.y, object.Position.z));
 	constants.rendermatrix = CamData.proj * CamData.view * model;
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 
@@ -212,6 +227,41 @@ Gfx::RenderTarget* Gfx::Renderer::GetTexture(const std::string& name)
 	}
 }
 
+void Gfx::Renderer::PrepareStorageBuffer()
+{
+    /*if (!Core::WindowManager::GetInstance()->IsMousePressed()) {*/
+    /*    u_int dst[DEPTH_ARRAY_SCALE] = {0};*/
+    /*    BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetStorageUBO(), sizeof(u_int) * DEPTH_ARRAY_SCALE, 0, dst);*/
+    /*    //SelectedID = 0;*/
+    /*    return;*/
+    /*}*/
+
+    void* storage;
+    VkDeviceSize storagesize = sizeof(u_int) * DEPTH_ARRAY_SCALE;
+    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), BONE_ARRAY_SIZE, storagesize, 0, (void**)&storage);
+    u_int* u = static_cast<u_int*>(storage);
+
+    int selectedID = -1;
+    // TODO: improve pressision
+    //printf("--------------------\n");
+    for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
+        if (u[i] != 0) {
+            selectedID = u[i];
+            SelectedID = selectedID;
+            //printf("[%d][%d] \n ",i, u[i]);
+            break;
+        }
+    }
+    if (selectedID == -1) {
+        SelectedID = 0;
+    }
+    //printf("\n\n");
+    u_int dst[DEPTH_ARRAY_SCALE] = {0};
+    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int));
+    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+    
+}
+
 void Gfx::Renderer::PrepareCameraBuffer(Core::Camera& camera)
 {
 	glm::mat4 view = glm::lookAt(camera.GetPos(), camera.GetPos() + camera.GetFront(), camera.GetUp());
@@ -223,7 +273,7 @@ void Gfx::Renderer::PrepareCameraBuffer(Core::Camera& camera)
 	CamData.view = view;
 	CamData.viewproj = projection * view;
 	CamData.viewpos = glm::vec4(1.0);//glm::vec4(EditorCamera.getposition(), 1.0);
-	CamData.mousepos = glm::vec4(1.0);//{Mouse.pos.x, Mouse.pos.y, 0, 0};
+	CamData.mousepos = { Core::WindowManager::GetInstance()->GetMousePos().x, Core::WindowManager::GetInstance()->GetMousePos().y, 0, 0};
 	CamData.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
     CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;
 

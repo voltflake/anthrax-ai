@@ -23,6 +23,7 @@ namespace Core
         Gfx::BindlessDataType BindlessType;
 
         bool HasCameraBuffer;
+        bool HasStorageBuffer;
         bool HasTexture;
     };
     struct ObjectInfo {
@@ -35,9 +36,9 @@ namespace Core
         std::string Model;
         bool IsModel = false;
         
-        inline static std::atomic_int ObjectCounter = 0;
+        inline static std::atomic_int ObjectCounter = 1;
 
-        ObjectInfo() { ObjectCounter++; }
+        ObjectInfo() { ID = ObjectCounter; ObjectCounter++; }
     };  
     
     typedef std::unordered_map<std::string, Core::SceneInfo> RQSceneMap;
@@ -63,6 +64,7 @@ namespace Core
             Camera& GetCamera() { if (CurrentCamera == CAMERA_EDITOR) return EditorCamera; return EditorCamera; }
             void UpdateCameraDirection() { if (CurrentCamera == CAMERA_EDITOR) EditorCamera.UpdateDirection(); }
             void UpdateCameraPosition() { if (CurrentCamera == CAMERA_EDITOR) EditorCamera.UpdateMovement(); }
+            void UpdateObjects();        
 
         private:
             void LoadScene(const std::string& filename);

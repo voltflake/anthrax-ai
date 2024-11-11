@@ -25,7 +25,11 @@ namespace Gfx
         glm::mat4 rendermatrix;
 
         int texturebind = 0;
+        int storagebind = 0;
         int bufferbind = 0; 
+        int objectID = 0; 
+        
+        int selected = 0;
     };
 
     struct MeshInfo {

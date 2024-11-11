@@ -2,9 +2,9 @@ Scene: models
     Object:
         ID: 0
         Position:
-            x: 10
-            y: 2
-            z: 5
+            x: 3
+            y: 1
+            z: 3
         Material:
             name: models
             frag: model.frag
@@ -13,3 +13,17 @@ Scene: models
             name: zeroone.png
         Model:
             name: monkeytextured.obj
+    Object:
+        ID: 0
+        Position:
+            x: 5
+            y: 2
+            z: 5
+        Material:
+            name: models
+            frag: model.frag
+            vert: model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: cube.obj

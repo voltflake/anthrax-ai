@@ -1,30 +1,51 @@
 #pragma once
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/gfx/model.h"
+#include "anthraxAI/gfx/vkpipeline.h"
+#include <cstdint>
 namespace Gfx
 {
+    enum ObjectTypes {
+        OBJECT_DEF = 0,
+        OBJECT_GIZMO = 1000,
+    };
+
     enum BindlessDataType {
         BINDLESS_DATA_NONE = 0,
         BINDLESS_DATA_TEXTURE,
         BINDLESS_DATA_CAM_BUFFER,
         BINDLESS_DATA_SIZE
     };
-
+   
     struct RenderObject {
 	    Gfx::MeshInfo* Mesh = nullptr;
 	    Gfx::ModelInfo* Model = nullptr;
 	    Gfx::Material* Material = nullptr;
-        Gfx::RenderTarget* Texture = nullptr;
+      Gfx::RenderTarget* Texture = nullptr;
 
-        uint32_t BindlessOffset = 0;    
+      uint32_t BindlessOffset = 0;    
 	    Vector3<float> Position;
 
         bool VertexBase = false;
         bool IsGrid = false;
         bool IsVisible = true;
+        bool HasStorage = false;
+        
+        uint32_t ID;
+        uint32_t GizmoID;
 
         uint32_t BufferBind;
+        uint32_t StorageBind;
         uint32_t TextureBind;
+    };
+   
+    #define DEPTH_ARRAY_SCALE 512
+    #define MAX_BONES 200
+    #define BONE_ARRAY_SIZE (sizeof(glm::mat4) * MAX_BONES)
+    
+    struct StorageData {
+        glm::mat4 bonesmatrices[MAX_BONES];
+        u_int data[DEPTH_ARRAY_SCALE] = {0};
     };
 
     struct CameraData {
@@ -67,13 +88,13 @@ namespace Gfx
     typedef std::unordered_map<std::string, RenderTarget> TexturesMap;
 
     
-    struct TextureParams {
+    struct BasicParams {
         uint32_t camerabufer = 0;
         uint32_t texturehandle = 0;
+        uint32_t storagebuffer = 0;
         uint32_t pad0;
-        uint32_t pad1;
     };
-    struct CanBufferParams {
+    struct CamBufferParams {
         uint32_t camerabufer = 0;
         uint32_t pad0;
         uint32_t pad1;

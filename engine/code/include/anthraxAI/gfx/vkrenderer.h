@@ -30,6 +30,7 @@ namespace Gfx
             RenderTarget* GetDepthRT() { return DepthRT; }
 
             void PrepareCameraBuffer(Core::Camera& camera);
+            void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
 
@@ -57,12 +58,16 @@ namespace Gfx
             void EndRendering(VkCommandBuffer cmd) { vkCmdEndRenderingKHR(cmd); }
             bool IsOnResize() const { return OnResize; }
             void SetOnResize(bool ison) { OnResize = ison; }
+
+            int GetSelectedID() const { return SelectedID; }
         private:
             RenderTarget* DepthRT;
             RenderTarget* MainRT;
 
             TexturesMap Textures;
 	        
+            u_int SelectedID = 0;
+            StorageData StorageBuffer;
             CameraData 	CamData;
             UploadContext Upload;
             

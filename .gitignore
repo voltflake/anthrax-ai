@@ -2,6 +2,7 @@ build/
 package/
 .vscode/
 .cache/
+.cache/clangd/
 # Python output and compilation files
 *.pyc
 *.pyo

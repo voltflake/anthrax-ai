@@ -38,11 +38,12 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
 void Gfx::Model::LoadModels()
 {
     std::string path = "./models/";
-    for (auto& it : Core::Scene::GetInstance()->GetResources()) {
-        for (Core::ObjectInfo info : it.second) {
-            if (!info.IsModel) continue;
+    Core::Scene* scene = Core::Scene::GetInstance();
+    for (auto& it : scene->GetGameObjects()->GetObjects()) {
+        for (Keeper::Objects* info : it.second) {
+            if (info->GetModelName().empty()) continue;
 
-            LoadModel(path + info.Model);
+            LoadModel(path + info->GetModelName());
         }
     }
     LoadModel(path + "axis.obj");

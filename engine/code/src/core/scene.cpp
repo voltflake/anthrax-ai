@@ -1,5 +1,7 @@
 #include "anthraxAI/core/scene.h"
 #include "anthraxAI/engine.h"
+#include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
@@ -14,7 +16,7 @@ void Core::Scene::RenderScene()
     Gfx::Renderer::GetInstance()->StartFrame(RQScenes[CurrentScene].Attachments);
 
     if (RQScenes[CurrentScene].HasCameraBuffer) {
-        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(EditorCamera);
+        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
     }
     if (RQScenes[CurrentScene].HasStorageBuffer) {
         Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
@@ -53,9 +55,10 @@ void Core::Scene::Loop()
         RenderScene();
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
-        UpdateCameraDirection();
-        UpdateCameraPosition();
-        UpdateObjects();    
+        /*UpdateCameraDirection();*/
+        /*UpdateCameraPosition();*/
+        /*UpdateObjects();    */
+        GameObjects->Update();
 
         RenderScene();
     }
@@ -89,13 +92,17 @@ void Core::Scene::UpdateResources(Core::SceneInfo& info)
 
 void Core::Scene::Init()
 {
-    SetCamera(CAMERA_EDITOR);
-    GetCamera().SetPosition({0.0f, 0.0f, 3.0f});
-    GetCamera().SetDirections();
-
     LoadScene("scene1");
     LoadScene("textures");
-    
+
+    GameObjects = new Keeper::Base;
+
+    GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {0.0f, 0.0f, 3.0f}));
+    EditorCamera = GameObjects->Get<Keeper::Camera>(Keeper::Type::CAMERA);
+
+    GameObjects->Create(ParsedInfo);
+    //GameObjects->Get<Keeper::Sprite>(Keeper::Type::SPRITE)->PrintInfo(); 
+    //GameObjects->ObjectList.push_back(new Object<class T>);
 }
 
 void Core::Scene::Update()
@@ -107,7 +114,7 @@ void Core::Scene::Update()
         Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR);
         info.Attachments = attachments;
         info.BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER;
-        info.RenderQueue = LoadResources(tag, { Core::ObjectInfo() });
+        info.RenderQueue = LoadResources(tag, { Keeper::Info() });
         RQScenes[tag] = info;
  
         UpdateResources(RQScenes[tag]);
@@ -128,7 +135,7 @@ void Core::Scene::Update()
     }
 }
 
-std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag, const std::vector<Core::ObjectInfo>& info)
+std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info)
 {
     std::vector<Gfx::RenderObject> rq;
     
@@ -157,7 +164,7 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
     }
 
     bool is3d = false;
-    for (Core::ObjectInfo obj : info) {
+    for (Keeper::Info obj : info) {
 
         Gfx::RenderObject rqobj;
         rqobj.ID = obj.ID;
@@ -248,7 +255,7 @@ void Core::Scene::LoadScene(const std::string& filename)
     
     Utils::NodeIt node = Parse.GetChild(Parse.GetRootNode(), Utils::LEVEL_ELEMENT_OBJECT);
     while (Parse.IsNodeValid(node)) { 
-        Core::ObjectInfo info;
+        Keeper::Info info;
         idi = Parse.GetElement<int>(node, Utils::LEVEL_ELEMENT_ID, 0);
 
         Utils::NodeIt position = Parse.GetChild(node, Utils::LEVEL_ELEMENT_POSITION);
@@ -272,8 +279,10 @@ void Core::Scene::LoadScene(const std::string& filename)
         }
 
         if (SceneObjects[scenename].empty()) {
+            ParsedInfo.reserve(10);
             SceneObjects[scenename].reserve(10); // random for now, should do according to the parsed level
         }
+        ParsedInfo.emplace_back(info);
         SceneObjects[scenename].emplace_back(info);
 
         node = Parse.GetChild(texture, Utils::LEVEL_ELEMENT_OBJECT);

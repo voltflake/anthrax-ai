@@ -201,9 +201,10 @@ void Gfx::Pipeline::Build()
 	ColorBlendAttachment = ColorBlendAttachmentCreateInfo();
 	DepthStencil = DepthStencilCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
 
-    for (auto& it : Core::Scene::GetInstance()->GetResources()) {
-        for (Core::ObjectInfo& info : it.second) {
-            if (info.Fragment.empty() || info.Vertex.empty()) continue;
+    Core::Scene* scene = Core::Scene::GetInstance();
+    for (auto& it : scene->GetGameObjects()->GetObjects()) {
+        for (Keeper::Objects* info : it.second) {
+            if (info->GetFragmentName().empty() || info->GetVertexName().empty() || info->GetMaterialName().empty()) continue;
 	        
             VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 
@@ -212,14 +213,14 @@ void Gfx::Pipeline::Build()
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
             }
-            std::string frag = "./shaders/" + info.Fragment + ".spv"; 
-            std::string vert = "./shaders/" + info.Vertex + ".spv"; 
+            std::string frag = "./shaders/" + info->GetFragmentName() + ".spv"; 
+            std::string vert = "./shaders/" + info->GetVertexName() + ".spv"; 
             ASSERT(!LoadShader(frag.c_str(), &fragshader), "Error: fragment shader module");
             ASSERT(!LoadShader(vert.c_str(), &vertexshader), "Error: vertex shader module");
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
             Setup(0);
-            CreateMaterial(Pipeline, PipelineLayout, info.Material);
+            CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
         }
     }
 

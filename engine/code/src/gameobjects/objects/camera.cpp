@@ -1,8 +1,8 @@
-#include "anthraxAI/core/camera.h"
+#include "anthraxAI/gameobjects/objects/camera.h"
 #include "anthraxAI/core/windowmanager.h"
 #include <cstdio>
 
-void Core::Camera::SetDirections()
+void Keeper::Camera::SetDirections()
 {
     Direction = glm::normalize(Position - Target);
     WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -12,7 +12,7 @@ void Core::Camera::SetDirections()
     Up = glm::cross(Direction, Right);
 }
 
-void Core::Camera::UpdateMovement()
+void Keeper::Camera::UpdateMovement()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs;
     const float camspeed = 0.1f * delta;	
@@ -30,13 +30,13 @@ void Core::Camera::UpdateMovement()
     }
 }
 
-void Core::Camera::UpdateDirection()
+void Keeper::Camera::UpdateDirection()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs; 
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
     Vector2<int> curmousepos = Core::WindowManager::GetInstance()->GetMouseDelta();
     if (curmousepos.x == 0 && curmousepos.y == 0) return;
-    float rotspeed = delta * 0.0003f;
+    float rotspeed = delta * 0.0001f;
 
     if (mousemove.x || mousemove.y) {
         float yaw = rotspeed * mousemove.x;

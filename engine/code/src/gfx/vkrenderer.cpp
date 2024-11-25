@@ -5,7 +5,7 @@
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/core/windowmanager.h"
-#include "anthraxAI/core/camera.h"
+#include "anthraxAI/gameobjects/objects/camera.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
@@ -262,7 +262,7 @@ void Gfx::Renderer::PrepareStorageBuffer()
     
 }
 
-void Gfx::Renderer::PrepareCameraBuffer(Core::Camera& camera)
+void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 {
 	glm::mat4 view = glm::lookAt(camera.GetPos(), camera.GetPos() + camera.GetFront(), camera.GetUp());
 	glm::mat4 projection = glm::perspective(glm::radians(45.f), float(Gfx::Device::GetInstance()->GetSwapchainSize().x) / float(Gfx::Device::GetInstance()->GetSwapchainSize().y), 0.01f, 100.0f);

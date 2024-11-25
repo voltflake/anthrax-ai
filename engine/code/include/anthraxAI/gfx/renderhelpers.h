@@ -21,9 +21,9 @@ namespace Gfx
 	    Gfx::MeshInfo* Mesh = nullptr;
 	    Gfx::ModelInfo* Model = nullptr;
 	    Gfx::Material* Material = nullptr;
-      Gfx::RenderTarget* Texture = nullptr;
+        Gfx::RenderTarget* Texture = nullptr;
 
-      uint32_t BindlessOffset = 0;    
+        uint32_t BindlessOffset = 0;
 	    Vector3<float> Position;
 
         bool VertexBase = false;

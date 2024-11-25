@@ -21,6 +21,7 @@ namespace Gfx
             void CleanResources();
             
             void CreateTextures();
+            bool CreateTextureFromInfo(const std::string& texturename);
             RenderTarget CreateTexture(const std::string& path);
             void CreateSampler(RenderTarget& rt);
 
@@ -29,7 +30,7 @@ namespace Gfx
             RenderTarget* GetMainRT() { return MainRT; }
             RenderTarget* GetDepthRT() { return DepthRT; }
 
-            void PrepareCameraBuffer(Core::Camera& camera);
+            void PrepareCameraBuffer(Keeper::Camera& camera);
             void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);

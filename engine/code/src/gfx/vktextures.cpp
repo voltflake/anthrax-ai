@@ -1,27 +1,48 @@
+#include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/sprite.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include "anthraxAI/gfx/vkrendertarget.h"
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
+{
+    if (texturename.empty()) {
+        return false;
+    }
+    std::string path = "./textures/";
+    std::string texture = texturename;
+
+    auto it = Textures.find(texture);
+    if (it != Textures.end()) {
+        return false;
+    }
+    Textures[texture] = CreateTexture(path + texture);
+    CreateSampler(Textures[texture]);
+
+    return true;
+}
+
 void Gfx::Renderer::CreateTextures()
 {
-    std::string path = "./textures/";
-
-    for (auto& it : Core::Scene::GetInstance()->GetResources()) {
-        for (Core::ObjectInfo& info : it.second) {
-            std::string texture = info.Texture;
-
-            auto it = Textures.find(texture);
-            if (it != Textures.end()) {
-                continue;
+    
+    Core::Scene* scene = Core::Scene::GetInstance();
+    //for (auto& it : Core::Scene::GetInstance()->GetResources()) {
+        for (auto& it : scene->GetGameObjects()->GetObjects()) {
+            for (Keeper::Objects* info : it.second) {
+                if (info->GetTextureName().empty()) {
+                    continue;
+                }
+                if (!CreateTextureFromInfo(info->GetTextureName())) {
+                    continue;
+                }
             }
-            Textures[texture] = CreateTexture(path + texture);
-            CreateSampler(Textures[texture]);
         }
-    }
+        //}
 
-	path = "./textures/dummy.png";
+    std::string path = "./textures/dummy.png";
 	Textures["dummy"] = CreateTexture(path);
 	CreateSampler(Textures["dummy"]);
 }

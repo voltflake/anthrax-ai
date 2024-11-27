@@ -13,8 +13,9 @@
 
 void Core::Scene::RenderScene()
 {
-    Gfx::Renderer::GetInstance()->StartFrame(RQScenes[CurrentScene].Attachments);
+    Gfx::Renderer::GetInstance()->BeginFrame(RQScenes[CurrentScene].Attachments);
 
+    Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
     if (RQScenes[CurrentScene].HasCameraBuffer) {
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
     }
@@ -23,7 +24,6 @@ void Core::Scene::RenderScene()
     }
 
     uint32_t range;
-    Gfx::Renderer::GetInstance()->NullTmpBindings();
     for (Gfx::RenderObject& obj :  RQScenes[CurrentScene].RenderQueue) {
         if (!obj.IsVisible) continue;
 
@@ -45,7 +45,44 @@ void Core::Scene::RenderScene()
         }
     }
 
+    Gfx::Renderer::GetInstance()->EndRender();
+
+    Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
+
+    if (RQScenes["gizmo"].HasCameraBuffer) {
+        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
+    }
+    if (RQScenes["gizmo"].HasStorageBuffer) {
+        Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
+    }
+    
+    
+    //Gfx::Renderer::GetInstance()->NullTmpBindings();
+    for (Gfx::RenderObject& obj :  RQScenes["gizmo"].RenderQueue) {
+        if (!obj.IsVisible) continue;
+
+        if (RQScenes["gizmo"].BindlessType == Gfx::BINDLESS_DATA_TEXTURE) {
+            range = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.TextureBind, }));
+        }
+        else if (RQScenes["gizmo"].BindlessType == Gfx::BINDLESS_DATA_CAM_BUFFER) { 
+            range = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::CamBufferParams>(Gfx::CamBufferParams({ obj.BufferBind }));
+        }
+        if (RQScenes["gizmo"].BindlessType != Gfx::BINDLESS_DATA_NONE) {
+            Gfx::DescriptorsBase::GetInstance()->Build();
+            obj.BindlessOffset = range;
+        }
+        if (obj.VertexBase) {
+            Gfx::Renderer::GetInstance()->DrawSimple(obj);
+        }
+        else {
+            Gfx::Renderer::GetInstance()->Draw(obj);
+        }
+    }
+    Gfx::Renderer::GetInstance()->RenderUI();
+    Gfx::Renderer::GetInstance()->EndRender();
+
     Gfx::Renderer::GetInstance()->EndFrame();
+
 }
 
 void Core::Scene::Loop()
@@ -55,8 +92,6 @@ void Core::Scene::Loop()
         RenderScene();
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
-        /*UpdateCameraDirection();*/
-        /*UpdateCameraPosition();*/
         /*UpdateObjects();    */
         GameObjects->Update();
 
@@ -131,6 +166,18 @@ void Core::Scene::Update()
         info.RenderQueue = LoadResources(tag, it.second);
         RQScenes[tag] = info;
 
+        UpdateResources(RQScenes[tag]);
+    }
+    {
+        Core::SceneInfo info;
+        std::string tag = "gizmo";
+
+        Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);
+        info.Attachments = attachments;
+        info.BindlessType = Gfx::BINDLESS_DATA_TEXTURE;
+        info.RenderQueue = LoadResources(tag, { Keeper::Info() });
+        RQScenes[tag] = info;
+ 
         UpdateResources(RQScenes[tag]);
     }
 }

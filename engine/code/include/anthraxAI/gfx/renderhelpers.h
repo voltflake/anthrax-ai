@@ -81,6 +81,8 @@ namespace Gfx
         RENDER_ATTACHMENT_NONE  = 0,
         RENDER_ATTACHMENT_COLOR = 1 << 0,
         RENDER_ATTACHMENT_DEPTH = 1 << 1,
+        RENDER_ATTACHMENT_LOAD  = 1 << 2,
+        RENDER_ATTACHMENT_CLEAR = 1 << 3,
         RENDER_ATTACHMENT_SIZE
     };
 

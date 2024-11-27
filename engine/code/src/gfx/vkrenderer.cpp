@@ -94,7 +94,7 @@ void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 	}
 }
 
-VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag)
+VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag, AttachmentFlags loadop)
 {
 	VkClearValue clearvalue;
 	if (flag == Gfx::RENDER_ATTACHMENT_COLOR) {
@@ -104,7 +104,7 @@ VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags f
         AttachmentInfos[flag].imageView = MainRT->GetImageView();
         AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
-        AttachmentInfos[flag].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        AttachmentInfos[flag].loadOp = ((loadop & Gfx::RENDER_ATTACHMENT_LOAD) == Gfx::RENDER_ATTACHMENT_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
         AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         AttachmentInfos[flag].clearValue = clearvalue;
 
@@ -137,8 +137,9 @@ void Gfx::Renderer::NullTmpBindings()
 	TmpBindMesh = nullptr;
 }
 
-void Gfx::Renderer::StartFrame(AttachmentFlags attachmentflags)
+void Gfx::Renderer::BeginFrame(AttachmentFlags attachmentflags)
 {
+    Gfx::Renderer::GetInstance()->NullTmpBindings();
 	ImGui::Render();
 
 	SwapchainIndex = SyncFrame();
@@ -146,13 +147,40 @@ void Gfx::Renderer::StartFrame(AttachmentFlags attachmentflags)
     Cmd.SetCmd(GetFrame().MainCommandBuffer);
 	Cmd.BeginCmd(Cmd.InfoCmd(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
 
-	std::vector<RenderingAttachmentInfo> attachmentinfo;
+	/*std::vector<RenderingAttachmentInfo> attachmentinfo;*/
+	/*attachmentinfo.reserve(Gfx::RENDER_ATTACHMENT_SIZE);*/
+	/*if ((attachmentflags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {*/
+	/*	Gfx::RenderingAttachmentInfo info;*/
+	/*	info.IsDepth = false;*/
+	/*	info.Image = MainRT->GetImage();*/
+	/*	info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR);*/
+	/*	attachmentinfo.push_back(info);*/
+	/*}*/
+	/*if ((attachmentflags & Gfx::RENDER_ATTACHMENT_DEPTH) == Gfx::RENDER_ATTACHMENT_DEPTH) {*/
+	/*	Gfx::RenderingAttachmentInfo info;*/
+	/*	info.IsDepth = true;*/
+	/*	info.Image = DepthRT->GetImage();*/
+	/*	info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_DEPTH);*/
+	/*	attachmentinfo.push_back(info);*/
+	/*}*/
+	/**/
+	/*const VkRenderingInfo renderinfo = Cmd.GetRenderingInfo(attachmentinfo, Core::WindowManager::GetInstance()->GetScreenResolution());    */
+	/*BeginRendering(Cmd.GetCmd(), &renderinfo);*/
+}
+
+void Gfx::Renderer::EndRender()
+{
+    EndRendering(Cmd.GetCmd());
+}
+void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags)
+{
+   	std::vector<RenderingAttachmentInfo> attachmentinfo;
 	attachmentinfo.reserve(Gfx::RENDER_ATTACHMENT_SIZE);
 	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {
 		Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = false;
 		info.Image = MainRT->GetImage();
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR);
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR, attachmentflags);
 		attachmentinfo.push_back(info);
 	}
 	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_DEPTH) == Gfx::RENDER_ATTACHMENT_DEPTH) {
@@ -167,11 +195,16 @@ void Gfx::Renderer::StartFrame(AttachmentFlags attachmentflags)
 	BeginRendering(Cmd.GetCmd(), &renderinfo);
 }
 
+void Gfx::Renderer::RenderUI()
+{
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Cmd.GetCmd());
+}
+
 void Gfx::Renderer::EndFrame()
 {
- 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Cmd.GetCmd());
+ 	/*ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Cmd.GetCmd());*/
 
-    EndRendering(Cmd.GetCmd());
+   // EndRendering(Cmd.GetCmd());
 	
 	Cmd.CopyImage(	GetMainRT()->GetImage(),
 					GetMainRT()->GetSize(),

@@ -34,8 +34,10 @@ namespace Gfx
             void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
+            
+            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag, AttachmentFlags loadop = Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR);
 
-            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag);
+            void RenderUI();
 
             int GetFrameInd() { return FrameIndex; }
             FrameData& GetFrame() { return Frames[FrameIndex]; }
@@ -43,8 +45,10 @@ namespace Gfx
             uint32_t SyncFrame();
             void SetFrameInd() { FrameIndex = (FrameIndex + 1) % MAX_FRAMES; }
 
-            void StartFrame(AttachmentFlags attachmentflags);
+            void BeginFrame(AttachmentFlags attachmentflags);
             void EndFrame();
+            void EndRender();
+            void StartRender(AttachmentFlags attachmentflags);
 
             void Draw(Gfx::RenderObject& object);
             void DrawMeshes(Gfx::RenderObject& object);

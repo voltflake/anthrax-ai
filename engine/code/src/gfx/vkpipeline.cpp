@@ -201,34 +201,34 @@ void Gfx::Pipeline::Build()
 	ColorBlendAttachment = ColorBlendAttachmentCreateInfo();
 	DepthStencil = DepthStencilCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
 
-    Core::Scene* scene = Core::Scene::GetInstance();
-    for (auto& it : scene->GetGameObjects()->GetObjects()) {
-        for (Keeper::Objects* info : it.second) {
-            if (info->GetFragmentName().empty() || info->GetVertexName().empty() || info->GetMaterialName().empty()) continue;
-	        
-            VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-
-            if (!ShaderStages.empty()) {
-                ShaderStages.clear();
-                vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-                vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-            }
-            std::string frag = "./shaders/" + info->GetFragmentName() + ".spv"; 
-            std::string vert = "./shaders/" + info->GetVertexName() + ".spv"; 
-            ASSERT(!LoadShader(frag.c_str(), &fragshader), "Error: fragment shader module");
-            ASSERT(!LoadShader(vert.c_str(), &vertexshader), "Error: vertex shader module");
-            ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-            ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-            Setup(0);
-            CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
-        }
-    }
+    /*Core::Scene* scene = Core::Scene::GetInstance();*/
+    /*for (auto& it : scene->GetGameObjects()->GetObjects()) {*/
+    /*    for (Keeper::Objects* info : it.second) {*/
+    /*        if (info->GetFragmentName().empty() || info->GetVertexName().empty() || info->GetMaterialName().empty()) continue;*/
+    /**/
+    /*        VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");*/
+    /**/
+    /*        if (!ShaderStages.empty()) {*/
+    /*            ShaderStages.clear();*/
+    /*            vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);*/
+    /*            vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);*/
+    /*        }*/
+    /*        std::string frag = "./shaders/" + info->GetFragmentName() + ".spv"; */
+    /*        std::string vert = "./shaders/" + info->GetVertexName() + ".spv"; */
+    /*        ASSERT(!LoadShader(frag.c_str(), &fragshader), "Error: fragment shader module");*/
+    /*        ASSERT(!LoadShader(vert.c_str(), &vertexshader), "Error: vertex shader module");*/
+    /*        ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));*/
+    /*        ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));*/
+    /*        Setup(0);*/
+    /*        CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());*/
+    /*    }*/
+    /*}*/
 
 
 // intro
-	ShaderStages.clear();
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
+	/*ShaderStages.clear();*/
+	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);*/
+	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);*/
 	ASSERT(!LoadShader("./shaders/intro.frag.spv", &fragshader), "Error: fragment shader module");
 	ASSERT(!LoadShader("./shaders/sprite.vert.spv", &vertexshader), "Error: vertex shader module");
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
@@ -252,6 +252,20 @@ void Gfx::Pipeline::Build()
 	
 	Setup(0);
 	CreateMaterial(Pipeline, PipelineLayout, "grid");
+
+//gizmo
+    ShaderStages.clear();
+	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
+	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
+	ASSERT(!LoadShader("./shaders/model.frag.spv", &fragshader), "Error: fragment shader module");
+	ASSERT(!LoadShader("./shaders/model.vert.spv", &vertexshader), "Error: vertex shader module");
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
+    
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	
+	Setup(0);
+	CreateMaterial(Pipeline, PipelineLayout, "gizmo");
 
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);

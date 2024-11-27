@@ -14,7 +14,8 @@ enum EngineState {
     ENGINE_STATE_INIT 	= 1 << 0,	/* 0000 0001 */
 	ENGINE_STATE_EDITOR = 1 << 1, 	/* 0000 0010 */
 	ENGINE_STATE_PLAY 	= 1 << 2,	/* 0000 0100 */
-	ENGINE_STATE_EXIT 	= 1 << 3,	/* 0000 1000 */
+	ENGINE_STATE_RESOURCE_RELOAD  = 1 << 3,	/* 0000 1000 */
+	ENGINE_STATE_EXIT 	= 1 << 4,	/* 0001 0000 */
 };
 
 class Engine : public Utils::Singleton<Engine>

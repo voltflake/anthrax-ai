@@ -1,5 +1,6 @@
 #pragma once
 
+#include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
@@ -15,7 +16,7 @@
 #include <atomic>
 #include <string>
 #include <unordered_map>
-
+#include <filesystem>
 namespace Core
 {
     struct SceneInfo {
@@ -44,14 +45,17 @@ namespace Core
             std::vector<Gfx::RenderObject> LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info);
             void RenderScene();
 
-            void SetCurrentScene(const std::string& str) { CurrentScene = str; }
+            void SetCurrentScene(const std::string& str) { CurrentScene = str; Engine::GetInstance()->SetState(ENGINE_STATE_RESOURCE_RELOAD); }
             RQSceneMap& GetScenes() { return RQScenes; }
             SceneObjectMap& GetResources() { return SceneObjects; }
 
             //void SetCamera(CameraInfo info) { CurrentCamera = info; }
             Keeper::Camera& GetCamera() { return *EditorCamera; }
             Keeper::Base* GetGameObjects() const { return GameObjects; }
-            void UpdateObjects();        
+            void UpdateObjects();
+            void ReloadResources();
+            void ParseSceneNames();
+            const std::vector<std::string>& GetSceneNames() const { return SceneNames; }  
 
         private:
             void LoadScene(const std::string& filename);
@@ -62,6 +66,8 @@ namespace Core
             RQSceneMap RQScenes;
             SceneObjectMap SceneObjects;
             std::vector<Keeper::Info> ParsedInfo;
+
+            std::vector<std::string> SceneNames;
             
             Keeper::Camera* EditorCamera;
 

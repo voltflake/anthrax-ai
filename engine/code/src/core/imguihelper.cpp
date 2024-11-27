@@ -148,9 +148,9 @@ void Core::ImGuiHelper::InitUIElements()
         UI::Element tab(UI::TAB, tablabel);
 
         std::vector<const char*> scenes;
-        scenes.reserve(Core::Scene::GetInstance()->GetScenes().size());
-        for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
-            scenes.emplace_back(it.first.c_str());
+        scenes.reserve(Core::Scene::GetInstance()->GetSceneNames().size());
+        for (const std::string& it : Core::Scene::GetInstance()->GetSceneNames()) {
+            scenes.emplace_back(it.c_str());
         }
 
         Add(tab, UI::Element(UI::COMBO, "Scenes", scenes, [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));

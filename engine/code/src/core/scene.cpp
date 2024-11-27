@@ -1,5 +1,4 @@
 #include "anthraxAI/core/scene.h"
-#include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gfx/renderhelpers.h"
@@ -56,8 +55,6 @@ void Core::Scene::RenderScene()
         Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
     }
     
-    
-    //Gfx::Renderer::GetInstance()->NullTmpBindings();
     for (Gfx::RenderObject& obj :  RQScenes["gizmo"].RenderQueue) {
         if (!obj.IsVisible) continue;
 
@@ -86,7 +83,10 @@ void Core::Scene::RenderScene()
 }
 
 void Core::Scene::Loop()
-{
+{   
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
+        ReloadResources();
+    }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
         RenderScene();
@@ -127,15 +127,16 @@ void Core::Scene::UpdateResources(Core::SceneInfo& info)
 
 void Core::Scene::Init()
 {
-    LoadScene("scene1");
-    LoadScene("textures");
+    //LoadScene("scene1");
+    //LoadScene("textures");
+    ParseSceneNames();  
 
     GameObjects = new Keeper::Base;
 
     GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {0.0f, 0.0f, 3.0f}));
     EditorCamera = GameObjects->Get<Keeper::Camera>(Keeper::Type::CAMERA);
 
-    GameObjects->Create(ParsedInfo);
+    //GameObjects->Create(ParsedInfo);
     //GameObjects->Get<Keeper::Sprite>(Keeper::Type::SPRITE)->PrintInfo(); 
     //GameObjects->ObjectList.push_back(new Object<class T>);
 }
@@ -156,18 +157,18 @@ void Core::Scene::Update()
     }
 
 
-    for (auto& it : SceneObjects) {
-        Core::SceneInfo info;
-        std::string tag = it.first;
-
-        Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);
-        info.Attachments = attachments;
-        info.BindlessType = Gfx::BINDLESS_DATA_TEXTURE;
-        info.RenderQueue = LoadResources(tag, it.second);
-        RQScenes[tag] = info;
-
-        UpdateResources(RQScenes[tag]);
-    }
+    /*for (auto& it : SceneObjects) {*/
+    /*    Core::SceneInfo info;*/
+    /*    std::string tag = it.first;*/
+    /**/
+    /*    Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);*/
+    /*    info.Attachments = attachments;*/
+    /*    info.BindlessType = Gfx::BINDLESS_DATA_TEXTURE;*/
+    /*    info.RenderQueue = LoadResources(tag, it.second);*/
+    /*    RQScenes[tag] = info;*/
+    /**/
+    /*    UpdateResources(RQScenes[tag]);*/
+    /*}*/
     {
         Core::SceneInfo info;
         std::string tag = "gizmo";
@@ -203,7 +204,7 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
         rqobj.VertexBase = false;
         rqobj.ID = 1000;
         rqobj.Position = {0.0f};
-        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("models");
+        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("gizmo");
         rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture("dummy");
         rqobj.Model = Gfx::Model::GetInstance()->GetModel("axis.obj");
         rq.push_back(rqobj);
@@ -287,6 +288,18 @@ void Core::Scene::UpdateObjects()
         //gizmo_it->Position.y += 0.1;
     }
 
+}
+
+void Core::Scene::ParseSceneNames()
+{
+    std::string path = "scenes/";
+    
+    SceneNames.reserve(20);
+    for (const auto& name : std::filesystem::directory_iterator(path)) {
+        std::string str = name.path();
+        std::string basename = str.substr(str.find_last_of("/\\") + 1);
+        SceneNames.push_back(basename.c_str());
+    }
 }
 
 void Core::Scene::LoadScene(const std::string& filename)

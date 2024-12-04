@@ -27,6 +27,7 @@ class Engine : public Utils::Singleton<Engine>
 
         int GetState() const { return State; }
         void SetState(int state) { State |= state; }
+        void ClearState(int state) {  Utils::ClearBit(&State, state); }
         void ToogleEditorMode() { Utils::ToogleBit(&State, ENGINE_STATE_EDITOR);  Utils::ToogleBit(&State, ENGINE_STATE_PLAY);}
 
         long long GetTime() const;

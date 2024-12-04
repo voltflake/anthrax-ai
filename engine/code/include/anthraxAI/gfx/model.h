@@ -25,22 +25,15 @@ namespace Gfx
     {
         public:
             Model() {}
-            ~Model() {
-                for (auto& model : Models) {
-                    for (auto& mesh : model.second.Meshes) {
-                        delete mesh;
-                    }
-                }
-            }
             void LoadModels();
             void LoadModel(const std::string& path);
             ModelInfo* GetModel(const std::string& path);
 
+            void CleanAll();
+
         private:
-            MeshInfo ProcessMesh(const aiScene *scene, aiMesh* aimesh);
             void ProcessNode(const std::string& path, aiNode *node, const aiScene *scene);
             
             ModelsMap Models;
-
     };
 }

@@ -45,12 +45,16 @@ namespace Gfx
         };
 
         BufferHelper::Buffer IndexBuffer;
+
+        void Clean();
     };
     typedef std::unordered_map<std::string, MeshInfo> MeshMap;
 
     class Mesh : public Utils::Singleton<Mesh>
     {
         public:
+            void CleanAll();
+
             void CreateMeshes();
             void CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo);
 

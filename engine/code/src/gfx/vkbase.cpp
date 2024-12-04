@@ -12,6 +12,7 @@ void Gfx::Vulkan::Init()
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
 	Gfx::DescriptorsBase::GetInstance()->Init();
+	Gfx::DescriptorsBase::GetInstance()->AllocateBuffers();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
@@ -36,10 +37,14 @@ void Gfx::Vulkan::CleanUp()
         vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &frame.RenderFence, true, 1000000000);
     }
 
-	Gfx::DescriptorsBase::GetInstance()->CleanUp();
+	Gfx::Mesh::GetInstance()->CleanAll();
+	Gfx::Model::GetInstance()->CleanAll();
 
     Core::PipelineDeletor::GetInstance()->CleanAll();
 	Gfx::Renderer::GetInstance()->CleanResources();
+	Gfx::DescriptorsBase::GetInstance()->CleanAll();
+	Gfx::DescriptorsBase::GetInstance()->CleanBindless();
+
 	Gfx::Device::GetInstance()->CleanUpSwapchain();
 	
 	Core::Deletor::GetInstance()->CleanAll();

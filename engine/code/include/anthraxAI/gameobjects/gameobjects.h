@@ -45,6 +45,8 @@ namespace Keeper {
             virtual std::string GetFragmentName() const { return ""; }
             virtual std::string GetVertexName() const { return ""; }
             virtual std::string GetMaterialName() const { return ""; }
+            virtual Vector3<float> GetPosition() const { return {0.0f, 0.0f, 0.0f}; }
+
             virtual Type GetType() { return SIZE; }
             virtual void Update() {}
             virtual void PrintInfo() {}
@@ -56,6 +58,7 @@ namespace Keeper {
     {
         public:
             ~Base();
+            void CleanIfNot(Keeper::Type type);
     
             template<typename T>
             void Create(T* type) { ASSERT(type->GetType() == SIZE, "Keeper::Base::Create(): Error: child has no GetType() defined"); ObjectsList[type->GetType()].push_back(type); }

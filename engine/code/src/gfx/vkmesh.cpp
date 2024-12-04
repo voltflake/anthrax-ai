@@ -26,12 +26,27 @@ void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
 		BufferHelper::CreateBuffer(mesh.IndexBuffer, flags2, sizeof(mesh.AIindices[0]) * mesh.AIindices.size(), mesh.AIindices.data());
 	}
 
-	Core::Deletor::GetInstance()->Push([=, this]() {
-       vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.Buffer, nullptr);
-       vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.DeviceMemory, nullptr);
-       vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.Buffer, nullptr);
-       vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.DeviceMemory, nullptr);
-    });
+    VkDebugUtilsObjectNameInfoEXT info;
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(mesh.IndexBuffer.DeviceMemory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
+	info.pObjectName = std::string("mesh index buffer" + mesh.Path).c_str();
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
+
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(mesh.VertexBuffer.DeviceMemory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
+	info.pObjectName = std::string("mesh vertex buffer" + mesh.Path).c_str();
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
+
+	// Core::Deletor::GetInstance()->Push([=, this]() {
+    //    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.Buffer, nullptr);
+    //    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.DeviceMemory, nullptr);
+    //    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.Buffer, nullptr);
+    //    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.DeviceMemory, nullptr);
+    // });
 }
 
 void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
@@ -77,6 +92,23 @@ void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
     UpdateMesh(*meshinfo);
 }
 
+void Gfx::MeshInfo::Clean()
+{
+    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), VertexBuffer.Buffer, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), VertexBuffer.DeviceMemory, nullptr);
+    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), IndexBuffer.Buffer, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), IndexBuffer.DeviceMemory, nullptr);
+}
+
+void Gfx::Mesh::CleanAll()
+{
+    for (auto& it : Meshes) {
+        Gfx::MeshInfo& mesh = it.second;
+        mesh.Clean();
+    }
+    Meshes.clear();
+}
+
 void Gfx::Mesh::CreateMeshes()
 {
     Gfx::TexturesMap texturemap = Gfx::Renderer::GetInstance()->GetTextureMap();
@@ -84,6 +116,7 @@ void Gfx::Mesh::CreateMeshes()
     Gfx::MeshInfo mesh;
     mesh.Vertices.resize(4);
     for (auto it : texturemap) {
+        if (it.first == "dummy") continue;
         mesh.Path = it.first;
         mesh.Vertices[0].position = {0, 0, 0.0f};
         mesh.Vertices[1].position = {0, 0 + it.second.GetSize().y, 0.0f};

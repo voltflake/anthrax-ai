@@ -23,6 +23,20 @@ namespace Core
             }
     };
 
-    class PipelineDeletor : public Deletor
-    {};
+    class PipelineDeletor :  public Utils::Singleton<PipelineDeletor>
+    {
+        std::deque<std::function<void()>> Deletors;
+
+        public:
+            void Push(std::function<void()>&& function) {
+                Deletors.push_back(function);
+            }
+
+            void CleanAll() {
+                for (auto it = Deletors.rbegin(); it != Deletors.rend(); it++) {
+                    (*it)();
+                }
+                Deletors.clear();
+            }
+    };
 }

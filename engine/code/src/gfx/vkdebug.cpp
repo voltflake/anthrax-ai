@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkdebug.h"
+#include "anthraxAI/gfx/vkdevice.h"
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL Gfx::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -29,6 +30,11 @@ void Gfx::VkDebug::Setup(VkInstance instance, bool validationon)
 	VK_ASSERT(CreateDebugUtilsMessengerEXT(instance, &MessengerCreateInfo, nullptr, &Messenger), "failed to set up debug messenger!");
 }
 
+void Gfx::VkDebug::SetName(VkDebugUtilsObjectNameInfoEXT info)
+{
+    SetDebugUtilsObjectNameEXT(Gfx::Device::GetInstance()->GetDevice(), &info);   
+}
+
 void Gfx::VkDebug::Destroy(VkInstance instance, const VkAllocationCallbacks* pAllocator)
 {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -39,6 +45,7 @@ void Gfx::VkDebug::Destroy(VkInstance instance, const VkAllocationCallbacks* pAl
 
 VkResult Gfx::VkDebug::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
 {
+    SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);

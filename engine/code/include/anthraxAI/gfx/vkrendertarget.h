@@ -28,6 +28,8 @@ namespace Gfx
             VkDeviceMemory GetDeviceMemory() { return Memory; }
             Vector2<int> GetSize() const { return Dimensions; }
 
+            void Clean();
+
         private:
             VkImage Image;
             VkImageView ImageView;

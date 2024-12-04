@@ -56,6 +56,14 @@ void Gfx::RenderTarget::AllocateRTMemory()
 
 	VK_ASSERT(vkAllocateMemory(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, nullptr, &Memory),"failed to allocate image memory!");
 	vkBindImageMemory(Gfx::Device::GetInstance()->GetDevice(), Image, Memory, 0);
+
+    VkDebugUtilsObjectNameInfoEXT info;
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(Memory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;
+	info.pObjectName = "rt buffer";
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 }
 
 void Gfx::RenderTarget::CreateRenderTarget()
@@ -135,4 +143,12 @@ void Gfx::RenderTarget::Copy(VkCommandBuffer cmd, VkBuffer buffer, uint32_t widt
     };
 
     vkCmdCopyBufferToImage(cmd, buffer, Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+}
+
+void Gfx::RenderTarget::Clean() 
+{
+    vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), Image, nullptr);
+    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), Memory, nullptr);
+    vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), ImageView, nullptr);
+    vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), Sampler, nullptr);
 }

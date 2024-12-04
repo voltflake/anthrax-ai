@@ -13,6 +13,27 @@ Keeper::Base::~Base()
   ObjectsList.clear();
 }
 
+void Keeper::Base::CleanIfNot(Keeper::Type type)
+{
+  for (auto& it : ObjectsList) {
+    if (it.first != type) {
+      for (auto* obj : it.second) {
+      if (obj) {
+        delete obj;
+      }
+    }
+    it.second.clear();
+    }
+    // bool cleanvec 
+    // for (auto* obj : it.second) {
+    //   if (obj && obj->GetType() != type) {
+    //     delete obj;
+    //   }
+    // }
+    // it.second.clear(); 
+  }
+}
+
 void Keeper::Base::Update()
 {
     for (auto& it : ObjectsList) {
@@ -37,6 +58,4 @@ void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
 Keeper::Objects::Objects(const Keeper::Info& info)
      
 {
-
-   std::cout << "npc 111 created\n\n";
 }

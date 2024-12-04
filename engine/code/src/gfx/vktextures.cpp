@@ -25,22 +25,28 @@ bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
     return true;
 }
 
+void Gfx::Renderer::CleanTextures()
+{
+    for (auto& it : Textures) {
+        // Gfx::RenderTarget& rt = it.second;
+        it.second.Clean();
+    }
+    Textures.clear();
+}
+
 void Gfx::Renderer::CreateTextures()
 {
-    
     Core::Scene* scene = Core::Scene::GetInstance();
-    //for (auto& it : Core::Scene::GetInstance()->GetResources()) {
-        for (auto& it : scene->GetGameObjects()->GetObjects()) {
-            for (Keeper::Objects* info : it.second) {
-                if (info->GetTextureName().empty()) {
-                    continue;
-                }
-                if (!CreateTextureFromInfo(info->GetTextureName())) {
-                    continue;
-                }
+    for (auto& it : scene->GetGameObjects()->GetObjects()) {
+        for (Keeper::Objects* info : it.second) {
+            if (info->GetTextureName().empty()) {
+                continue;
+            }
+            if (!CreateTextureFromInfo(info->GetTextureName())) {
+                continue;
             }
         }
-        //}
+    }
 
     std::string path = "./textures/dummy.png";
 	Textures["dummy"] = CreateTexture(path);

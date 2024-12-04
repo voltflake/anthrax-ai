@@ -34,8 +34,11 @@ namespace Gfx
     {
         public:
             void Init();
-            void CleanUp();
+            void CleanAll();
+            void CleanBindless();
 
+            void AllocateBuffers();
+            
             VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
             VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
             BufferHelper::Buffer& GetCameraUBO() { return CameraBuffer; }

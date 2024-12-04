@@ -15,6 +15,8 @@ namespace Gfx
     class Renderer : public Utils::Singleton<Renderer> 
     {
         public:
+            void CleanTextures();
+
             void CreateCommands();
             void CreateRenderTargets();
 
@@ -45,7 +47,7 @@ namespace Gfx
             uint32_t SyncFrame();
             void SetFrameInd() { FrameIndex = (FrameIndex + 1) % MAX_FRAMES; }
 
-            void BeginFrame(AttachmentFlags attachmentflags);
+            void BeginFrame();
             void EndFrame();
             void EndRender();
             void StartRender(AttachmentFlags attachmentflags);

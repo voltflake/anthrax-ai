@@ -19,6 +19,7 @@ namespace Keeper
             void Update() override { } 
             void PrintInfo() override;
 
+            Vector3<float> GetPosition() const override { return Position; }
             std::string GetTextureName() const override { return TextureName; }
             std::string GetMaterialName() const override { return MaterialName; }
             std::string GetFragmentName() const override { return Fragment; }

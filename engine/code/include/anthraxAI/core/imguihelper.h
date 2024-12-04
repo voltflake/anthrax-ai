@@ -111,6 +111,7 @@ namespace Core
             void Add(const std::string& scene, const UI::Element& element) { UIElements[scene].emplace_back(element); }
     
             void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
+            void CleanAll();
         private:
             void Combo(UI::Element element) const;
             void ProcessUI(const UI::Element& element);

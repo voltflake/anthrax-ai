@@ -1,5 +1,7 @@
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/core/scene.h"
+#include "anthraxAI/gfx/vkbase.h"
+
 void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScene *scene)
 {
     Models[path].MeshBase.resize(scene->mNumMeshes);
@@ -12,7 +14,20 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
 
         Gfx::MeshInfo* meshinfo = new Gfx::MeshInfo;
         Gfx::Mesh::GetInstance()->CreateMesh(aimesh, meshinfo);
+   VkDebugUtilsObjectNameInfoEXT info;
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(meshinfo->IndexBuffer.DeviceMemory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
+	info.pObjectName = std::string("moedl index buffer" + meshinfo->Path).c_str();
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(meshinfo->VertexBuffer.DeviceMemory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
+	info.pObjectName = std::string("moedl vertex buffer" + meshinfo->Path).c_str();
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
         Models[path].Meshes.push_back(meshinfo);
          
         // printf("-----!!!!------\n\n mesh \n\n ----!!!!--");
@@ -35,6 +50,18 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
     }
 }
 
+void Gfx::Model::CleanAll()
+{
+    for (auto& model : Models) {
+        for (auto& mesh : model.second.Meshes) {
+            mesh->Clean();
+            delete mesh;
+        }
+        model.second.Meshes.clear();
+    }
+    Models.clear();
+}
+
 void Gfx::Model::LoadModels()
 {
     std::string path = "./models/";
@@ -42,7 +69,6 @@ void Gfx::Model::LoadModels()
     for (auto& it : scene->GetGameObjects()->GetObjects()) {
         for (Keeper::Objects* info : it.second) {
             if (info->GetModelName().empty()) continue;
-
             LoadModel(path + info->GetModelName());
         }
     }
@@ -73,8 +99,4 @@ Gfx::ModelInfo* Gfx::Model::GetModel(const std::string& path)
 	}
 }
 
-Gfx::MeshInfo Gfx::Model::ProcessMesh(const aiScene *scene, aiMesh* aimesh)
-{
-
-}
 

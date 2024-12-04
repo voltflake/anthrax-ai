@@ -22,6 +22,9 @@ namespace Gfx
 
             VkInstance GetVkInstance() const { return Instance; }
             bool IsValidationLayersOn() const { return ValidationLayersOn; }
+
+            void SetDebugName(VkDebugUtilsObjectNameInfoEXT info) { Debug.SetName(info); }
+
         private:
             VkDebug Debug;
             VkInstance Instance;

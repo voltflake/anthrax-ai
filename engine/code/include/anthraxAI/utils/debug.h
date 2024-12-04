@@ -6,7 +6,7 @@ namespace Utils
  {
         float FPS;
         float DeltaMs;
-        bool Grid = false;
+        bool Grid = true;
     };
 
 

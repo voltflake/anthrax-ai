@@ -12,7 +12,7 @@ namespace Gfx
 
     enum BindlessDataType {
         BINDLESS_DATA_NONE = 0,
-        BINDLESS_DATA_TEXTURE,
+        BINDLESS_DATA_CAM_STORAGE_SAMPLER,
         BINDLESS_DATA_CAM_BUFFER,
         BINDLESS_DATA_SIZE
     };

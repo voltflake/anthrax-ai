@@ -12,8 +12,11 @@ namespace Keeper
             
             ~Npc() {}
             
-            Type GetType() override { return ObjectType; }
-            void Update() override { }
+            Type GetType() const override { return ObjectType; }
+            void SetSelected(bool id) override { Selected = id; }
+            void SetVisible(bool vis) override { }
+            bool IsVisible() const override{ return Visible; }
+            void Update() override;
             void PrintInfo() override;
 
             Vector3<float> GetPosition() const override { return Position; }
@@ -22,6 +25,7 @@ namespace Keeper
             std::string GetMaterialName() const override { return MaterialName; }
             std::string GetFragmentName() const override { return Fragment; }
             std::string GetVertexName() const override { return Vertex; }
+
         private:
             Keeper::Type ObjectType = Type::NPC;
             
@@ -32,7 +36,8 @@ namespace Keeper
             std::string TextureName;
             std::string MaterialName;
             std::string ModelName;
-            bool IsVisible = false;
+            bool Visible = true;
+            bool Selected = false;
   };
 }
 

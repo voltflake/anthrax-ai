@@ -6,11 +6,13 @@
 #include "anthraxAI/gfx/vkmesh.h"
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/renderhelpers.h"
+#include "anthraxAI/utils/parser.h"
+
+#include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/camera.h"
 #include "anthraxAI/gameobjects/objects/sprite.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
-#include "anthraxAI/utils/parser.h"
-#include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/gizmo.h"
 
 #include <atomic>
 #include <string>
@@ -47,17 +49,20 @@ namespace Core
 
             void SetCurrentScene(const std::string& str);
             RQSceneMap& GetScenes() { return RQScenes; }
-            //SceneObjectMap& GetResources() { return SceneObjects; }
 
-            //void SetCamera(CameraInfo info) { CurrentCamera = info; }
             Keeper::Camera& GetCamera() { return *EditorCamera; }
-            Keeper::Base* GetGameObjects() const { return GameObjects; }
+            const Keeper::Base* GetGameObjects() const { return GameObjects; }
             void UpdateObjects();
             void ReloadResources();
             void ParseSceneNames();
             const std::vector<std::string>& GetSceneNames() const { return SceneNames; }
 
+            void SetSelectedID(uint32_t id) { GameObjects->SetSelectedID(id); }
+            uint32_t GetSelectedID() { return GameObjects->GetSelectedID(); }
+
         private:
+            void UpdateRQ();
+
             void LoadScene(const std::string& filename);
             void Render(const std::string& scene);
 

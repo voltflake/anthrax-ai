@@ -72,7 +72,7 @@ void Gfx::Model::LoadModels()
             LoadModel(path + info->GetModelName());
         }
     }
-    LoadModel(path + "axis.obj");
+    //LoadModel(path + "axis.obj");
 }
 
 void Gfx::Model::LoadModel(const std::string& path)

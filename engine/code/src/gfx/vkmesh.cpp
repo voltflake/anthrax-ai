@@ -41,12 +41,6 @@ void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
 	info.pObjectName = std::string("mesh vertex buffer" + mesh.Path).c_str();
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-	// Core::Deletor::GetInstance()->Push([=, this]() {
-    //    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.Buffer, nullptr);
-    //    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.VertexBuffer.DeviceMemory, nullptr);
-    //    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.Buffer, nullptr);
-    //    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), mesh.IndexBuffer.DeviceMemory, nullptr);
-    // });
 }
 
 void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)

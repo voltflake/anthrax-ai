@@ -15,8 +15,11 @@ namespace Keeper
             
             ~Sprite() {};
             
-            Type GetType() override { return ObjectType; }
+            Type GetType() const override { return ObjectType; }
             void Update() override { } 
+            void SetSelected(bool id) override { }
+            void SetVisible(bool vis) override { }
+            bool IsVisible() const override{ return Visible; }
             void PrintInfo() override;
 
             Vector3<float> GetPosition() const override { return Position; }
@@ -34,7 +37,7 @@ namespace Keeper
             std::string TextureName;
             std::string MaterialName;
             std::string MeshName;
-            bool IsVisible = false;
+            bool Visible = true;
   };
 }
 

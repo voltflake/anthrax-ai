@@ -36,7 +36,6 @@ void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 {
 	const int meshsize = object.Model->Meshes.size();
 	for (int i = 0; i < meshsize; i++) {
-		
 		DrawMesh(object, object.Model->Meshes[i], true);
 	} 
 }
@@ -45,7 +44,6 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 {
 	bool bindpipe, bindindex = false;
 	CheckTmpBindings(mesh, object.Material, &bindpipe, &bindindex);
-
 	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
 
 	if (bindpipe) {
@@ -59,9 +57,7 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
     if (object.HasStorage) {
         constants.storagebind = object.StorageBind;
         constants.objectID = object.ID;
-        constants.selected = object.ID == SelectedID ? 1 : 0;
-        if (constants.selected) {
-        }
+        constants.selected = object.ID == Core::Scene::GetInstance()->GetSelectedID() ? 1 : 0;
     }
     glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(object.Position.x, object.Position.y, object.Position.z));
 	constants.rendermatrix = CamData.proj * CamData.view * model;
@@ -243,9 +239,9 @@ void Gfx::Renderer::PrepareStorageBuffer()
     /*}*/
 
     void* storage;
-    VkDeviceSize storagesize = sizeof(u_int) * DEPTH_ARRAY_SCALE;
+    VkDeviceSize storagesize = sizeof(u_int32_t) * DEPTH_ARRAY_SCALE;
     vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), BONE_ARRAY_SIZE, storagesize, 0, (void**)&storage);
-    u_int* u = static_cast<u_int*>(storage);
+    u_int32_t* u = static_cast<u_int32_t*>(storage);
 
     int selectedID = -1;
     // TODO: improve pressision
@@ -253,18 +249,32 @@ void Gfx::Renderer::PrepareStorageBuffer()
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
         if (u[i] != 0) {
             selectedID = u[i];
-            SelectedID = selectedID;
-            //printf("[%d][%d] \n ",i, u[i]);
-            break;
+			Core::Scene::GetInstance()->SetSelectedID(selectedID);
+    		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
+    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
+	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+
+           // printf("[%d][%d] \n ",i, u[i]);
+            return;
         }
     }
+	
+	if (Core::WindowManager::GetInstance()->IsMousePressed()) {
+
     if (selectedID == -1) {
-        SelectedID = 0;
+		Core::Scene::GetInstance()->SetSelectedID(0);
+  //  printf("-----|%d|", selectedID);
+
     }
-    //printf("\n\n");
-    u_int dst[DEPTH_ARRAY_SCALE] = {0};
-    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int));
+
+	}
+	//}
+		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
+    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
     vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+
+    //printf("\n\n");
+   
     
 }
 
@@ -285,7 +295,6 @@ void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 
     const size_t buffersize = (sizeof(CameraData));
     BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(), buffersize, 0, &CamData);
-
 }
 
 VkFenceCreateInfo FenceCreateInfo(VkFenceCreateFlags flags)

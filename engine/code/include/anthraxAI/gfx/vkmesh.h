@@ -33,7 +33,7 @@ namespace Gfx
     };
 
     struct MeshInfo {
-        std::string Path;
+        std::string Path = "";
 
         std::vector<Vertex> Vertices;
         BufferHelper::Buffer VertexBuffer;

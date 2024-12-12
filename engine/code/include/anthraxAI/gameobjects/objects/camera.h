@@ -31,8 +31,10 @@ class Camera : public Keeper::Objects
 #endif
         void UpdateDirection();
         void Update() override { UpdateMovement(); UpdateDirection(); };
+
+        void SetSelected(bool id) override { }
         
-        Keeper::Type GetType() override { return ObjectType; }
+        Keeper::Type GetType() const override { return ObjectType; }
 
     private:
         Keeper::Type ObjectType = Keeper::Type::CAMERA;

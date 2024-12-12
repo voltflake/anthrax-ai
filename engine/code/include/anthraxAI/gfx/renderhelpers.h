@@ -5,11 +5,6 @@
 #include <cstdint>
 namespace Gfx
 {
-    enum ObjectTypes {
-        OBJECT_DEF = 0,
-        OBJECT_GIZMO = 1000,
-    };
-
     enum BindlessDataType {
         BINDLESS_DATA_NONE = 0,
         BINDLESS_DATA_CAM_STORAGE_SAMPLER,
@@ -28,9 +23,9 @@ namespace Gfx
 
         bool VertexBase = false;
         bool IsGrid = false;
-        bool IsVisible = true;
         bool HasStorage = false;
         
+        bool IsVisible = true;
         uint32_t ID;
         uint32_t GizmoID;
 

@@ -28,7 +28,6 @@ bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
 void Gfx::Renderer::CleanTextures()
 {
     for (auto& it : Textures) {
-        // Gfx::RenderTarget& rt = it.second;
         it.second.Clean();
     }
     Textures.clear();
@@ -48,9 +47,9 @@ void Gfx::Renderer::CreateTextures()
         }
     }
 
-    std::string path = "./textures/dummy.png";
-	Textures["dummy"] = CreateTexture(path);
-	CreateSampler(Textures["dummy"]);
+    // std::string path = "./textures/dummy.png";
+	// Textures["dummy"] = CreateTexture(path);
+	// CreateSampler(Textures["dummy"]);
 }
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)

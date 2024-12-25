@@ -17,6 +17,11 @@
     layout(Layout, set = BindlessDescriptorSet, binding = BindlessStorageBinding) \
     BufferAccess buffer Name Struct GetLayoutVariableName(Name)[]
 
+#define RegisterBufferReadWrite(Layout, Name, Struct) \
+    layout(Layout, set = BindlessDescriptorSet, binding = BindlessStorageBinding) \
+    buffer Name Struct GetLayoutVariableName(Name)[]
+
+
 #define GetResource(Name, Index) \
     GetLayoutVariableName(Name)[Index]
 
@@ -26,26 +31,31 @@ RegisterBuffer(std430, readonly, DummyBuffer, { uint ignore; });
 layout(set = BindlessDescriptorSet, binding = BindlessSamplerBinding) \
     uniform sampler2D textures[];
 
-
-// const int MAX_BONES = 200;
-// const int BONE_INFLUENCE = 4;
-// #define DEPTH_ARRAY_SCALE 512
-// #define MAX_POINT_LIGHTS 4
-
 layout( push_constant ) uniform constants
 {
-    mat4 model;    
-    mat4 rendermatrix;    
-
     int bindtexture;
     int bindstorage;
+    int bindinstance;
     int bindbuffer;
 
     int objectID;
     int selected;
+    int debugbones;
+    int boneID;
 } pushconstants;
 
-
+int GetStorageInd() {
+  return pushconstants.bindstorage;
+}
+int GetInstanceInd() {
+  return pushconstants.bindinstance;
+}
+int GetTextureInd() {
+  return pushconstants.bindtexture;
+}
+int GetUniformInd() {
+  return pushconstants.bindbuffer;
+}
 RegisterUniform(Camera, {
     vec4 viewpos;
     vec4 mousepos;
@@ -63,6 +73,24 @@ RegisterUniform(Camera, {
 });
 
 #define DEPTH_ARRAY_SCALE 512
+#define INSTANCE_SIZE 20
 const int MAX_BONES = 200;
 
+struct InstanceData {
+    mat4 bonesmatrices[MAX_BONES];
+    mat4 rendermatrix;
+
+    uint hasanimation;
+    uint pad0;
+    uint pad1;
+    uint pad2;
+};
+
+RegisterBuffer(std140, readonly, Instance, {
+      InstanceData instances[];
+});
+
+RegisterBuffer(std430, writeonly, Storage, {
+    uint data[DEPTH_ARRAY_SCALE]; 
+});
 

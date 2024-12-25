@@ -166,6 +166,7 @@ void Core::ImGuiHelper::InitUIElements()
     Add(debugtab, UI::Element(UI::FLOAT, "fps", []() -> float { return Utils::Debug::GetInstance()->FPS; }));
     Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
     Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
+    Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
 }
 
 void Core::ImGuiHelper::Combo(UI::Element element) const
@@ -191,7 +192,7 @@ void Core::ImGuiHelper::Combo(UI::Element element) const
     }
 }
 
-void Core::ImGuiHelper::ProcessUI(const UI::Element& element)
+void Core::ImGuiHelper::ProcessUI(UI::Element& element)
 {
     switch (element.GetType()) {
         case UI::COMBO: {
@@ -211,9 +212,10 @@ void Core::ImGuiHelper::ProcessUI(const UI::Element& element)
             break;
         }
         case UI::CHECKBOX: {
-            static bool check = true; 
+            bool check = element.GetCheckbox(); 
             ImGui::Checkbox(element.GetLabel().c_str(), &check);
             element.DefinitionBool(check);
+            element.SetCheckbox(check);
             break;
         }
         case UI::TEXT:

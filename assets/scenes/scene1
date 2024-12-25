@@ -27,3 +27,19 @@ Scene: models
             name: zeroone.png
         Model:
             name: cube.obj
+    Object:
+        ID: 0
+        Position:
+            x: 0
+            y: 2
+            z: 0
+        Material:
+            name: models
+            frag: model.frag
+            vert: model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: Defeated.dae
+        Animation:
+            name: Defeated.dae

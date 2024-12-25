@@ -47,6 +47,10 @@ namespace Gfx
             BufferHelper::Buffer& GetStorageUBO() { return StorageBuffer; }
             VkDeviceMemory GetStorageBufferMemory() const { return StorageBuffer.DeviceMemory; }
             
+            VkBuffer GetInstanceBuffer() const { return InstanceBuffer.Buffer; }
+            BufferHelper::Buffer& GetInstanceUBO() { return InstanceBuffer; }
+            VkDeviceMemory GetInstanceBufferMemory() const { return InstanceBuffer.DeviceMemory; }
+
             size_t PadUniformBufferSize(size_t originalsize);
 
             uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler);
@@ -82,6 +86,7 @@ namespace Gfx
 
             BufferHelper::Buffer CameraBuffer;
             BufferHelper::Buffer StorageBuffer;
+            BufferHelper::Buffer InstanceBuffer;
 
             VkDescriptorPool Pool;
 	        VkDescriptorSetLayout BindlessLayout = VK_NULL_HANDLE;

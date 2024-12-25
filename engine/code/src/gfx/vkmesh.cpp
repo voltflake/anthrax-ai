@@ -13,7 +13,7 @@ Gfx::MeshInfo* Gfx::Mesh::GetMesh(const std::string& name)
 	}
 }
 
-void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
+void Gfx::Mesh::Update(MeshInfo& mesh)
 {
     VkBufferUsageFlags flags[2] = {VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT};
 	BufferHelper::CreateBuffer(mesh.VertexBuffer, flags, sizeof(mesh.Vertices[0]) * mesh.Vertices.size(), mesh.Vertices.data());
@@ -43,18 +43,30 @@ void Gfx::Mesh::UpdateMesh(MeshInfo& mesh)
 
 }
 
+void Gfx::Mesh::SetVertexBoneDefaultData(Gfx::Vertex& vertex)
+{
+  for (int i = 0; i < BONE_INFLUENCE; i++)
+    {
+        vertex.boneID[i] = -1;
+        vertex.weights[i] = 0.0f;
+    }
+}
 void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
 {
    // Gfx::MeshInfo meshinfo;
     meshinfo->Vertices.reserve(aimesh->mNumVertices);
     for(int i = 0; i < aimesh->mNumVertices; i++) {
         Gfx::Vertex vertex;
+
+        SetVertexBoneDefaultData(vertex);
        
 		glm::vec3 data; 
 		data.x = aimesh->mVertices[i].x;
 		data.y = aimesh->mVertices[i].y;
 		data.z = aimesh->mVertices[i].z; 
-		vertex.position = data;
+		vertex.position.x = data.x;
+		vertex.position.y = data.y;
+		vertex.position.z = data.z;
 
 		data.x = aimesh->mNormals[i].x;
 		data.y = aimesh->mNormals[i].y;
@@ -83,7 +95,11 @@ void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
 		}
 	}
 
-    UpdateMesh(*meshinfo);
+}
+
+void Gfx::Mesh::UpdateMesh(Gfx::MeshInfo* meshinfo)
+{
+    Update(*meshinfo);
 }
 
 void Gfx::MeshInfo::Clean()
@@ -112,10 +128,10 @@ void Gfx::Mesh::CreateMeshes()
     for (auto it : texturemap) {
         if (it.first == "dummy") continue;
         mesh.Path = it.first;
-        mesh.Vertices[0].position = {0, 0, 0.0f};
-        mesh.Vertices[1].position = {0, 0 + it.second.GetSize().y, 0.0f};
-        mesh.Vertices[2].position = {0 + it.second.GetSize().x, 0 + it.second.GetSize().y, 0.0f};
-        mesh.Vertices[3].position ={0 + it.second.GetSize().x, 0, 0.0f};
+        mesh.Vertices[0].position = {0, 0, 0.0f, 1.0f};
+        mesh.Vertices[1].position = {0, 0 + it.second.GetSize().y, 0.0f, 1.0f};
+        mesh.Vertices[2].position = {0 + it.second.GetSize().x, 0 + it.second.GetSize().y, 0.0f, 1.0f};
+        mesh.Vertices[3].position ={0 + it.second.GetSize().x, 0, 0.0f, 1.0f};
      
         mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
         mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
@@ -127,16 +143,16 @@ void Gfx::Mesh::CreateMeshes()
         mesh.Vertices[2].uv = {1.0f, 1.0f};
         mesh.Vertices[3].uv = {1.0f, 0.0f};
         
-        UpdateMesh(mesh);
+        Update(mesh);
         Meshes[it.first] = mesh;
     }
     
     Vector2<int> res = { 1920, 1080 };
     mesh.Path = "dummy";
-    mesh.Vertices[0].position = {0, 0, 0.0f};
-    mesh.Vertices[1].position = {0, 0 + res.y, 0.0f};
-    mesh.Vertices[2].position = {0 + res.x, 0 + res.y, 0.0f};
-    mesh.Vertices[3].position ={0 + res.x, 0, 0.0f};
+    mesh.Vertices[0].position = {0, 0, 0.0f, 1.0f};
+    mesh.Vertices[1].position = {0, 0 + res.y, 0.0f, 1.0f};
+    mesh.Vertices[2].position = {0 + res.x, 0 + res.y, 0.0f, 1.0f};
+    mesh.Vertices[3].position ={0 + res.x, 0, 0.0f, 1.0f};
 
     mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
     mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
@@ -148,7 +164,7 @@ void Gfx::Mesh::CreateMeshes()
     mesh.Vertices[3].uv = {1.0f, 1.0f};
     mesh.Vertices[2].uv = {1.0f, 0.0f};
 
-    UpdateMesh(mesh);
+    Update(mesh);
     Meshes["dummy"] = mesh;
 
 }

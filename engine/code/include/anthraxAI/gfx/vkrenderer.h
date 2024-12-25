@@ -33,6 +33,7 @@ namespace Gfx
             RenderTarget* GetDepthRT() { return DepthRT; }
 
             void PrepareCameraBuffer(Keeper::Camera& camera);
+            void PrepareInstanceBuffer();
             void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
@@ -65,6 +66,8 @@ namespace Gfx
             void EndRendering(VkCommandBuffer cmd) { vkCmdEndRenderingKHR(cmd); }
             bool IsOnResize() const { return OnResize; }
             void SetOnResize(bool ison) { OnResize = ison; }
+            
+            int GetInstanceSize() const { return 20; }
 
         private:
             RenderTarget* DepthRT;
@@ -73,9 +76,13 @@ namespace Gfx
             TexturesMap Textures;
 	        
             StorageData StorageBuffer;
+            InstanceData InstanceBuffer;
             CameraData 	CamData;
             UploadContext Upload;
             
+            uint32_t InstanceCount = 0;
+            uint32_t InstanceIndex = 0;
+
             bool OnResize = false;
 	        int FrameIndex = 0;
             uint32_t SwapchainIndex = 0;

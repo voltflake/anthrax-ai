@@ -4,6 +4,7 @@
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
+#include "anthraxAI/utils/defines.h"
 #include <ctime>
 #include <iostream>
 
@@ -145,6 +146,15 @@ void Core::WindowManager::ProcessEvents()
             Engine::GetInstance()->ToogleEditorMode();
             Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
         }
+        if (PressedKey == MINUS_KEY) {
+            if (Utils::Debug::GetInstance()->BoneID > 0) {
+                Utils::Debug::GetInstance()->BoneID--;
+            }
+        }
+        if (PressedKey == PLUS_KEY) {
+            Utils::Debug::GetInstance()->BoneID++;
+        }
+
     }
     if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_RELEASED)) {
         Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
@@ -154,6 +164,7 @@ void Core::WindowManager::ProcessEvents()
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
         if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_RELEASED)) {
             Mouse.Delta = {0, 0};
+            Mouse.Pressed = false;        
             //printf("------MOUSE RELEASED--------\n");
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_MOVE);
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_RELEASED);

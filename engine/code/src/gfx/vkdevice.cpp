@@ -74,11 +74,16 @@ void Gfx::Device::CreateDevice()
 
 	VkPhysicalDeviceDescriptorIndexingFeatures descindeing{};
 	descindeing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-	descindeing.pNext = &dynfeature;
+	descindeing.pNext = &dynfeature;    	
+
+    VkPhysicalDeviceShaderDrawParametersFeatures shaderdrawparams{};
+    shaderdrawparams.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
+    shaderdrawparams.pNext = &descindeing;
+    shaderdrawparams.shaderDrawParameters = VK_TRUE;
 
 	VkPhysicalDeviceFeatures2 devfeatures2{};
 	devfeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-	devfeatures2.pNext = &descindeing;
+	devfeatures2.pNext = &shaderdrawparams;
 	devfeatures2.features = devicefeatures;
 
 	vkGetPhysicalDeviceFeatures2(PhysicalDevice, &devfeatures2);

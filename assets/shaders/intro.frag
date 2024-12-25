@@ -130,8 +130,8 @@ float GetWord(float num, vec2 coord, vec2 resolution)
 
 void main()
 {    
-    float time = GetResource(Camera, pushconstants.bindbuffer).time;
-    vec2 resolution = GetResource(Camera, pushconstants.bindbuffer).viewport.xy;
+    float time = GetResource(Camera, GetUniformInd()).time;
+    vec2 resolution = GetResource(Camera, GetUniformInd()).viewport.xy;
     
     if (incoord.x < 0.12 || incoord.x > 0.88) {
         outfragcolor = vec4(0);

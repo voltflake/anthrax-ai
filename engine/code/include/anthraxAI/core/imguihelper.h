@@ -53,6 +53,8 @@ namespace UI
             std::function<float ()> DefinitionFloat;
 
             inline bool operator<(const UI::Element& elem) const { return GetID() < elem.GetID(); }
+            bool GetCheckbox() const { return Checkbox; }
+            void SetCheckbox(bool b) { Checkbox = b;}
         private:
             
             void GetArg(std::vector<const char*> vec) { ComboList = vec; }
@@ -67,6 +69,7 @@ namespace UI
             int ID = 0;
             ElementType Type;
             std::string Label;
+            bool Checkbox = true;
 };
     
     class Window
@@ -114,7 +117,7 @@ namespace Core
             void CleanAll();
         private:
             void Combo(UI::Element element) const;
-            void ProcessUI(const UI::Element& element);
+            void ProcessUI(UI::Element& element);
             ImGuiStyle 	EditorStyle;
             std::string EditorWindow;
             

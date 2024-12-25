@@ -27,20 +27,31 @@ namespace Gfx
         
         bool IsVisible = true;
         uint32_t ID;
-        uint32_t GizmoID;
+        bool IsSelected = false;
 
         uint32_t BufferBind;
         uint32_t StorageBind;
+        uint32_t InstanceBind;
         uint32_t TextureBind;
     };
    
     #define DEPTH_ARRAY_SCALE 512
     #define MAX_BONES 200
+    #define MAX_INSTANCES 500
+    #define INSTANCES_ARRAY_SIZE (sizeof(glm::mat4) * MAX_INSTANCES)
     #define BONE_ARRAY_SIZE (sizeof(glm::mat4) * MAX_BONES)
     
     struct StorageData {
-        glm::mat4 bonesmatrices[MAX_BONES];
         u_int data[DEPTH_ARRAY_SCALE] = {0};
+    };
+    struct InstanceData {
+        glm::mat4 bonesmatrices[MAX_BONES];
+        glm::mat4 rendermatrix;
+        
+        uint32_t hasanimation = 0;
+        uint32_t pad0 = 0;
+        uint32_t pad1 = 0;
+        uint32_t pad2 = 0;
     };
 
     struct CameraData {
@@ -89,7 +100,7 @@ namespace Gfx
         uint32_t camerabufer = 0;
         uint32_t texturehandle = 0;
         uint32_t storagebuffer = 0;
-        uint32_t pad0;
+        uint32_t instancebuffer = 0;
     };
     struct CamBufferParams {
         uint32_t camerabufer = 0;

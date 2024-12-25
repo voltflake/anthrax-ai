@@ -33,6 +33,7 @@ bool Gfx::Vulkan::OnResize()
 
 void Gfx::Vulkan::CleanUp()
 {
+    vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
 	for (Gfx::FrameData frame : Gfx::Renderer::GetInstance()->Frames) {
         vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &frame.RenderFence, true, 1000000000);
     }

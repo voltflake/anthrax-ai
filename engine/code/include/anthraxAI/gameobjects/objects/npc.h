@@ -1,6 +1,7 @@
 #pragma once
 
 #include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/gizmo.h"
 
 namespace Keeper 
 {
@@ -18,7 +19,11 @@ namespace Keeper
             bool IsVisible() const override{ return Visible; }
             void Update() override;
             void PrintInfo() override;
-
+   
+            bool HasAnimations() const override { return IsAnimated; }
+            void SetGizmo(Keeper::Objects* gizmo) override { GizmoHandle = reinterpret_cast<Keeper::Gizmo*>(gizmo); }
+            
+            Keeper::Objects* GetGizmo() const override { return  reinterpret_cast<Keeper::Objects*>(GizmoHandle);}
             Vector3<float> GetPosition() const override { return Position; }
             std::string GetModelName() const override { return ModelName; }
             std::string GetTextureName() const override { return TextureName; }
@@ -26,6 +31,7 @@ namespace Keeper
             std::string GetFragmentName() const override { return Fragment; }
             std::string GetVertexName() const override { return Vertex; }
 
+            const std::vector<std::string>& GetAnimations() const override { return Animations; }        
         private:
             Keeper::Type ObjectType = Type::NPC;
             
@@ -38,6 +44,11 @@ namespace Keeper
             std::string ModelName;
             bool Visible = true;
             bool Selected = false;
+            bool IsAnimated = false;
+
+            std::vector<std::string> Animations;
+            
+            Keeper::Gizmo* GizmoHandle = nullptr;
   };
 }
 

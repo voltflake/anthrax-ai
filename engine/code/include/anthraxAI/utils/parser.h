@@ -16,6 +16,7 @@ namespace Utils
     X(LEVEL_ELEMENT_ID, "ID") \
     X(LEVEL_ELEMENT_MATERIAL, "Material") \
     X(LEVEL_ELEMENT_TEXTURE, "Texture") \
+    X(LEVEL_ELEMENT_ANIMATION, "Animation") \
     X(LEVEL_ELEMENT_MODEL, "Model") \
     X(LEVEL_ELEMENT_NAME, "name") \
     X(LEVEL_ELEMENT_FRAG, "frag") \
@@ -54,6 +55,7 @@ namespace Utils
             T GetElement(const NodeIt& node, const LevelElements& element, T defval) const;
 
             bool IsNodeValid(NodeIt& it) const { return it != Tokens.end(); }
+            bool IsNodeValidInRange(NodeIt& it) const { return it != ChildRange; }
             std::string GetRootElement() const;
             NodeIt GetRootNode() const { return RootNode; }
 
@@ -63,6 +65,7 @@ namespace Utils
             TokensPair Tokens;
   
             NodeIt RootNode;
+            NodeIt ChildRange;
             NodeIt RootChildNode;
             NodeIt ChildNode;
             

@@ -12,24 +12,24 @@ namespace Gfx
 {
     #define BONE_INFLUENCE 4
     struct Vertex {
-        glm::vec3 position;
+        glm::vec4 instanceind;
+        glm::vec4 position;
         glm::vec3 normal;
         glm::vec3 color;
         glm::vec2 uv;
-        // int boneID[4];
-        // float weights[4];
+        float weights[4];
+        int boneID[4];
     };
 
     struct MeshPushConstants {
-        glm::mat4 model;
-        glm::mat4 rendermatrix;
-
         int texturebind = 0;
         int storagebind = 0;
+        int instancebind = 0;
         int bufferbind = 0; 
         int objectID = 0; 
-        
         int selected = 0;
+        int debugbones = 0;
+        int boneID = 0;
     };
 
     struct MeshInfo {
@@ -58,10 +58,11 @@ namespace Gfx
             void CreateMeshes();
             void CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo);
 
-            void UpdateMesh(MeshInfo& mesh);
-
+            void Update(MeshInfo& mesh);
+            void UpdateMesh(Gfx::MeshInfo* meshinfo);
             MeshInfo* GetMesh(const std::string& name);   
         private:
+            void SetVertexBoneDefaultData(Gfx::Vertex& vertex);
             MeshMap Meshes;
     };
 }

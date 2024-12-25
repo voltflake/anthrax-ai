@@ -31,8 +31,8 @@ vec4 grid(vec3 pos, float scale, float div, vec3 col) {
 
 void main()
 {
-    mat4 proj = GetResource(Camera, pushconstants.bindbuffer).proj;
-    mat4 view = GetResource(Camera, pushconstants.bindbuffer).view;
+    mat4 proj = GetResource(Camera, GetUniformInd()).proj;
+    mat4 view = GetResource(Camera, GetUniformInd()).view;
 
     float y = -innear.y / (infar.y - innear.y); // parametric equation of a line (y axis)
     vec3 clippos = innear + y * (infar - innear);

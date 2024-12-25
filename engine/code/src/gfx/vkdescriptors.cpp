@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
@@ -127,7 +128,7 @@ void Gfx::DescriptorsBase::AllocateDataBuffers()
 }
 void Gfx::DescriptorsBase::AllocateStorageBuffers()
 {
-	const size_t buffersize = (sizeof(StorageData));
+	size_t buffersize = (sizeof(StorageData));
 	BufferHelper::CreateBuffer(StorageBuffer, buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
 	VkDebugUtilsObjectNameInfoEXT info;
 	info.pNext = nullptr;
@@ -140,6 +141,20 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
 	Core::Deletor::GetInstance()->Push([=, this]() {
 		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.Buffer, nullptr);
     	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.DeviceMemory, nullptr);
+	});
+
+    buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
+	BufferHelper::CreateBuffer(InstanceBuffer, buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
+	info.objectHandle = reinterpret_cast<uint64_t>(InstanceBuffer.DeviceMemory);
+	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
+	info.pObjectName = "INSTANCE buffer";
+	Gfx::Vulkan::GetInstance()->SetDebugName(info);
+
+    Core::Deletor::GetInstance()->Push([=, this]() {
+		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.Buffer, nullptr);
+    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.DeviceMemory, nullptr);
 	});
 }
 
@@ -170,7 +185,7 @@ void Gfx::DescriptorsBase::Init()
 	VkDescriptorSetLayoutBinding bindings[MAX_BINDING];
 	VkShaderStageFlags stageflags[MAX_BINDING] = {
 		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-		VK_SHADER_STAGE_FRAGMENT_BIT,
+		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		VK_SHADER_STAGE_FRAGMENT_BIT
 	};
 	VkDescriptorBindingFlags flags[MAX_BINDING];

@@ -10,6 +10,8 @@ Keeper::Npc::Npc(const Info& info)
     MaterialName = info.Material;
     Vertex = info.Vertex;
     Fragment = info.Fragment;
+    Animations = info.Animations;
+    IsAnimated = !Animations.empty();
 }
 
 void Keeper::Npc::PrintInfo()
@@ -22,5 +24,15 @@ void Keeper::Npc::PrintInfo()
 
 void Keeper::Npc::Update()
 {
-    
+   if (GizmoHandle) {
+        if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Y) {
+            Position.y += 0.5; //GizmoHandle->GetPosition();
+        }
+        if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::X) {
+            Position.x += 0.5;
+        }
+        if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Z) {
+            Position.z += 0.5;
+        }
+    } 
 }

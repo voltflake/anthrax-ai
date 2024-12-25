@@ -1,4 +1,5 @@
 #include "anthraxAI/core/scene.h"
+#include "anthraxAI/core/animator.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
@@ -8,8 +9,11 @@
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkmesh.h"
 #include "anthraxAI/gfx/model.h"
+#include "anthraxAI/utils/debug.h"
+#include "anthraxAI/utils/parser.h"
 #include <algorithm>
 #include <cstdio>
+#include <string>
 #include <vulkan/vulkan_core.h>
 
 
@@ -18,15 +22,12 @@ void Core::Scene::Render(const std::string& scene)
     if (RQScenes[scene].HasCameraBuffer) {
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
     }
-    // if (RQScenes[scene].HasStorageBuffer) {
-    //     Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
-    // }
-    
+        
     for (Gfx::RenderObject& obj :  RQScenes[scene].RenderQueue) {
         if (!obj.IsVisible) continue;
 
         if (RQScenes[scene].BindlessType == Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER) {
-            BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.TextureBind, }));
+            BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.InstanceBind, obj.TextureBind, }));
         }
         else if (RQScenes[scene].BindlessType == Gfx::BINDLESS_DATA_CAM_BUFFER) { 
             BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::CamBufferParams>(Gfx::CamBufferParams({ obj.BufferBind }));
@@ -38,7 +39,7 @@ void Core::Scene::Render(const std::string& scene)
         if (obj.VertexBase) {
             Gfx::Renderer::GetInstance()->DrawSimple(obj);
         }
-        else {
+        else { 
             Gfx::Renderer::GetInstance()->Draw(obj);
         }
     }
@@ -47,6 +48,7 @@ void Core::Scene::Render(const std::string& scene)
 void Core::Scene::RenderScene()
 {
     Gfx::Renderer::GetInstance()->BeginFrame();
+    Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
 
     {
         // objects from map
@@ -98,16 +100,22 @@ void Core::Scene::Loop()
 
 void Core::Scene::UpdateRQ()
 {
-    int i = 0;
-    auto npc = GameObjects->Get(Keeper::Type::NPC);
-    for (Keeper::Objects* info : npc) {
-        RQScenes[CurrentScene].RenderQueue[i].IsVisible = info->IsVisible();
-        i++;
-    }
-    i = 0;
-    auto gizmo = GameObjects->Get(Keeper::Type::GIZMO);
-    for (Keeper::Objects* info : gizmo) {
-        RQScenes["gizmo"].RenderQueue[i].IsVisible = info->IsVisible(); 
+    if (GameObjects->IsValid(Keeper::Type::NPC)) {
+        int i = 0;
+        auto npc = GameObjects->Get(Keeper::Type::NPC);
+        for (Keeper::Objects* info : npc) {
+            RQScenes[CurrentScene].RenderQueue[i].IsSelected = info->GetGizmo() ? 1 : 0;  
+            RQScenes[CurrentScene].RenderQueue[i].IsVisible = info->IsVisible();
+            RQScenes[CurrentScene].RenderQueue[i].Position = info->GetPosition();
+            i++;
+        }
+        i = 0;
+        auto gizmo = GameObjects->Get(Keeper::Type::GIZMO);
+        for (Keeper::Objects* info : gizmo) {
+            RQScenes["gizmo"].RenderQueue[i].IsVisible = info->IsVisible();
+            RQScenes["gizmo"].RenderQueue[i].Position = info->GetPosition();
+            i++;
+        }
     }
 }
 
@@ -119,6 +127,7 @@ void Core::Scene::UpdateResources(Core::SceneInfo& info)
                 obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()));
     	        obj.BufferBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
                 obj.StorageBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+                obj.InstanceBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
                 obj.HasStorage = obj.Model ? true : false;
 
                 info.HasCameraBuffer = true;
@@ -139,17 +148,12 @@ void Core::Scene::UpdateResources(Core::SceneInfo& info)
 
 void Core::Scene::Init()
 {
-    //LoadScene("scene1");
-    //LoadScene("textures");
     ParseSceneNames();  
 
     GameObjects = new Keeper::Base;
     GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {0.0f, 0.0f, 3.0f}));
     EditorCamera = reinterpret_cast<Keeper::Camera*>(*(GameObjects->Get(Keeper::Type::CAMERA).begin()));
 
-    //GameObjects->Create(ParsedInfo);
-    //GameObjects->Get<Keeper::Sprite>(Keeper::Type::SPRITE)->PrintInfo(); 
-    //GameObjects->ObjectList.push_back(new Object<class T>);
 }
 
 void Core::Scene::Update()
@@ -165,38 +169,12 @@ void Core::Scene::Update()
         RQScenes[tag] = info;
         UpdateResources(RQScenes[tag]);
     }
-
-
-    /*for (auto& it : SceneObjects) {*/
-    /*    Core::SceneInfo info;*/
-    /*    std::string tag = it.first;*/
-    /**/
-    /*    Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);*/
-    /*    info.Attachments = attachments;*/
-    /*    info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER;*/
-    /*    info.RenderQueue = LoadResources(tag, it.second);*/
-    /*    RQScenes[tag] = info;*/
-    /**/
-    /*    UpdateResources(RQScenes[tag]);*/
-    /*}*/
-    // {
-    //     Core::SceneInfo info;
-    //     std::string tag = "gizmo";
-
-    //     Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);
-    //     info.Attachments = attachments;
-    //     info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER;
-    //     info.RenderQueue = LoadResources(tag, { Keeper::Info() });
-    //     RQScenes[tag] = info;
- 
-    //     UpdateResources(RQScenes[tag]);
-    // }
 }
 
 void Core::Scene::ReloadResources()
 {
     vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
-
+    
     BindlessRange = 0;
 
     ParsedSceneInfo.clear();
@@ -205,7 +183,14 @@ void Core::Scene::ReloadResources()
     
     GameObjects->CleanIfNot(Keeper::Type::CAMERA);
     GameObjects->Create(ParsedSceneInfo);
-    GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X)));
+    GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
+    GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
+    GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Z), Keeper::Gizmo::Type::Z));
+    if (Animator) {
+        delete Animator;
+    }
+    Animator = new AnimatorBase();
+    Utils::Debug::GetInstance()->AnimStartMs = Engine::GetInstance()->GetTime();
 
 	Gfx::Mesh::GetInstance()->CleanAll();
 	Gfx::Model::GetInstance()->CleanAll();
@@ -263,6 +248,8 @@ void Core::Scene::ReloadResources()
         RQScenes[tag] = info;
         UpdateResources(RQScenes[tag]);
     }
+    
+    Animator->Init();
 
     HasFrameGrid = false;
     if (RQScenes.find("grid") != RQScenes.end()) {
@@ -308,20 +295,6 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
         ASSERT(rq.empty(), "Render Queue is empty, you probably passed a wrong tag");
         return rq;
     }
-    if (tag == "gizmo") {
-        Gfx::RenderObject rqobj;
-        rqobj.IsGrid = false;
-        rqobj.VertexBase = false;
-        rqobj.IsVisible = false;
-        rqobj.ID = 1000;
-        rqobj.Position = {0.0f};
-        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("gizmo");
-        rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture("dummy");
-        rqobj.Model = Gfx::Model::GetInstance()->GetModel("axis.obj");
-        rq.push_back(rqobj);
-        return rq;
-    }
-
     if (tag == "grid") {
         Gfx::RenderObject rqobj;
         rqobj.Position = {0.0f};
@@ -335,84 +308,8 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
         return rq;
     }
 
-    bool is3d = false;
-    for (Keeper::Info obj : info) {
-
-        Gfx::RenderObject rqobj;
-        rqobj.Position = obj.Position;
-        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(obj.Material);
-        rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture(obj.Texture);
-        if (obj.IsModel) {
-            is3d = true;
-            rqobj.Model = Gfx::Model::GetInstance()->GetModel(obj.Model);
-        }
-        else {
-            rqobj.Mesh = Gfx::Mesh::GetInstance()->GetMesh(obj.Texture);
-        }
-        rq.push_back(rqobj);
-    }
-
-    if (is3d) {
-        Gfx::RenderObject rqobj;
-
-        // Gfx::RenderObject rqobj;
-        // rqobj.IsGrid = false;
-        // rqobj.VertexBase = false;
-        // rqobj.ID = Gfx::OBJECT_GIZMO;
-        // rqobj.Position = {0.0f};
-        // rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("models");
-        // rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture("dummy");
-        // rqobj.Model = Gfx::Model::GetInstance()->GetModel("axis.obj");
-        // rqobj.IsVisible = false;
-        // rq.push_back(rqobj);
-
-        rqobj.Position = {0.0f};
-        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("grid");
-        rqobj.Texture =Gfx::Renderer::GetInstance()->GetTexture("dummy");
-        rqobj.Mesh = nullptr;
-        rqobj.IsGrid = true;
-        rqobj.VertexBase = true;
-        rqobj.IsVisible = true;
-        rq.push_back(rqobj);
-    }
-
     ASSERT(rq.empty(), "Render Queue is empty, you probably passed a wrong tag");
     return rq;
-}
-
-void Core::Scene::UpdateObjects()
-{
-    // int selectedID = Gfx::Renderer::GetInstance()->GetSelectedID();
-
-    // std::vector<Gfx::RenderObject>& rq = RQScenes[CurrentScene].RenderQueue;
-    // auto gizmo_it = std::find_if(rq.begin(), rq.end(), [&](Gfx::RenderObject& object) { return (object.ID == Gfx::OBJECT_GIZMO); } );
-
-    // if (selectedID == 0) {
-    //     if (gizmo_it != rq.end()) {
-    //         gizmo_it->IsVisible = false;
-    //     }
-    //     return ;
-    // }
-
-    // auto selected_it = std::find_if(rq.begin(), rq.end(), [&, selectedID](Gfx::RenderObject& object) { return (object.ID == selectedID); } );
-    
-    // if (selected_it != rq.end() && selected_it->ID != Gfx::OBJECT_GIZMO) {
-    //     if (gizmo_it != rq.end()) {
-    //         gizmo_it->GizmoID = selectedID;
-
-    //         gizmo_it->Position = selected_it->Position;
-    //         gizmo_it->Position.y += 5;
-    //         gizmo_it->IsVisible = true;
-    //     }
-    // }
-    // else if (selected_it != rq.end() ) {
-    //     int id = selected_it->GizmoID;
-    //     auto gizmo_handle_it = std::find_if(rq.begin(), rq.end(), [&, id](Gfx::RenderObject& object) { return (object.ID == id); } );
-    //     gizmo_handle_it->Position.y += 0.1;
-    //     selected_it->Position.y += 0.1;
-    //     //gizmo_it->Position.y += 0.1;
-    // }
-
 }
 
 void Core::Scene::ParseSceneNames()
@@ -470,18 +367,25 @@ void Core::Scene::LoadScene(const std::string& filename)
             info.Model = Parse.GetElement<std::string>(model, Utils::LEVEL_ELEMENT_NAME, "");
             info.IsModel = true;
         }
-
-        // if (SceneObjects[scenename].empty()) {
-        //     ParsedSceneInfo.reserve(10);
-        //     //SceneObjects[scenename].reserve(10); // random for now, should do according to the parsed level
-        // }
+      
+        Utils::NodeIt anim = Parse.GetChild(model, Utils::LEVEL_ELEMENT_ANIMATION);
+        info.Animations.reserve(10);
+        while (Parse.IsNodeValidInRange(anim)) {
+            std::string animstr = Parse.GetElement<std::string>(anim, Utils::LEVEL_ELEMENT_NAME, "");
+           info.Animations.push_back(animstr);
+            anim = Parse.GetChild(++anim, Utils::LEVEL_ELEMENT_ANIMATION);
+        }
+    
         ParsedSceneInfo.emplace_back(info);
-       // SceneObjects[scenename].emplace_back(info);
 
         node = Parse.GetChild(texture, Utils::LEVEL_ELEMENT_OBJECT);
     printf("\n-----------------PARSED--------------------------");
     printf("\n[scene]: |%s|\n[id]: %d\n[position]: [x]: %f [y]: %f [z]: %f\n[material][name]: %s [frag]: %s [vert]: %s\n[texture][name]: %s\n[model][name]: %s\n", 
         scenename.c_str(), idi, xpos, ypos, zpos, info.Material.c_str(), info.Fragment.c_str(), info.Vertex.c_str(), info.Texture.c_str(), info.Model.c_str());
+    printf("Parsed animations:\n");
+    for (std::string s : info.Animations) {
+            printf("%s\n", s.c_str());
+        }
     printf("-------------------------------------------------\n");
     }
 

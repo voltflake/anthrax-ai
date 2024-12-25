@@ -29,6 +29,7 @@ void Utils::Parser::Load(const std::string& filename)
 
     Tokenize(File.begin());
     RootNode = Tokens.begin();
+    ChildRange = Tokens.end();
 
     int i = 0;
     printf("-----------------TOKENIZED--------------------------\n");
@@ -78,7 +79,15 @@ void Utils::Parser::Tokenize(std::vector<std::string>::const_iterator it)
 Utils::NodeIt Utils::Parser::GetChild(const NodeIt& node, const LevelElements& elem) const
 {
     std::string key =  Utils::GetValue(elem);
-    NodeIt it = std::find_if(node, Tokens.end(), [key](const auto& n) { return n.first == key; } );
+    NodeIt obj_it = Tokens.end();
+
+    if (elem == Utils::LEVEL_ELEMENT_ANIMATION) {
+        std::string obj_key = Utils::GetValue(Utils::LEVEL_ELEMENT_OBJECT);
+        obj_it = std::find_if(node, Tokens.end(), [obj_key](const auto& n) { return n.first == obj_key; } );
+        const_cast<NodeIt&>(ChildRange) = obj_it;
+    }
+
+    NodeIt it = std::find_if(node, obj_it, [key](const auto& n) { return n.first == key; } );
 
     if (it == Tokens.end()) {
         std::cout << ("Parser::GetElement(): Child not found |" + key + "|") << std::endl;

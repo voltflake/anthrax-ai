@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkrenderer.h"
+#include "anthraxAI/core/scene.h"
 #include "anthraxAI/gfx/bufferhelper.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
@@ -6,7 +7,8 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gameobjects/objects/camera.h"
-#include <algorithm>
+#include "anthraxAI/utils/debug.h"
+#include "glm/detail/qualifier.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -36,6 +38,7 @@ void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 {
 	const int meshsize = object.Model->Meshes.size();
 	for (int i = 0; i < meshsize; i++) {
+
 		DrawMesh(object, object.Model->Meshes[i], true);
 	} 
 }
@@ -54,13 +57,16 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
     constants.selected = 0;
+    constants.debugbones = 0;
+    constants.boneID = 0;
     if (object.HasStorage) {
         constants.storagebind = object.StorageBind;
+        constants.instancebind = object.InstanceBind;
         constants.objectID = object.ID;
-        constants.selected = object.ID == Core::Scene::GetInstance()->GetSelectedID() ? 1 : 0;
+        constants.selected = (object.IsSelected || object.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
+        constants.boneID = Utils::Debug::GetInstance()->BoneID;
+        constants.debugbones = Utils::Debug::GetInstance()->Bones ? 1 : 0;
     }
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(object.Position.x, object.Position.y, object.Position.z));
-	constants.rendermatrix = CamData.proj * CamData.view * model;
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 
 	if (bindindex) {
@@ -69,7 +75,8 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 		vkCmdBindIndexBuffer(Cmd.GetCmd(), mesh->IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	}
 	if (ismodel) {
-		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->AIindices.size()), 1, 0, 0, 0);
+		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->AIindices.size()), 1, 0, 0, InstanceIndex);
+        InstanceIndex++;
 	}
 	else {
 		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);		
@@ -237,37 +244,42 @@ void Gfx::Renderer::PrepareStorageBuffer()
     /*    //SelectedID = 0;*/
     /*    return;*/
     /*}*/
-
+    
+    //for (int i = 0; i < MAX_INSTANCES; i++) {
+   
     void* storage;
     VkDeviceSize storagesize = sizeof(u_int32_t) * DEPTH_ARRAY_SCALE;
-    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), BONE_ARRAY_SIZE, storagesize, 0, (void**)&storage);
+    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), 0, storagesize, 0, (void**)&storage);
     u_int32_t* u = static_cast<u_int32_t*>(storage);
 
     int selectedID = -1;
     // TODO: improve pressision
     //printf("--------------------\n");
+	if (Core::WindowManager::GetInstance()->IsMousePressed()) {
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
         if (u[i] != 0) {
             selectedID = u[i];
 			Core::Scene::GetInstance()->SetSelectedID(selectedID);
+            // printf("[%d][%d] \n ",i, u[i]);
     		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
     memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
 	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
 
-           // printf("[%d][%d] \n ",i, u[i]);
             return;
         }
     }
 	
-	if (Core::WindowManager::GetInstance()->IsMousePressed()) {
 
     if (selectedID == -1) {
 		Core::Scene::GetInstance()->SetSelectedID(0);
-  //  printf("-----|%d|", selectedID);
+   // printf("-----|%d|\n\n", selectedID);
 
     }
 
 	}
+    
+
+   // printf("-----|%d|---\n", Core::Scene::GetInstance()->GetSelectedID());
 	//}
 		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
     memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
@@ -278,6 +290,54 @@ void Gfx::Renderer::PrepareStorageBuffer()
     
 }
 
+void Gfx::Renderer::PrepareInstanceBuffer()
+{
+    const size_t buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
+    void* instancedata;
+    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(), 0, buffersize, 0, (void**)&instancedata);
+    
+    InstanceData* datas = (InstanceData*)instancedata;
+    /*for (int i = 0; i < InstanceCount; i++) {*/
+    /*    datas[i].rendermatrix = glm::mat4(1.0f); */
+    /*}*/
+    int i = 0;
+    //for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
+    Core::RQSceneMap map =  Core::Scene::GetInstance()->GetScenes();
+    bool hasanim = false;
+    for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].RenderQueue) {
+        if (!obj.Model || !obj.IsVisible) continue;
+        hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
+        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+        
+            if (hasanim) {
+                std::vector<glm::mat4> bonevec = {}; 
+                bonevec = Core::Scene::GetInstance()->UpdateAnimation(obj);
+
+                for(int k = 0; (k < bonevec.size() ); k++) {
+                    datas[i].bonesmatrices[k] = obj.Model->Bones.FinTransform[k];//vec[i]
+                }
+            }
+            datas[i].hasanimation = hasanim ? 1 : 0;
+            datas[i].rendermatrix =glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
+            //glm::mat4(1.0f);
+            i++;
+        }
+    }
+    for (Gfx::RenderObject& obj : map["gizmo"].RenderQueue) {
+         if (!obj.Model || !obj.IsVisible) continue;
+        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+        datas[i].rendermatrix =  glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
+//glm::mat4(1.0f);
+            i++;
+        }
+
+    }
+    InstanceCount = i;
+    InstanceIndex = 0;
+    //}
+    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory());
+
+}
 void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 {
 	glm::mat4 view = glm::lookAt(camera.GetPos(), camera.GetPos() + camera.GetFront(), camera.GetUp());

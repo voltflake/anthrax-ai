@@ -42,9 +42,9 @@ void Gfx::Model::ProcessBones(std::vector<Vertex>& vert, const std::string& path
             ASSERT(!(vertexID <= vert.size()), "vertex weight loading error\n");
             SetVertexBoneData(vert[vertexID], boneID, weight);
         }
-        for (int i  = 0; i < 4; i++) {
-            printf("[%d] %d %f\n", vertexID, vert[vertexID].boneID[i], vert[vertexID].weights[i]);
-        }
+        // for (int i  = 0; i < 4; i++) {
+        //     printf("[%d] %d %f\n", vertexID, vert[vertexID].boneID[i], vert[vertexID].weights[i]);
+        // }
     }
 }
 

@@ -1,5 +1,6 @@
 #include "anthraxAI/core/scene.h"
 #include "anthraxAI/core/animator.h"
+#include "anthraxAI/core/audio.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
@@ -80,7 +81,8 @@ void Core::Scene::RenderScene()
 }
 
 void Core::Scene::Loop()
-{   
+{
+    Core::Audio::GetInstance()->Play();
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
         if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
@@ -169,6 +171,8 @@ void Core::Scene::Update()
         RQScenes[tag] = info;
         UpdateResources(RQScenes[tag]);
     }
+    Core::Audio::GetInstance()->Load("Anthrax_Mastered.wav");
+
 }
 
 void Core::Scene::ReloadResources()
@@ -205,6 +209,7 @@ void Core::Scene::ReloadResources()
     Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
 
+    Core::Audio::GetInstance()->ResetState();
 //----
     Engine::GetInstance()->ClearState(ENGINE_STATE_RESOURCE_RELOAD);
     Engine::GetInstance()->SetState(ENGINE_STATE_EDITOR);
@@ -231,7 +236,7 @@ void Core::Scene::ReloadResources()
         auto gizmo = GameObjects->Get(Keeper::Type::GIZMO);
         for (Keeper::Objects* info : gizmo) {
             std::string tag = "gizmo";
-            Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);
+            Gfx::AttachmentFlags attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR );
             gizmoscene.Attachments = attachments;
             gizmoscene.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER;
             gizmoscene.RenderQueue.push_back(LoadResources(tag, info));

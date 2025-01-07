@@ -148,7 +148,8 @@ void Core::ImGuiHelper::InitUIElements()
         UI::Element tab(UI::TAB, tablabel);
 
         std::vector<const char*> scenes;
-        scenes.reserve(Core::Scene::GetInstance()->GetSceneNames().size());
+        scenes.reserve(Core::Scene::GetInstance()->GetSceneNames().size() + 1);
+        //scenes.emplace_back("none");
         for (const std::string& it : Core::Scene::GetInstance()->GetSceneNames()) {
             scenes.emplace_back(it.c_str());
         }
@@ -167,21 +168,33 @@ void Core::ImGuiHelper::InitUIElements()
     Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
     Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
     Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
+
+    UI::Element audiotab(UI::TAB, "Audio");
+    std::vector<const char*> audios;
+    audios.reserve(Core::Audio::GetInstance()->GetAudioNames().size() + 1);
+    //audios.emplace_back("none");
+    for (const std::string& it : Core::Audio::GetInstance()->GetAudioNames()) {
+        audios.emplace_back(it.c_str());
+    }
+    Add(audiotab, UI::Element(UI::COMBO, "Sounds", audios, [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
+    Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
+    Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
+    Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
+    Add(audiotab, UI::Element(UI::CHECKBOX, "play", nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
+    
 }
 
-void Core::ImGuiHelper::Combo(UI::Element element) const
+void Core::ImGuiHelper::Combo(UI::Element& element)
 {
-    std::vector<const char*> items = element.GetComboList() ; 
-    auto it = std::find(items.begin(), items.end(), "intro");
-    static int ind = std::distance(items.begin(), it) - 1;
+    std::vector<const char*> items = element.GetComboList() ;
 
-    const char* currvalue = items[ind];  
+    const char* currvalue = items[element.ComboInd];  
     if (ImGui::BeginCombo(element.GetLabel().c_str(), currvalue, 0)) {
         for (int n = 0; n < items.size(); n++) {
-            const bool is_selected = (ind == n);
+            const bool is_selected = (element.ComboInd == n);
             if (ImGui::Selectable(items[n], is_selected)) {
-                ind = n;
-                element.Definition(items[ind]);
+                element.ComboInd = n;
+                element.Definition(items[element.ComboInd]);
             }
 
             if (is_selected) {
@@ -219,7 +232,13 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
             break;
         }
         case UI::TEXT:
-            ImGui::TextUnformatted(element.GetLabel().c_str());
+            if (element.DefinitionString) {
+                ImGui::Text((element.GetLabel() + ": %s").c_str(), element.DefinitionString().c_str());
+            }
+            else {
+             ImGui::TextUnformatted(element.GetLabel().c_str());
+
+            }
             break;
         case UI::SEPARATOR:
             ImGui::Separator();

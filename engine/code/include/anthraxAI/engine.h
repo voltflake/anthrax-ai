@@ -4,6 +4,7 @@
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/core/scene.h"
+#include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/imguihelper.h"
 
 #include "anthraxAI/gfx/vkbase.h"

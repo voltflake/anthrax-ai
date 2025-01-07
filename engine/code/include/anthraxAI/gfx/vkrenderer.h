@@ -69,6 +69,10 @@ namespace Gfx
             
             int GetInstanceSize() const { return 20; }
 
+            const glm::mat4& GetProjection() const { return CamData.proj; }
+            const glm::mat4& GetView() const { return CamData.view; }
+
+
         private:
             RenderTarget* DepthRT;
             RenderTarget* MainRT;

@@ -28,7 +28,8 @@ void Engine::Init()
     Core::WindowManager::GetInstance()->InitWindowsWindow();
 #endif
 
-    Core::Scene::GetInstance()->Init(); 
+    Core::Scene::GetInstance()->Init();
+    Core::Audio::GetInstance()->Init();
     
     Gfx::Vulkan::GetInstance()->Init();
 

@@ -16,8 +16,8 @@ void main()
 
     vec4 color = texture(textures[GetTextureInd()], incoord.xy).xyzw;
     if (pushconstants.selected == 1) {
-        color.r += 0.5;
-        clamp(color.r, 0.0, 1.0);
+        color.r = 0.5;
+        color.r = clamp(color.r, 0.0, 1.0);
     }
     if (pushconstants.debugbones == 1) {
         for (int i = 0; i < 4; i++) {

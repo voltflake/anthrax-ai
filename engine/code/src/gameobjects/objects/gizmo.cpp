@@ -17,8 +17,9 @@ Keeper::Gizmo::Gizmo(const Info& info, int axis)
 void Keeper::Gizmo::SetPosition(const Vector3<float> pos)
 {
     Position = pos;
+
     //if (Axis == Gizmo::Type::Y) {
-    Position.y += 3;
+   // Position.y += 3;
     //}
    // if (Axis == Gizmo::Type::X) {
     //    Position.x += 1;

@@ -150,7 +150,11 @@
 			"variant": "cpp",
 			"regex": "cpp",
 			"valarray": "cpp",
-			"ranges": "cpp"
+			"ranges": "cpp",
+			"complex": "cpp",
+			"csignal": "cpp",
+			"expected": "cpp",
+			"source_location": "cpp"
 		},
 	}
 }

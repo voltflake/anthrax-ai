@@ -39,6 +39,7 @@ namespace Core
         Vector2<int> Begin = { 0, 0};
         Vector2<int> Event = { 0, 0};
         bool Pressed = false;
+        bool Selected = false;
     };
 
     class WindowManager : public Utils::Singleton<WindowManager>
@@ -66,8 +67,11 @@ namespace Core
             Vector2<int> GetScreenResolution() const { return Extents; }
 
             Vector2<int> GetMousePos() const { return Mouse.Position; }
+            Vector2<int> GetMouseBegin() const { return Mouse.Begin; }
             Vector2<int> GetMouseDelta() const { return Mouse.Delta; }
             bool IsMousePressed() const { return Mouse.Pressed; }
+            bool IsMouseSelected() const { return Mouse.Selected; }
+            void ReleaseMouseSelected() { Mouse.Selected = false;}
             xcb_keysym_t GetPressedKey() const { return PressedKey; }
         private:
             int Event;

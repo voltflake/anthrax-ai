@@ -255,15 +255,16 @@ void Gfx::Renderer::PrepareStorageBuffer()
     int selectedID = -1;
     // TODO: improve pressision
     //printf("--------------------\n");
-	if (Core::WindowManager::GetInstance()->IsMousePressed()) {
+	if (Core::WindowManager::GetInstance()->IsMouseSelected()) {
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
         if (u[i] != 0) {
             selectedID = u[i];
 			Core::Scene::GetInstance()->SetSelectedID(selectedID);
             // printf("[%d][%d] \n ",i, u[i]);
     		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
-    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
-	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+			memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
+			vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+				Core::WindowManager::GetInstance()->ReleaseMouseSelected();
 
             return;
         }
@@ -348,7 +349,7 @@ void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 	CamData.proj = projection;
 	CamData.view = view;
 	CamData.viewproj = projection * view;
-	CamData.viewpos = glm::vec4(1.0);//glm::vec4(EditorCamera.getposition(), 1.0);
+	CamData.viewpos = glm::vec4(camera.GetPos(), 1.0);
 	CamData.mousepos = { Core::WindowManager::GetInstance()->GetMousePos().x, Core::WindowManager::GetInstance()->GetMousePos().y, 0, 0};
 	CamData.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
     CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;

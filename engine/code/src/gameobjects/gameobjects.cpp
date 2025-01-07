@@ -2,7 +2,7 @@
 #include "anthraxAI/gameobjects/objects/sprite.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
-#include <algorithm>
+#include "anthraxAI/core/windowmanager.h"
 #include <cstdio>
 Keeper::Base::~Base()
 {
@@ -54,14 +54,17 @@ void Keeper::Base::Update()
     int id = SelectedID;
     std::vector<Objects*>::iterator selected_it = std::find_if(ObjectsList[Keeper::Type::NPC].begin(), ObjectsList[Keeper::Type::NPC].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
     std::vector<Objects*>::iterator gizmo_it = std::find_if(ObjectsList[Keeper::Type::GIZMO].begin(), ObjectsList[Keeper::Type::GIZMO].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id;});
-  
+    static bool gizmo = false;
+    if (gizmo) {
+        gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
+    }
     for (Keeper::Objects* obj : ObjectsList[Keeper::Type::GIZMO]) {
         if (selected_it != ObjectsList[Keeper::Type::NPC].end()) {
             obj->SetVisible(true);
             obj->SetHandle(*selected_it);
             obj->SetPosition((*selected_it)->GetPosition());
         }
-        if (selected_it == ObjectsList[Keeper::Type::NPC].end() && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
+        if (!gizmo && selected_it == ObjectsList[Keeper::Type::NPC].end() && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
             obj->SetVisible(false);
             obj->SetHandle(0);
         }
@@ -73,13 +76,17 @@ void Keeper::Base::Update()
         for (Keeper::Objects* obj : it.second) {
             obj->SetSelected(obj->GetID() == SelectedID);
             if (gizmo_it != ObjectsList[Keeper::Type::GIZMO].end()) {
-                if ((*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {  
+                if ((*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {
+                    gizmo = true; 
                     obj->SetGizmo(*gizmo_it);
                     obj->SetSelected(true);
                 }
             }
-            else {
+            else if (!gizmo) {
                 obj->SetGizmo(nullptr);
+            }
+            if (gizmo && obj->GetType() == Keeper::Type::CAMERA) {
+              continue;
             }
             obj->Update();
         }

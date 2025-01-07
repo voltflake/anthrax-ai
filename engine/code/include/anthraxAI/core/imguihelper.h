@@ -42,6 +42,9 @@ namespace UI
             Element(ElementType type, const std::string& label,std::function<float ()> func) 
             : Type(type), Label(label), DefinitionFloat(func) { }
 
+            Element(ElementType type, const std::string& label, std::function<std::string ()> func) 
+            : Type(type), Label(label), DefinitionString(func) { }
+
             int GetID() const { return ID; }
             ElementType GetType() const { return Type; }
             std::string GetLabel() const { return Label; }
@@ -51,10 +54,14 @@ namespace UI
             std::function<void (std::string)> Definition;
             std::function<void (bool)> DefinitionBool;
             std::function<float ()> DefinitionFloat;
+            std::function<std::string ()> DefinitionString;
 
             inline bool operator<(const UI::Element& elem) const { return GetID() < elem.GetID(); }
             bool GetCheckbox() const { return Checkbox; }
             void SetCheckbox(bool b) { Checkbox = b;}
+
+            int ComboInd = 0;
+
         private:
             
             void GetArg(std::vector<const char*> vec) { ComboList = vec; }
@@ -116,7 +123,7 @@ namespace Core
             void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
             void CleanAll();
         private:
-            void Combo(UI::Element element) const;
+            void Combo(UI::Element& element);
             void ProcessUI(UI::Element& element);
             ImGuiStyle 	EditorStyle;
             std::string EditorWindow;

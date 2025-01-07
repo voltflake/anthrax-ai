@@ -101,6 +101,12 @@ list(APPEND _libraries assimp::assimp)
 # add_subdirectory(${_path}/assimp)
 
 #=====================================================================================#
+#=================================== openAL-soft ===================================#
+list(APPEND _includes ${_path}/openal-soft/openal-soft/include)
+
+add_subdirectory(${_path}/openal-soft/openal-soft)
+list(APPEND _libraries OpenAL::OpenAL)
+#=====================================================================================#
 
 list(REMOVE_DUPLICATES _libraries)
 list(REMOVE_DUPLICATES _includes)

@@ -1,44 +1,46 @@
-(1. process material loading; connection between model class and resource data structure
+`Parser:`
+<!-- - lookup for possible elements -> key value -->
 
-1.1. descriptor layout error after 3d -> 2d 
-1.2. starting engine -> 2d -> editor color messed up) --> probably done !
+1. load the file to the vector of strings
+2. check if contains root node `Scene:` --> root node = file.begin()
+3. check if contains child eg `Object:` --> when we want to find child we will check for the iterater from `RootNode + ElementLookup_key`, we will parse retrieved data `Object:` to `ElementLookup_value('Object')`, also check for errors (eg if ':' is missing, '\t' is missing)
+4. if yes -> set up `RootChildNode` -> use this iterator to find other elements of this child (positions, textures, anim)
+5. do the same as in `3.` to gather info for `RootChildNode` children -> `ChildNode`
 
-1. please get rid of test3d variable 
+`template for level:`
 
-2. parser for 3d levels? improve 2d/3d modes handling
+Scene: models
+    Object:
+        ID: 0
+        Position:
+            x: 10
+            y: 10
+            z: 5
+        Material:
+            name: models
+            frag: model.frag
+            vert: model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: monkeytextured.obj
 
-3. fix lighting; direction ligting; point lights
+------------
 
-----------
-
-Ambitious:
-- completely rewrite engine architecture
-(probably combine this with streams, but at separate time work on the features for anthraxAI and make videos)
-
-----------
-
-
-parser thoughts:
-
-- two folders: levels/2d and levels/3d
-
-- if we are in 2d mode -> parse 2d level
-- if we are in 3d mode -> parse 3d level
-
-- 3d level text: 
-    - model path
-    - input texture (also check whether model contains material)
-    - position (x y z)
-    - is animation
-        - path to other animations
-        - speed
-
-(add some basic assertions eg if we are passing correct node names)
-
-implementation details:
-    - GetRootNode()
-    -> GetNextChild() -> GetElement<std::string>(ELEM_PATH) etc
-
-    - array of strings? bind iterator with particular node
-    - arrayy of NodeStruct ? bind iterator with nodestruct element which has root and next child 
-    
+Scene: sprites
+    Object:
+        ID: 0
+        Material:
+            name: sprites
+            frag: sprite.frag
+            vert: sprite.vert
+        Texture:
+            name: kote-v-bote.jpg
+    Object:
+        ID: 1
+        Material:
+            name: sprites
+            frag: sprite.frag
+            vert: sprite.vert
+        Texture:
+            name: placeholder.jpg

@@ -27,15 +27,7 @@
 					}
 				]
 			}
-		,
-			{
-				"name": "[Windows][CMake] Launch",
-				"type": "cppvsdbg",
-				"request": "launch",
-				"program": "${workspaceFolder}/build/demos/demo-models/anthraxAI-demo-models",
-				"cwd": "${workspaceFolder}/assets",
-				"stopAtEntry": false
-			}
+		
 		],
 		"compounds": []
 	},
@@ -158,7 +150,11 @@
 			"variant": "cpp",
 			"regex": "cpp",
 			"valarray": "cpp",
-			"ranges": "cpp"
+			"ranges": "cpp",
+			"complex": "cpp",
+			"csignal": "cpp",
+			"expected": "cpp",
+			"source_location": "cpp"
 		},
 	}
 }

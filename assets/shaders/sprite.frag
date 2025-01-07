@@ -1,8 +1,9 @@
 #version 450
 
-#include "fragdef.h"
+#include "defines/fragdef.h"
+#include "defines/defines.h"
 
 void main()
 {
-    outfragcolor = texture(texturesampler, incoord.xy).xyzw;
+    outfragcolor = texture(textures[GetTextureInd()], incoord.xy).xyzw;
 }

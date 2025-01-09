@@ -52,6 +52,7 @@ namespace UI
             std::vector<const char*> GetComboList() { return ComboList;}
             
             std::function<void (std::string)> Definition;
+            std::function<bool ()> DefinitionBoolRet;
             std::function<void (bool)> DefinitionBool;
             std::function<float ()> DefinitionFloat;
             std::function<std::string ()> DefinitionString;

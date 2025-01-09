@@ -19,6 +19,20 @@ void Gfx::Vulkan::Init()
 	
 }
 
+bool Gfx::Vulkan::ReloadShaders()
+{
+    vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
+    Core::PipelineDeletor::GetInstance()->CleanAll();
+
+//	Gfx::Pipeline::GetInstance()->CompileShader("./shaders/intro.frag", shaderc_glsl_fragment_shader, {});
+
+	Gfx::Pipeline::GetInstance()->Build();
+
+	Core::Scene::GetInstance()->UpdateMaterials();
+
+	return true;
+}
+
 bool Gfx::Vulkan::OnResize()
 {
     if (Gfx::Renderer::GetInstance()->IsOnResize() && Core::WindowManager::GetInstance()->GetScreenResolution().x > 0 && Core::WindowManager::GetInstance()->GetScreenResolution().y > 0) {

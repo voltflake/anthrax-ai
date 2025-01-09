@@ -31,7 +31,7 @@ endif()
 #======================================= vulkan ======================================#
 
 find_package(Vulkan REQUIRED)
-list(APPEND _libraries Vulkan::Vulkan Vulkan::Headers)
+list(APPEND _libraries Vulkan::Vulkan Vulkan::Headers )
 include_directories(${Vulkan_INCLUDE_DIRS})
 link_directories(${Vulkan_LIBRARY_DIRS})
 link_libraries(${Vulkan_LIBRARIES})
@@ -114,6 +114,10 @@ list(REMOVE_DUPLICATES _includes)
 add_library(libraries INTERFACE)
 add_library(anthrax::libraries ALIAS libraries)
 target_link_libraries(libraries INTERFACE ${_libraries})
+
+#manually link against shaderc
+target_link_libraries(libraries INTERFACE shaderc_shared )
+
 target_include_directories(libraries SYSTEM INTERFACE ${_includes})
 
 if (WIN32)

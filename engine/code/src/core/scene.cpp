@@ -158,7 +158,7 @@ void Core::Scene::Init()
 
 }
 
-void Core::Scene::Update()
+void Core::Scene::LoadIntro()
 {
     {
         Core::SceneInfo info;
@@ -172,7 +172,22 @@ void Core::Scene::Update()
         UpdateResources(RQScenes[tag]);
     }
     Core::Audio::GetInstance()->Load("Anthrax_Mastered.wav");
+}
 
+void Core::Scene::UpdateMaterials()
+{
+    for (Gfx::RenderObject& obj : RQScenes[CurrentScene].RenderQueue) {
+        obj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(obj.MaterialName);
+    }
+    for (Gfx::RenderObject& obj : RQScenes["gizmo"].RenderQueue) {
+        obj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(obj.MaterialName);
+    }
+    for (Gfx::RenderObject& obj : RQScenes["grid"].RenderQueue) {
+        obj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("grid");
+    }
+    for (Gfx::RenderObject& obj : RQScenes["intro"].RenderQueue) {
+        obj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("intro");
+    }
 }
 
 void Core::Scene::ReloadResources()
@@ -190,6 +205,7 @@ void Core::Scene::ReloadResources()
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Z), Keeper::Gizmo::Type::Z));
+    
     if (Animator) {
         delete Animator;
     }
@@ -274,6 +290,7 @@ Gfx::RenderObject Core::Scene::LoadResources(const std::string& tag, const Keepe
     rqobj.ID = info->GetID();
     rqobj.IsVisible = info->IsVisible();
     rqobj.Position = info->GetPosition();
+    rqobj.MaterialName = info->GetMaterialName();
     rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(info->GetMaterialName());
     rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture(info->GetTextureName());
     if (!info->GetModelName().empty()) {
@@ -354,15 +371,19 @@ void Core::Scene::LoadScene(const std::string& filename)
         idi = Parse.GetElement<int>(node, Utils::LEVEL_ELEMENT_ID, 0);
 
         Utils::NodeIt position = Parse.GetChild(node, Utils::LEVEL_ELEMENT_POSITION);
-        xpos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_X, 0.0);
-        ypos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Y, 0.0);
-        zpos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Z, 0.0);
-        info.Position = { xpos, ypos, zpos };
+        if (Parse.IsNodeValid(position)) {
+            xpos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_X, 0.0);
+            ypos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Y, 0.0);
+            zpos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Z, 0.0);
+            info.Position = { xpos, ypos, zpos };
+        }
 
         Utils::NodeIt material = Parse.GetChild(node, Utils::LEVEL_ELEMENT_MATERIAL);
-        info.Material = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_NAME, "");
-        info.Fragment = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_FRAG, "");
-        info.Vertex = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_VERT, "");
+        if (Parse.IsNodeValid(material)) {
+            info.Material = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_NAME, "");
+            info.Fragment = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_FRAG, "");
+            info.Vertex = Parse.GetElement<std::string>(material, Utils::LEVEL_ELEMENT_VERT, "");
+        }
 
         Utils::NodeIt texture = Parse.GetChild(node, Utils::LEVEL_ELEMENT_TEXTURE);
         info.Texture = Parse.GetElement<std::string>(texture, Utils::LEVEL_ELEMENT_NAME, "");

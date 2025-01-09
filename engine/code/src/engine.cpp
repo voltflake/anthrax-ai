@@ -33,7 +33,8 @@ void Engine::Init()
     
     Gfx::Vulkan::GetInstance()->Init();
 
-    Core::Scene::GetInstance()->Update();
+    Core::Scene::GetInstance()->LoadIntro();
+    
     Core::ImGuiHelper::GetInstance()->Init();
     
     SetState(ENGINE_STATE_EDITOR);

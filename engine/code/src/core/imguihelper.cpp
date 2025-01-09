@@ -149,7 +149,7 @@ void Core::ImGuiHelper::InitUIElements()
 
         std::vector<const char*> scenes;
         scenes.reserve(Core::Scene::GetInstance()->GetSceneNames().size() + 1);
-        //scenes.emplace_back("none");
+        scenes.emplace_back("none");
         for (const std::string& it : Core::Scene::GetInstance()->GetSceneNames()) {
             scenes.emplace_back(it.c_str());
         }
@@ -158,7 +158,7 @@ void Core::ImGuiHelper::InitUIElements()
         
         Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
     
-        Add(EditorWindow, UI::Element(UI::BUTTON, "Global Button")); 
+        Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
     }
     
     UI::Element debugtab(UI::TAB, "Debug");
@@ -172,7 +172,7 @@ void Core::ImGuiHelper::InitUIElements()
     UI::Element audiotab(UI::TAB, "Audio");
     std::vector<const char*> audios;
     audios.reserve(Core::Audio::GetInstance()->GetAudioNames().size() + 1);
-    //audios.emplace_back("none");
+    audios.emplace_back("none");
     for (const std::string& it : Core::Audio::GetInstance()->GetAudioNames()) {
         audios.emplace_back(it.c_str());
     }
@@ -188,13 +188,15 @@ void Core::ImGuiHelper::Combo(UI::Element& element)
 {
     std::vector<const char*> items = element.GetComboList() ;
 
-    const char* currvalue = items[element.ComboInd];  
+    const char* currvalue = items[element.ComboInd];
     if (ImGui::BeginCombo(element.GetLabel().c_str(), currvalue, 0)) {
         for (int n = 0; n < items.size(); n++) {
             const bool is_selected = (element.ComboInd == n);
             if (ImGui::Selectable(items[n], is_selected)) {
                 element.ComboInd = n;
-                element.Definition(items[element.ComboInd]);
+                if (n != 0) {
+                    element.Definition(items[element.ComboInd]);
+                }
             }
 
             if (is_selected) {
@@ -218,8 +220,8 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
         }
         case UI::BUTTON: {    
             if (ImGui::Button(element.GetLabel().c_str())) {
-                if (element.Definition) {
-                    element.Definition(element.GetLabel());
+                if (element.DefinitionFloat) {
+                    element.DefinitionFloat();
                 }
             }
             break;

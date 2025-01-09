@@ -18,6 +18,8 @@ namespace Gfx
 	    Gfx::Material* Material = nullptr;
         Gfx::RenderTarget* Texture = nullptr;
 
+        std::string MaterialName;
+
         uint32_t BindlessOffset = 0;
 	    Vector3<float> Position;
 

@@ -72,7 +72,6 @@ bool Core::Audio::LoadWAV(const std::string& name, std::uint8_t& channels, std::
 
     // data subchunk
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read data header");
-    printf("-----|%s| \n\n", buffer);
 
     ASSERT(strncmp(buffer, "data", 4) != 0, "Core::Audio::LoadWAV(): file is not a valid WAVE file (data chunk)");
 

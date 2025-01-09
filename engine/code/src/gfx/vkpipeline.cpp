@@ -107,18 +107,23 @@ VkPipelineDepthStencilStateCreateInfo DepthStencilCreateInfo(bool bDepthTest, bo
 }
 
 bool Gfx::Pipeline::LoadShader(const char* filepath, VkShaderModule* outshadermodule) {
-	
-	std::ifstream file(filepath, std::ios::ate | std::ios::binary);
 
-	if (!file.is_open()) {
-		return false;
-	}
+	std::vector<char> buffer;
+	Utils::ReadFile(filepath, buffer);
 
-    size_t fileSize = (size_t) file.tellg();
-	std::vector<char> buffer(fileSize);
-	file.seekg(0);
-	file.read(buffer.data(), fileSize);
-	file.close();
+	VkShaderModuleCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.pNext = nullptr;
+	createInfo.codeSize = buffer.size();
+	createInfo.pCode = reinterpret_cast<const uint32_t*>(buffer.data());
+
+	VkShaderModule shadermodule;
+	VK_ASSERT(vkCreateShaderModule(Gfx::Device::GetInstance()->GetDevice(), &createInfo, nullptr, &shadermodule), "failed to create shader module!");
+	*outshadermodule = shadermodule;
+	return true;
+}
+
+bool Gfx::Pipeline::LoadShader(const std::string& buffer, VkShaderModule* outshadermodule) {
 
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -158,6 +163,26 @@ Gfx::Material* Gfx::Pipeline::CreateMaterial(VkPipeline pipelinew, VkPipelineLay
 	});
 
 	return &Materials[name];
+}
+
+void Gfx::Pipeline::CompileShader(const std::string& name, shaderc_shader_kind kind, std::string& data) {
+
+	std::vector<char> buffer;
+	Utils::ReadFile(name, buffer);
+	
+	shaderc::Compiler compiler;
+  	shaderc::CompileOptions options{};
+
+	options.SetIncluder(std::make_unique<Gfx::ShadercIncluder>());
+
+  	// Like -DMY_DEFINE=1
+  	//options.AddMacroDefinition("MY_DEFINE", "1");
+
+  	shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(buffer.data(), buffer.size(), kind, name.c_str(), options);
+
+	ASSERT(module.GetCompilationStatus() != shaderc_compilation_status_success, "Gfx::Pipeline::CompileShader() " + module.GetErrorMessage());
+
+	data = std::string(std::string((const char*)module.cbegin(), (const char*)module.cend()));
 }
 
 void Gfx::Pipeline::Build() 
@@ -201,6 +226,8 @@ void Gfx::Pipeline::Build()
 	ColorBlendAttachment = ColorBlendAttachmentCreateInfo();
 	DepthStencil = DepthStencilCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
 
+	std::string shaderbuf;
+
     Core::Scene* scene = Core::Scene::GetInstance();
     for (auto& it : scene->GetGameObjects()->GetObjects()) {
         for (Keeper::Objects* info : it.second) {
@@ -213,10 +240,15 @@ void Gfx::Pipeline::Build()
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
             }
-            std::string frag = "./shaders/" + info->GetFragmentName() + ".spv";
-            std::string vert = "./shaders/" + info->GetVertexName() + ".spv";
-            ASSERT(!LoadShader(frag.c_str(), &fragshader), "Error: fragment shader module");
-            ASSERT(!LoadShader(vert.c_str(), &vertexshader), "Error: vertex shader module");
+            std::string frag = "./shaders/" + info->GetFragmentName();
+            std::string vert = "./shaders/" + info->GetVertexName();
+			CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+			LoadShader(shaderbuf, &fragshader);
+			shaderbuf.clear();
+			CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
+			LoadShader(shaderbuf, &vertexshader);
+			shaderbuf.clear();
+
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
             Setup(0);
@@ -224,15 +256,20 @@ void Gfx::Pipeline::Build()
         }
     }
 
-
 // intro
     if (!ShaderStages.empty()) {
 		ShaderStages.clear();
 		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
 	}
-	ASSERT(!LoadShader("./shaders/intro.frag.spv", &fragshader), "Error: fragment shader module");
-	ASSERT(!LoadShader("./shaders/sprite.vert.spv", &vertexshader), "Error: vertex shader module");
+
+	std::string buf;
+	CompileShader("./shaders/intro.frag", shaderc_glsl_fragment_shader, buf);
+	LoadShader(buf, &fragshader);
+	buf.clear();
+	CompileShader("./shaders/sprite.vert", shaderc_glsl_vertex_shader, buf);
+	LoadShader(buf, &vertexshader);
+
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
     
@@ -245,8 +282,15 @@ void Gfx::Pipeline::Build()
     ShaderStages.clear();
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	ASSERT(!LoadShader("./shaders/grid.frag.spv", &fragshader), "Error: fragment shader module");
-	ASSERT(!LoadShader("./shaders/grid.vert.spv", &vertexshader), "Error: vertex shader module");
+	std::string frag = "./shaders/grid.frag";
+    std::string vert = "./shaders/grid.vert";
+	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+	LoadShader(shaderbuf, &fragshader);
+	shaderbuf.clear();
+	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
+	LoadShader(shaderbuf, &vertexshader);
+	shaderbuf.clear();
+	
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
     
@@ -259,8 +303,16 @@ void Gfx::Pipeline::Build()
     ShaderStages.clear();
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	ASSERT(!LoadShader("./shaders/model.frag.spv", &fragshader), "Error: fragment shader module");
-	ASSERT(!LoadShader("./shaders/model.vert.spv", &vertexshader), "Error: vertex shader module");
+	
+	frag = "./shaders/model.frag";
+    vert = "./shaders/model.vert";
+	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+	LoadShader(shaderbuf, &fragshader);
+	shaderbuf.clear();
+	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
+	LoadShader(shaderbuf, &vertexshader);
+	shaderbuf.clear();
+	
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
 	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
     
@@ -400,3 +452,32 @@ VkPipelineVertexInputStateCreateInfo Gfx::Pipeline::VertexInputStageCreateInfo()
 	return info;
 }
 
+shaderc_include_result* Gfx::ShadercIncluder::GetInclude(const char* requested_src, shaderc_include_type type, const char* requesting_src, size_t include_depth)
+{
+	std::string name("./shaders/" + std::string(requested_src));
+
+	char *nameb = new char[name.size()];
+	memcpy(nameb, name.c_str(), name.size());
+
+	std::vector<char> contents;
+	Utils::ReadFile(name, contents);
+
+	char *contentb = new char[contents.size()];
+	memcpy(contentb, contents.data(), contents.size());
+
+	return new shaderc_include_result {
+		nameb,
+		name.size(),
+		contentb,
+		contents.size(),
+		new Data { nameb, contentb }
+	};
+}
+
+void Gfx::ShadercIncluder::ReleaseInclude(shaderc_include_result* data)
+{
+	Data* fdata = reinterpret_cast<Data*>(data->user_data);
+	delete[] fdata->buffer1;
+	delete[] fdata->buffer2;
+	delete fdata;
+}

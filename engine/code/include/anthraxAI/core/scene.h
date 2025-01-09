@@ -42,10 +42,12 @@ namespace Core
         public:
             ~Scene() { if (GameObjects) delete GameObjects; if (Animator) delete Animator; }
             void Init();
-            void Update();
+            
+            void LoadIntro();
 
             void Loop();
                 
+            void UpdateMaterials();
             void UpdateResources(SceneInfo& info);
             std::vector<Gfx::RenderObject> LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info);
             Gfx::RenderObject LoadResources(const std::string& tag, const Keeper::Objects* info);

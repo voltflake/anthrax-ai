@@ -34,17 +34,12 @@ glm::vec3 UnprojectMouse(glm::vec2 mouse, glm::vec2 dimensions, glm::vec3 pos)
     
     glm::vec3 realpos = glm::unProject({mouse.x, mouse.y, 1.0}, glm::translate(glm::mat4(1.0f), pos), Gfx::Renderer::GetInstance()->GetProjection(), viewport);
 
-  
-    // glm::vec3 mouse_ndc = { x, y, z };
-    // glm::vec4 mouse_clip = glm::vec4(mouse_ndc.x, mouse_ndc.y, -1.0f, 1.0f);
-    // glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+    float delta = Utils::Debug::GetInstance()->DeltaMs;
+    float speed = delta * 0.001f;
 
-    // glm::vec4 mouse_eye = glm::inverse(Gfx::Renderer::GetInstance()->GetProjection()) * mouse_clip;
-    // mouse_eye = glm::vec4(mouse_eye.x, mouse_eye.y, 1.0f, 0.0f);
-    // glm::vec4 mouse_world = ((glm::inverse(Gfx::Renderer::GetInstance()->GetView())) * mouse_eye);
-    // glm::vec3 position = pos + glm::normalize( glm::vec3(mouse_world.x, mouse_world.y, mouse_world.z));
-    return  glm::vec3(realpos.x, realpos.y, 1.0) * glm::vec3(0.03);
+    return  glm::vec3(realpos.x * speed, realpos.y * speed, 1.0) ;//* glm::vec3(speed);
 }
+
 void Keeper::Npc::Update()
 {
    if (GizmoHandle && Core::WindowManager::GetInstance()->IsMousePressed()) {

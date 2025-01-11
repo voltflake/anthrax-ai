@@ -171,7 +171,7 @@ void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags)
 		attachmentinfo.push_back(info);
 	}
 	
-	const VkRenderingInfo renderinfo = Cmd.GetRenderingInfo(attachmentinfo, Core::WindowManager::GetInstance()->GetScreenResolution());    
+	const VkRenderingInfo renderinfo = Cmd.GetRenderingInfo(attachmentinfo, {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});// Core::WindowManager::GetInstance()->GetScreenResolution());    
 	BeginRendering(Cmd.GetCmd(), &renderinfo);
 }
 
@@ -186,7 +186,7 @@ void Gfx::Renderer::EndFrame()
 					GetMainRT()->GetSize(),
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 					Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
-					Core::WindowManager::GetInstance()->GetScreenResolution(),
+					{(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height},
 					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
@@ -248,9 +248,9 @@ void Gfx::Renderer::PrepareStorageBuffer()
     //for (int i = 0; i < MAX_INSTANCES; i++) {
    
     void* storage;
-    VkDeviceSize storagesize = sizeof(u_int32_t) * DEPTH_ARRAY_SCALE;
+    VkDeviceSize storagesize = sizeof(uint32_t) * DEPTH_ARRAY_SCALE;
     vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), 0, storagesize, 0, (void**)&storage);
-    u_int32_t* u = static_cast<u_int32_t*>(storage);
+    uint32_t* u = static_cast<uint32_t*>(storage);
 
     int selectedID = -1;
     // TODO: improve pressision
@@ -261,8 +261,8 @@ void Gfx::Renderer::PrepareStorageBuffer()
             selectedID = u[i];
 			Core::Scene::GetInstance()->SetSelectedID(selectedID);
             // printf("[%d][%d] \n ",i, u[i]);
-    		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
-			memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
+    		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
+			memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
 			vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
 				Core::WindowManager::GetInstance()->ReleaseMouseSelected();
 
@@ -282,8 +282,8 @@ void Gfx::Renderer::PrepareStorageBuffer()
 
    // printf("-----|%d|---\n", Core::Scene::GetInstance()->GetSelectedID());
 	//}
-		 u_int32_t dst[DEPTH_ARRAY_SCALE] = {0};
-    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(u_int32_t));
+		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
+    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
     vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
 
     //printf("\n\n");
@@ -351,7 +351,7 @@ void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 	CamData.viewproj = projection * view;
 	CamData.viewpos = glm::vec4(camera.GetPos(), 1.0);
 	CamData.mousepos = { Core::WindowManager::GetInstance()->GetMousePos().x, Core::WindowManager::GetInstance()->GetMousePos().y, 0, 0};
-	CamData.viewport = { Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
+	CamData.viewport = { Gfx::Device::GetInstance()->GetSwapchainSize().x, Gfx::Device::GetInstance()->GetSwapchainSize().y , 0, 0 };//{ Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
     CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;
 
     const size_t buffersize = (sizeof(CameraData));
@@ -410,7 +410,7 @@ uint32_t Gfx::Renderer::SyncFrame()
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetSwapchain(), 1000000000, Frames[FrameIndex].PresentSemaphore, VK_NULL_HANDLE, &swapchainimageindex);
 	if (e == VK_ERROR_OUT_OF_DATE_KHR) {
-    OnResize = true;
+    	OnResize = true;
 		return -1;
 	}
 	VK_ASSERT(vkResetFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence), "vkResetFences failed !");
@@ -478,7 +478,7 @@ void Gfx::Renderer::CreateRenderTargets()
 	DepthRT = new RenderTarget();
 	DepthRT->SetFormat(VK_FORMAT_D32_SFLOAT);
 	DepthRT->SetDepth(true);
-	DepthRT->SetDimensions(Core::WindowManager::GetInstance()->GetScreenResolution());
+	DepthRT->SetDimensions({(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});//  Core::WindowManager::GetInstance()->GetScreenResolution());
 	DepthRT->CreateRenderTarget();
 	
 	if (MainRT) {

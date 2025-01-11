@@ -24,11 +24,8 @@ class Camera : public Keeper::Objects
         glm::vec3 GetFront() const { return Front; }
         glm::vec3 GetUp() const { return Up; }
 
-#ifdef AAI_LINUX
         void UpdateMovement();
-#else
-        void UpdateMovement();
-#endif
+
         void UpdateDirection();
         void Update() override { UpdateMovement(); UpdateDirection(); };
 

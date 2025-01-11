@@ -4,6 +4,11 @@
 #include <cstring>
 
 #include <vulkan/vulkan.h>
+#ifdef AAI_WINDOWS
+#include <windows.h>
+#include <backends/imgui_impl_win32.h>
+#include <vulkan/vulkan_win32.h>
+#endif
 #include <vulkan/vk_enum_string_helper.h>
 #ifdef AAI_LINUX
 #include <xcb/xcb.h>
@@ -11,9 +16,6 @@
 const std::vector<const char*> INSTANCE_EXT = 
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_xcb_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #else
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
-#include <backends/imgui_impl_win32.h>
 const std::vector<const char*> INSTANCE_EXT = 
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #endif

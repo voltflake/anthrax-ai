@@ -41,9 +41,9 @@ void main()
         outfragcolor = vec4(0);
         return ;
     }
-    gl_FragDepth = ClipSpaceDepth(clippos, proj, view);
+    gl_FragDepth = clamp(ClipSpaceDepth(clippos, proj, view), 0, 1);
 
-    float lineardepth = LinearDepth(clippos, proj, view);
+    float lineardepth = clamp(LinearDepth(clippos, proj, view), 0, 1);
     float fading = smoothstep(1, 0, lineardepth);
 
     outfragcolor.rgba = (grid(clippos, 1, 1, vec3(0.6, 0.6, 0.6))).rgba;

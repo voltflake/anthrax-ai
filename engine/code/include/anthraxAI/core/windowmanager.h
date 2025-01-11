@@ -18,6 +18,13 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 }
 #endif
 
+#if defined(AAI_WINDOWS)
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#include <backends/imgui_impl_win32.h>
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+#endif
+
 #define MAX_FPS 60
 
 enum WindowEvents {
@@ -62,6 +69,10 @@ namespace Core
 #else
         public:
             void InitWindowsWindow();
+            void RunWindows();
+
+            HWND GetWinWindow() { return Hwnd; }
+            HINSTANCE GetWinInstance() { return Hinstance; }
 #endif
         public:
             Vector2<int> GetScreenResolution() const { return Extents; }
@@ -72,7 +83,18 @@ namespace Core
             bool IsMousePressed() const { return Mouse.Pressed; }
             bool IsMouseSelected() const { return Mouse.Selected; }
             void ReleaseMouseSelected() { Mouse.Selected = false;}
+            void SetResizeExtents(int x, int y) { OnResizeExtents.x = x; OnResizeExtents.y = y; }
+            void SetEvent(int event) { Event |= event; }
+#ifdef AAI_LINUX
             xcb_keysym_t GetPressedKey() const { return PressedKey; }
+#else
+        private:
+            int PressedKey;
+            HWND Hwnd;
+	        HINSTANCE Hinstance;
+        public:
+            int GetPressedKey() const { return PressedKey; }
+#endif
         private:
             int Event;
             MouseInfo Mouse;
@@ -81,8 +103,11 @@ namespace Core
             
             void Events();
             void ProcessEvents();
+#ifdef AAI_LINUX
             int CatchEvent(xcb_generic_event_t *event);
-
+#else
+            int CatchEvent();
+#endif
             bool running = true;
     };
 }

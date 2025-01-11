@@ -55,19 +55,15 @@ void Core::Scene::RenderScene()
         // objects from map
         Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
         Render(CurrentScene);
+        if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
+            Render("grid");
+        }
         Gfx::Renderer::GetInstance()->EndRender();
 
         // gizmo
         if (HasFrameGizmo) {
             Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
             Render("gizmo");
-            Gfx::Renderer::GetInstance()->EndRender();
-        }
-        
-        // grid
-        if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
-            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["grid"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
-            Render("grid");
             Gfx::Renderer::GetInstance()->EndRender();
         }
 
@@ -340,7 +336,7 @@ void Core::Scene::ParseSceneNames()
     
     SceneNames.reserve(20);
     for (const auto& name : std::filesystem::directory_iterator(path)) {
-        std::string str = name.path();
+        std::string str = name.path().string();
         std::string basename = str.substr(str.find_last_of("/\\") + 1);
         SceneNames.push_back(basename.c_str());
     }

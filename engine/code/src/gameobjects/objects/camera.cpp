@@ -15,7 +15,11 @@ void Keeper::Camera::SetDirections()
 void Keeper::Camera::UpdateMovement()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs;
-    const float camspeed = 0.1f * delta;	
+#ifdef AAI_LINUX
+    const float camspeed = 0.1f * delta;
+#else
+    const float camspeed = 0.05f * delta;
+#endif
     if (Core::WindowManager::GetInstance()->GetPressedKey() == W_KEY) {
         Position += camspeed * Front;
     }

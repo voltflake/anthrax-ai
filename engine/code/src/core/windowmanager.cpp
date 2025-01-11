@@ -139,68 +139,6 @@ int Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 	return WINDOW_EVENT_RUN;
 }
 
-void Core::WindowManager::ProcessEvents()
-{
-    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_PRESSED)) {
-        if (PressedKey == ESC_KEY) {
-            Engine::GetInstance()->ToogleEditorMode();
-            Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
-        }
-        if (PressedKey == MINUS_KEY) {
-            if (Utils::Debug::GetInstance()->BoneID > 0) {
-                Utils::Debug::GetInstance()->BoneID--;
-            }
-        }
-        if (PressedKey == PLUS_KEY) {
-            Utils::Debug::GetInstance()->BoneID++;
-        }
-
-    }
-    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_RELEASED)) {
-        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
-        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
-    }
-
-    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
-        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_RELEASED)) {
-            Mouse.Delta = {0, 0};
-            Mouse.Pressed = false;
-            Mouse.Selected = false;
-            //printf("------MOUSE RELEASED--------\n");
-            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_MOVE);
-            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_RELEASED);
-        }
-        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_PRESSED)) {
-            //printf("------MOUSE PRESSED--------\n");
-            Mouse.Pressed = true;
-            Mouse.Selected = true;
-            Mouse.Begin = Mouse.Event;
-            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
-        }
-        if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {
-            Mouse.Position.x = Mouse.Event.x;
-            //printf("------MOUSE MOVE--------\n");
-            Mouse.Position.y = Mouse.Event.y;
-            Mouse.Delta.x = Mouse.Begin.x - Mouse.Event.x;
-            Mouse.Delta.y = Mouse.Begin.y - Mouse.Event.y;
-            Mouse.Begin = Mouse.Position;
-        }
-    }
-    if (Utils::IsBitSet(Event, WINDOW_EVENT_EXIT)) {
-        Engine::GetInstance()->SetState(ENGINE_STATE_EXIT);
-        running = false;
-    }
-    if (Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE)) {
-        Vector2<int> tmp = Extents;
-        Extents.x = OnResizeExtents.x;
-        Extents.y = OnResizeExtents.y;
-        if (!Engine::GetInstance()->OnResize()) {
-            Extents = tmp;
-        }
-        Utils::ClearBit(&Event, WINDOW_EVENT_RESIZE);
-    }
-}
-
 void Core::WindowManager::Events()
 {
 	xcb_generic_event_t *event;
@@ -240,4 +178,211 @@ void Core::WindowManager::RunLinux()
         Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
 	}
 }
+
+#else
+void Core::WindowManager::InitWindowsWindow()
+{
+	Hwnd = nullptr;
+	Hinstance = GetModuleHandleA(nullptr);
+
+	WNDCLASSEX wcex = {};
+	wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.style =  CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.hInstance = Hinstance;
+	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszClassName = TEXT("35");
+
+	ASSERT(!RegisterClassEx(&wcex), "Can't register winClass!");
+	
+	Hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"), WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            Extents.x, Extents.y,
+            nullptr,
+            nullptr,
+            Hinstance,
+            nullptr);
+	ASSERT(!Hwnd, "Can't create window!");
+
+	ShowWindow(Hwnd, SW_SHOW);
+	SetForegroundWindow(Hwnd);
+	SetFocus(Hwnd);
+}
+
+int Core::WindowManager::CatchEvent()
+{
+	if (Gfx::Renderer::GetInstance()->IsOnResize() && (OnResizeExtents.x != Extents.x || OnResizeExtents.y != Extents.y)) {
+		Event |= WINDOW_EVENT_RESIZE;
+	}
+		
+	PressedKey = -1;
+	Event |= WINDOW_EVENT_KEY_RELEASED;
+	if (GetAsyncKeyState(VK_LBUTTON) & 0x8000 != 0) {
+		Event |= WINDOW_EVENT_MOUSE_PRESSED;
+		POINT p;
+		if (GetCursorPos(&p)) {
+			if (ScreenToClient(Hwnd, &p)) {
+				Mouse.Event = { p.x, p.y };
+				Event |= WINDOW_EVENT_MOUSE_MOVE;
+			}
+		}
+	}
+	if (Mouse.Pressed) {
+		POINT p;
+		if (GetCursorPos(&p)) {
+			if (ScreenToClient(Hwnd, &p)) {
+				Mouse.Event = { p.x, p.y };
+				Event |= WINDOW_EVENT_MOUSE_MOVE;
+			}
+		}
+	}
+	if (GetAsyncKeyState(ENTER_KEY) < 0) {
+		PressedKey = ENTER_KEY;
+	}
+	if (GetAsyncKeyState(ESC_KEY) & 0x01) {
+		PressedKey = ESC_KEY;
+	}
+	if (GetAsyncKeyState(D_KEY) < 0) {
+		PressedKey = D_KEY;
+	}
+	if (GetAsyncKeyState(W_KEY) < 0) {
+		PressedKey = W_KEY;
+	}
+	if (GetAsyncKeyState(A_KEY) < 0) {
+		PressedKey = A_KEY;
+	}
+	if (GetAsyncKeyState(S_KEY) < 0) {
+		PressedKey = S_KEY;
+	}
+	if (PressedKey != -1) {
+		Event |= WINDOW_EVENT_KEY_PRESSED;
+        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
+	}	
+	return 0;
+}
+
+void Core::WindowManager::RunWindows() 
+{
+	MSG msg = {};
+
+	long long start, end = 0;
+	float delta;
+	while (running) {
+		start = clock();
+
+		if (PeekMessage(&msg, NULL, 0,0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+
+			if (msg.message == WM_QUIT)
+				break ;
+			if (msg.message == WM_LBUTTONUP) {
+				Mouse.Pressed = false;
+            	Event |= WINDOW_EVENT_MOUSE_RELEASED;
+			}
+		}
+		CatchEvent();
+		ProcessEvents();
+
+		while (delta < CLOCKS_PER_SEC / MAX_FPS) {
+			start = clock();
+			delta = (float(start - end));
+		}
+        Utils::Debug::GetInstance()->FPS = CLOCKS_PER_SEC / delta;
+
+		Core::ImGuiHelper::GetInstance()->UpdateFrame();
+        Core::Scene::GetInstance()->Loop();
+        
+        end = clock();
+        delta = (float(end - start));
+        Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
+	}
+}
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, message, wParam, lParam))
+        return true;
+	switch (message) {
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break ;
+		case WM_SIZE: {
+			RECT rect;
+			if(GetWindowRect(hWnd, &rect)) {
+				Core::WindowManager::GetInstance()->SetResizeExtents( rect.right - rect.left, rect.bottom - rect.top);
+			}
+			break;
+		}
+		case WM_PAINT:
+			ValidateRect(hWnd, NULL);
+			break;
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+			break;
+	}
+
+	return EXIT_SUCCESS;
+}
 #endif
+
+void Core::WindowManager::ProcessEvents()
+{
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_PRESSED)) {
+        if (PressedKey == ESC_KEY) {
+            Engine::GetInstance()->ToogleEditorMode();
+            Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
+        }
+        if (PressedKey == MINUS_KEY) {
+            if (Utils::Debug::GetInstance()->BoneID > 0) {
+                Utils::Debug::GetInstance()->BoneID--;
+            }
+        }
+        if (PressedKey == PLUS_KEY) {
+            Utils::Debug::GetInstance()->BoneID++;
+        }
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_RELEASED)) {
+        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
+        Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
+    }
+
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
+        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_RELEASED)) {
+            Mouse.Delta = {0, 0};
+            Mouse.Pressed = false;
+            Mouse.Selected = false;
+         //  printf("------MOUSE RELEASED--------\n");
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_MOVE);
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_RELEASED);
+        }
+        if (Utils::IsBitSet(Event, WINDOW_EVENT_MOUSE_PRESSED)) {
+         //  printf("------MOUSE PRESSED--- %d %d-----\n", Mouse.Position.x, Mouse.Position.y);
+            Mouse.Pressed = true;
+            Mouse.Selected = true;
+            Mouse.Begin = Mouse.Event;
+            Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
+        }
+        if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {
+            Mouse.Position.x = Mouse.Event.x;
+         //  printf("------MOUSE MOVE--------\n");
+            Mouse.Position.y = Mouse.Event.y;
+            Mouse.Delta.x = Mouse.Begin.x - Mouse.Event.x;
+            Mouse.Delta.y = Mouse.Begin.y - Mouse.Event.y;
+            Mouse.Begin = Mouse.Position;
+        }
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_EXIT)) {
+        Engine::GetInstance()->SetState(ENGINE_STATE_EXIT);
+        running = false;
+    }
+    if (Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE)) {
+        Vector2<int> tmp = Extents;
+        Extents.x = OnResizeExtents.x;
+        Extents.y = OnResizeExtents.y;
+        if (!Engine::GetInstance()->OnResize()) {
+            Extents = tmp;
+        }
+        Utils::ClearBit(&Event, WINDOW_EVENT_RESIZE);
+    }
+}

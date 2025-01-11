@@ -12,7 +12,11 @@
 void Core::ImGuiHelper::UpdateFrame()
 {
 	ImGui_ImplVulkan_NewFrame();
+#ifdef AAI_LINUX
 	ImGui_ImplX11_NewFrame();
+#else
+	ImGui_ImplWin32_NewFrame();
+#endif
 	ImGui::NewFrame();
 }
 
@@ -57,7 +61,7 @@ void Core::ImGuiHelper::Init()
 #if defined(AAI_LINUX)
     ImGui_ImplX11_Init(Core::WindowManager::GetInstance()->GetConnection(), Core::WindowManager::GetInstance()->GetWindow());
 #elif defined(AAI_WINDOWS)
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(Core::WindowManager::GetInstance()->GetWinWindow());
 #endif
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;

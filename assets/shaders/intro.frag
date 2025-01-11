@@ -12,7 +12,7 @@ const int font[] = int[](
  0x99e8e, 0xf843f, 0x6bd96, 0x46444, 0x6942f, 0x69496, 0x99f88, 0xf1687,
  0x61796, 0xf8421, 0x69696, 0x69e84, 0x66400, 0x0faa9, 0x0000f, 0x00600,
  0x0a500, 0x02720, 0x0f0f0, 0x08421, 0x33303, 0x69404, 0x00032, 0x00002,
- 0x55000, 0x00000, 0x00202, 0x42224, 0x24442);
+ 0x55000, 0x00000, 0x00202, 0x42224, 0x24442, 0x90f9f);
 
 #define A 0
 #define B 1
@@ -67,6 +67,7 @@ const int font[] = int[](
 #define COLN 50
 #define LPAR 51
 #define RPAR 52
+#define OO 53
 
 const ivec2 MAP_SIZE = ivec2(4, 5);
 
@@ -128,6 +129,58 @@ float GetWord(float num, vec2 coord, vec2 resolution)
   return colorr;
 }
 
+vec3 palette(float d){
+	return mix(vec3(0.2,0.7,0.9),vec3(1.,0.,1.),d);
+}
+
+vec2 rotate(vec2 p, float a){
+	float c = abs(sin(a));
+    float s = abs(cos(a));
+    return p*mat2(c,s,-s,c);
+}
+float boxframe(vec3 p, vec3 b, float e)
+{
+    p = abs(p) - b;
+    vec3 q = abs(p + e) - e;
+
+    return min(min(
+            length(max(vec3(p.x,q.y,q.z),0.0)) + min(max(p.x,max(q.y,q.z)),0.0),
+            length(max(vec3(q.x,p.y,q.z),0.0)) + min(max(q.x,max(p.y,q.z)),0.0)),
+            length(max(vec3(q.x,q.y,p.z),0.0)) + min(max(q.x,max(q.y,p.z)),0.0));
+}
+
+float map(vec3 pos)
+{
+    return boxframe(pos, vec3(0.2,0.1,0.2), 0.000025 );
+}
+
+vec4 raymarch(vec3 ro, vec3 rd, float time)
+{
+    float raystep = 0.0;
+    vec3 col = vec3(0.0);
+    float step;
+    for (float i = 0.0; i < 64.0; i++) {
+		vec3 p = ro + rd * raystep;
+        step = map(p);
+        if(step > 100.0){
+        	break;
+        }
+        col += palette(length(p)) / (200. * (step));
+        raystep += step;
+    }
+    return vec4(col, 1);
+}
+
+vec2 AnimCoords( vec2 p, float time )
+{
+    float y = (sin( p.y + p.x ) * 0.05 * time);
+    if (y < 0.1 && y > 0) {
+        p.y += y;
+    }
+   
+    return vec2(p.x, p.y);
+}
+
 void main()
 {    
     float time = GetResource(Camera, GetUniformInd()).time;
@@ -173,11 +226,22 @@ void main()
     introtext = float(DrawText(coord, resolution, 6.0 * sizemult, vec2(0.26, 0.9), arr, 16));
 
     int arr2[20] = int[](E, X, P, L, O, R, E, BLNK, M, Y, BLNK, S, A, D, N, E, S, S, COMM, COMM);
-    float introsectext = float(DrawText(coord, resolution, 5.6 * sizemult, vec2(0.26, 0.7 ), arr2, 18));
+    float introsectext = float(DrawText(coord, resolution, 7.0 * sizemult, vec2(0.38, 0.75 ), arr2, 7));
+    int arr22[20] = int[](M, Y, BLNK, S, A, D, N, E, S, S, Y, BLNK, S, A, D, N, E, S, S, COMM);
+    float introsectext2 = float(DrawText(coord, resolution, 7.5 * sizemult, vec2(0.33, 0.65 ), arr22, 10));
+
+    int arr3[20] = int[](S, O, U, N, D, BLNK, B, Y, BLNK, D, O, D, A, BLNK, K, R, O, P, P, COMM);
+    float musicby = float(DrawText(AnimCoords(coord, time), resolution, 5.0 * sizemult, vec2(0.4, 0.5 ), arr3, 8));
+    int arr4[20] = int[](D, OO, D, A, BLNK, K, R, O, P, P, O, D, A, BLNK, K, R, O, P, P, COMM);
+    float doda = float(DrawText(AnimCoords(coord, time), resolution, 5.5 * sizemult, vec2(0.38, 0.45 ), arr4, 10));
+
+    int arrai[20] = int[](A, N, T, H, R, A, X, A, I, BLNK, E, N, G, I, N, E, COMM, COMM, COMM, COMM);
+    float ai = float(DrawText(coord, resolution, 4.6 * sizemult, vec2(0.31, 0.3), arrai, 16));
+
 
     col.gb += vec2(introtext);
     if(coord.y > 0.62 && coord.y < 0.8 && coord.x > 0.25 && coord.x < 0.75) {
-        col.r *= introsectext;
+        col.r *= (introsectext + introsectext2);
     }
 
 // second intro scene ---------------------------------------------------------------
@@ -214,7 +278,24 @@ void main()
     }
     else {
         if (coord.y < 0.55 && coord.y > 0.1 && coord.x > 0.3 && coord.x < 0.7) {
-            col = vec3(0);
+            col = vec3((musicby) + (doda) ,0,0);
+            vec3 ray_origin = vec3(0.0,0.0,-50.  * sin(0.25 * time));
+            ray_origin.xz = rotate(ray_origin.xz, 0.2 * time);
+            ray_origin.xy = rotate(ray_origin.xy, time);
+
+            vec3 ray_norm = normalize(-ray_origin);
+            vec3 up = normalize(cross(ray_norm, normalize(cross(ray_norm, vec3(0.0,1.0,0.0)))));
+           
+            vec3 uuv = ray_origin + ray_norm*50. + coord.x*normalize(cross(ray_norm, vec3(0.0,1.0,0.0)))  + coord.y*up;
+    
+            vec3 rd = normalize(uuv-ray_origin);
+            
+            vec4 col2 = raymarch(ray_origin, rd, time);
+            col += col2.xyz;
+            col = clamp(col, vec3(0), vec3(1));
+            if (sync > 0.5 && sync < 0.8) {
+            col.r *= ai;
+            }
         }
     }
     outfragcolor = vec4(col, 1);

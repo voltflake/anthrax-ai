@@ -130,6 +130,9 @@ void Gfx::Device::CreateSwapchain()
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+	// VkSurfaceFullScreenExclusiveWin32InfoEXT surface_full_screen_exclusive_Win32_info_EXT{};
+
+	// createInfo.pNext = &surface_full_screen_exclusive_Win32_info_EXT;
 
 	QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
 	uint32_t queueFamilyIndices[] = {indices.Graphics.value(), indices.Present.value()};
@@ -194,10 +197,10 @@ void Gfx::Device::CreateLinuxSurface()
 #else
 void Gfx::Device::CreateWindowsSurface()
 {
-    VkWin32SurfaceCreateInfoKHR infe{};
+    VkWin32SurfaceCreateInfoKHR info{};
 	info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	info.hwnd = hwnd;
-	info.hinstance = hinstance;
+	info.hwnd = Core::WindowManager::GetInstance()->GetWinWindow();
+	info.hinstance = Core::WindowManager::GetInstance()->GetWinInstance();
 
 	VK_ASSERT(vkCreateWin32SurfaceKHR(Gfx::Vulkan::GetInstance()->GetVkInstance(), &info, nullptr, &Surface), "failed to create window surface!");
 }

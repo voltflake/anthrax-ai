@@ -85,7 +85,7 @@ void Keeper::Base::Update()
             else if (!gizmo) {
                 obj->SetGizmo(nullptr);
             }
-            if (gizmo && obj->GetType() == Keeper::Type::CAMERA) {
+            if ((gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() || gizmo) && obj->GetType() == Keeper::Type::CAMERA) {
               continue;
             }
             obj->Update();

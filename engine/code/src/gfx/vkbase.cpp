@@ -24,8 +24,6 @@ bool Gfx::Vulkan::ReloadShaders()
     vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
     Core::PipelineDeletor::GetInstance()->CleanAll();
 
-//	Gfx::Pipeline::GetInstance()->CompileShader("./shaders/intro.frag", shaderc_glsl_fragment_shader, {});
-
 	Gfx::Pipeline::GetInstance()->Build();
 
 	Core::Scene::GetInstance()->UpdateMaterials();
@@ -36,10 +34,16 @@ bool Gfx::Vulkan::ReloadShaders()
 bool Gfx::Vulkan::OnResize()
 {
     if (Gfx::Renderer::GetInstance()->IsOnResize() && Core::WindowManager::GetInstance()->GetScreenResolution().x > 0 && Core::WindowManager::GetInstance()->GetScreenResolution().y > 0) {
-        Gfx::Device::GetInstance()->RecreateSwapchain();
+    printf("00001\n\n");
+	    Gfx::Device::GetInstance()->RecreateSwapchain();
+    printf("00002\n\n");
 
         Gfx::Renderer::GetInstance()->CreateRenderTargets();
+    printf("00003\n\n");
+
         Gfx::Pipeline::GetInstance()->Build();
+    printf("00004\n\n");
+
         return true;
     }
     return false;

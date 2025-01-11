@@ -104,6 +104,7 @@ list(APPEND _libraries assimp::assimp)
 #=====================================================================================#
 #=================================== openAL-soft ===================================#
 
+if (WIN32)
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
 add_definitions(-DAL_LIBTYPE_STATIC)
 
@@ -111,12 +112,15 @@ add_subdirectory(${_path}/openal-soft/openal-soft)
 
 list(APPEND _includes ${_path}/openal-soft/openal-soft/include)
 
-if (WIN32)
 set(OPENAL_LIBRARY ${CMAKE_BINARY_DIR}/engine/libs/openal-soft/openal-soft/OpenAL32.lib)
 list(APPEND _libraries ${OPENAL_LIBRARY})
+elseif(UNIX)
+
+list(APPEND _includes ${_path}/openal-soft/openal-soft/include)
+
+add_subdirectory(${_path}/openal-soft/openal-soft)
+list(APPEND _libraries OpenAL::OpenAL)
 endif()
-
-
 #=====================================================================================#
 
 list(REMOVE_DUPLICATES _libraries)
@@ -134,7 +138,8 @@ target_link_libraries(libraries INTERFACE ${_libraries})
 # elseif (UNIX)
 # 	target_link_libraries(libraries INTERFACE shaderc_shared )
 # endif()
-target_link_directories(libraries INTERFACE "D:/Vulkan-Game/Vulkan/Lib/")
+
+#target_link_directories(libraries INTERFACE "D:/Vulkan-Game/Vulkan/Lib/")
 
 target_link_libraries(libraries INTERFACE shaderc_shared )
 

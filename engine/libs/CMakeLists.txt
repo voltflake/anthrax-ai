@@ -130,16 +130,9 @@ add_library(libraries INTERFACE)
 add_library(anthrax::libraries ALIAS libraries)
 target_link_libraries(libraries INTERFACE ${_libraries})
 
-# target_link_libraries(libraries INTERFACE ${aai_demos_dir}/openal-soft/openal-soft)
-
-#manually link against shaderc
-# if (WIN32)
-# 	target_link_libraries(libraries INTERFACE "D:/Vulkan-Game/Vulkan/Lib/shaderc_shared" )
-# elseif (UNIX)
-# 	target_link_libraries(libraries INTERFACE shaderc_shared )
-# endif()
-
-#target_link_directories(libraries INTERFACE "D:/Vulkan-Game/Vulkan/Lib/")
+if (WIN32)
+	target_link_directories(libraries INTERFACE "$ENV{VULKAN_SDK}/Lib/")
+endif()
 
 target_link_libraries(libraries INTERFACE shaderc_shared )
 

@@ -20,7 +20,7 @@ install_vulkan_pacman() {
     sudo pacman -Syu --noconfirm
 
     # Install Vulkan headers, tools, and drivers (for 64-bit systems)
-    sudo pacman -S --noconfirm vulkan-headers vulkan-tools vulkan-utility-libraries
+    sudo pacman -S --noconfirm vulkan-headers vulkan-tools vulkan-utility-libraries vulkan-validation-layers
 
     # Install GPU-specific Vulkan drivers (for example, for Intel or AMD)
     if lspci | grep -i "vga" | grep -i "amd"; then

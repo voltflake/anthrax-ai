@@ -79,6 +79,9 @@ void Core::Scene::RenderScene()
 void Core::Scene::Loop()
 {
     Core::Audio::GetInstance()->Play();
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
+        RenderScene();
+    }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
         if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
@@ -277,7 +280,8 @@ void Core::Scene::ReloadResources()
     if (RQScenes.find("gizmo") != RQScenes.end()) {
         HasFrameGizmo = true;
     }
-
+    GameObjects->UpdateObjectNames();
+    Core::ImGuiHelper::GetInstance()->UpdateObjectInfo();
 }
 
 Gfx::RenderObject Core::Scene::LoadResources(const std::string& tag, const Keeper::Objects* info)

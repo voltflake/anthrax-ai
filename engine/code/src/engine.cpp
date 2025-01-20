@@ -12,6 +12,17 @@ long long Engine::GetTime() const {
 #endif
 }
 
+void Engine::CheckState()
+{
+    if (Utils::IsBitSet(State, ENGINE_STATE_INTRO)) {
+        SetEditorMode();
+    }
+    else {
+        ToogleEditorMode();
+    }
+
+}
+
 bool Engine::OnResize()
 {
     return Gfx::Vulkan::GetInstance()->OnResize();
@@ -37,7 +48,7 @@ void Engine::Init()
     
     Core::ImGuiHelper::GetInstance()->Init();
     
-    SetState(ENGINE_STATE_EDITOR);
+    SetState(ENGINE_STATE_INTRO);
 }
 
 void Engine::Run()

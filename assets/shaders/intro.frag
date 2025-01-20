@@ -234,7 +234,10 @@ void main()
     float musicby = float(DrawText(AnimCoords(coord, time), resolution, 5.0 * sizemult, vec2(0.4, 0.5 ), arr3, 8));
     int arr4[20] = int[](D, OO, D, A, BLNK, K, R, O, P, P, O, D, A, BLNK, K, R, O, P, P, COMM);
     float doda = float(DrawText(AnimCoords(coord, time), resolution, 5.5 * sizemult, vec2(0.38, 0.45 ), arr4, 10));
+    int arr5[20] = int[](P, R, E, S, S, BLNK, E, S, C, P, O, D, A, BLNK, K, R, O, P, P, COMM);
+    float pressesc = float(DrawText(coord, resolution, 5.5 * sizemult, vec2(0.38, 0.3 ), arr5, 9));
 
+    float pressesc2 = float(DrawText(coord, resolution, 5.5 * sizemult, vec2(0.38, 0.46 ), arr5, 9));
     int arrai[20] = int[](A, N, T, H, R, A, X, A, I, BLNK, E, N, G, I, N, E, COMM, COMM, COMM, COMM);
     float ai = float(DrawText(coord, resolution, 4.6 * sizemult, vec2(0.31, 0.3), arrai, 16));
 
@@ -245,6 +248,11 @@ void main()
     }
 
 // second intro scene ---------------------------------------------------------------
+    bool blink = int(time * 10) % 2 == 0;
+    int blinkmult = 0;
+    if (blink) {
+        blinkmult = 1;
+    }
 
     float sync = abs(cos(time * 0.3));
     if (sync < 0.5 && sync > 0.0) {
@@ -278,7 +286,7 @@ void main()
     }
     else {
         if (coord.y < 0.55 && coord.y > 0.1 && coord.x > 0.3 && coord.x < 0.7) {
-            col = vec3((musicby) + (doda) ,0,0);
+            col = vec3((musicby) + (doda) + (pressesc * blinkmult) ,0,0);
             vec3 ray_origin = vec3(0.0,0.0,-50.  * sin(0.25 * time));
             ray_origin.xz = rotate(ray_origin.xz, 0.2 * time);
             ray_origin.xy = rotate(ray_origin.xy, time);
@@ -294,7 +302,7 @@ void main()
             col += col2.xyz;
             col = clamp(col, vec3(0), vec3(1));
             if (sync > 0.5 && sync < 0.8) {
-            col.r *= ai;
+            col.r *= (ai + (pressesc2 * blinkmult));
             }
         }
     }

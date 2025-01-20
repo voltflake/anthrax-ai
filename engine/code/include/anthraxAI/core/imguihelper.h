@@ -23,11 +23,13 @@ namespace UI
         COMBO,
         FLOAT,
         CHECKBOX,
+        LISTBOX,
     };
    
     class Element
     {
         public:
+
             Element(ElementType type, const std::string& label)
             : Type(type), Label(label) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
           
@@ -49,7 +51,7 @@ namespace UI
             ElementType GetType() const { return Type; }
             std::string GetLabel() const { return Label; }
 
-            std::vector<const char*> GetComboList() { return ComboList;}
+            std::vector<std::string> GetComboList() { return ComboList;}
             
             std::function<void (std::string)> Definition;
             std::function<bool ()> DefinitionBoolRet;
@@ -62,17 +64,19 @@ namespace UI
             void SetCheckbox(bool b) { Checkbox = b;}
 
             int ComboInd = 0;
+            
+            void ClearComboList() { ComboList.clear(); }
 
         private:
             
-            void GetArg(std::vector<const char*> vec) { ComboList = vec; }
+            void GetArg(const std::vector<std::string>& vec);
             void GetArg(void* nu) { }
             template <typename T>
             void EvaluateArgs(T t) { GetArg(t); }
             template<typename T, typename... Args>
             void EvaluateArgs(T t, Args... args) { EvaluateArgs(args...); }
 
-            std::vector<const char*> ComboList;
+            std::vector<std::string> ComboList = {};
             inline static std::atomic_int IDCounter = 0;
             int ID = 0;
             ElementType Type;
@@ -112,6 +116,7 @@ namespace Core
         public:
             ~ImGuiHelper();
 
+            void UpdateObjectInfo();
             void Init();
             void InitUIElements();
             void Render();
@@ -123,9 +128,9 @@ namespace Core
 #ifdef AAI_LINUX
             void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
 #endif
-            void CleanAll();
         private:
             void Combo(UI::Element& element);
+            void ListBox(UI::Element& element);
             void ProcessUI(UI::Element& element);
             ImGuiStyle 	EditorStyle;
             std::string EditorWindow;

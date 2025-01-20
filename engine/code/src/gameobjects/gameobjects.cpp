@@ -30,6 +30,34 @@ void Keeper::Base::CleanIfNot(Keeper::Type type)
   }
 }
 
+void Keeper::Base::UpdateObjectNames()
+{
+    if (!ObjectNames.empty()) {
+        ObjectNames.clear();
+    }
+    ObjectNames.reserve(GetObjectsSize());
+    for (auto& it : ObjectsList) {
+        if (it.first == Keeper::Type::GIZMO) continue;
+        for (Keeper::Objects* obj : it.second) {
+            std::string objname = "";
+            std::string objtype = "";
+
+            if (obj->GetType() == Keeper::Type::CAMERA) {
+                objtype = "Camera";
+            }
+            if (obj->GetType() == Keeper::Type::NPC) {
+                objtype = "NPC";
+            }
+            if (obj->GetType() == Keeper::Type::SPRITE) {
+                objtype = "Sprite";
+            }
+            objname = objtype + ": " + std::to_string(obj->GetID());
+            ObjectNames.emplace_back(objname);
+        }
+    }
+    
+}
+
 Keeper::Base::Base()
 {
     Keeper::Info info;
@@ -103,4 +131,14 @@ void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
             Create<Keeper::Sprite>(new Keeper::Sprite(obj));
         }
     } 
+}
+
+size_t Keeper::Base::GetObjectsSize() const
+{
+    size_t size = 0;
+    for (auto& it : ObjectsList) {
+        size += it.second.size();
+    }
+    printf("-----------KEEPER OBJ SIZE: %d\n\n", size);
+    return size;
 }

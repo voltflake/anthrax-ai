@@ -98,10 +98,16 @@ namespace Keeper {
 
             void SetSelectedID(uint32_t id) { SelectedID = id; }
             uint32_t GetSelectedID() { return SelectedID; }
+
+            size_t GetObjectsSize() const;
+            void UpdateObjectNames();
+            const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
                    
         private:
             GameObjectsMap ObjectsList;
             Info GizmoInfo[3];
             uint32_t SelectedID = 0;
+
+            std::vector<std::string> ObjectNames;
     };
 }

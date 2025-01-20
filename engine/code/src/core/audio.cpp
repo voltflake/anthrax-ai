@@ -1,4 +1,7 @@
 #include "anthraxAI/core/audio.h"
+#include "anthraxAI/engine.h"
+#include "anthraxAI/utils/debug.h"
+
 #include <fstream>
 void Core::Audio::Init()
 {
@@ -175,6 +178,9 @@ void Core::Audio::Play()
         //alGetSourcei(Source, AL_SOURCE_STATE, &State);
     }
     else {
+        if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
+            Engine::GetInstance()->CheckState();
+        }
         Release();
     }
 }

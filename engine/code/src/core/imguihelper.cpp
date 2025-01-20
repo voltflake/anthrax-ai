@@ -1,11 +1,13 @@
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/utils/debug.h"
 #include "imgui.h"
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <string>
 
@@ -140,6 +142,18 @@ void Core::ImGuiHelper::Init()
     InitUIElements();
 }
 
+void UI::Element::GetArg(const std::vector<std::string>& vec) 
+{
+    if (!ComboList.empty()) {
+        ComboList.clear();      
+    }
+    ComboList.reserve(vec.size() + 1);
+    ComboList.emplace_back("none");
+    for (const std::string& s : vec) { 
+        ComboList.emplace_back(s); 
+    }
+}
+
 void Core::ImGuiHelper::InitUIElements()
 {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -150,56 +164,66 @@ void Core::ImGuiHelper::InitUIElements()
         
         std::string tablabel = "Editor";
         UI::Element tab(UI::TAB, tablabel);
-
-        std::vector<const char*> scenes;
-        scenes.reserve(Core::Scene::GetInstance()->GetSceneNames().size() + 1);
-        scenes.emplace_back("none");
-        for (const std::string& it : Core::Scene::GetInstance()->GetSceneNames()) {
-            scenes.emplace_back(it.c_str());
-        }
-
-        Add(tab, UI::Element(UI::COMBO, "Scenes", scenes, [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
-        
+        Add(tab, UI::Element(UI::COMBO, "Scenes", Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
         Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
-    
         Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
     }
     
-    UI::Element debugtab(UI::TAB, "Debug");
-    Add(debugtab, UI::Element(UI::TEXT, "This is debug tab"));
-    Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
-    Add(debugtab, UI::Element(UI::FLOAT, "fps", []() -> float { return Utils::Debug::GetInstance()->FPS; }));
-    Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
-    Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
-    Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
-
-    UI::Element audiotab(UI::TAB, "Audio");
-    std::vector<const char*> audios;
-    audios.reserve(Core::Audio::GetInstance()->GetAudioNames().size() + 1);
-    audios.emplace_back("none");
-    for (const std::string& it : Core::Audio::GetInstance()->GetAudioNames()) {
-        audios.emplace_back(it.c_str());
+    {
+        UI::Element scenetab(UI::TAB, "Scene");
+        Add(scenetab, UI::Element(UI::TEXT, "Name:", []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
+        Add(scenetab, UI::Element(UI::SEPARATOR, "sep"));
     }
-    Add(audiotab, UI::Element(UI::COMBO, "Sounds", audios, [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
-    Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
-    Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
-    Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
-    Add(audiotab, UI::Element(UI::CHECKBOX, "play", nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
     
+    {
+        UI::Element audiotab(UI::TAB, "Audio");
+        Add(audiotab, UI::Element(UI::COMBO, "Sounds", Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
+        Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
+        Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
+        Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
+        Add(audiotab, UI::Element(UI::CHECKBOX, "play", nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
+    }
+
+    {
+        UI::Element debugtab(UI::TAB, "Debug");
+        Add(debugtab, UI::Element(UI::TEXT, "This is debug tab"));
+        Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
+        Add(debugtab, UI::Element(UI::FLOAT, "fps", []() -> float { return Utils::Debug::GetInstance()->FPS; }));
+        Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
+        Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
+        Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
+    }
+
+}
+
+void Core::ImGuiHelper::UpdateObjectInfo()
+{
+    for (auto& it : UITabs) {
+        if (it.first.GetLabel() == "Scene") {
+            for (auto& elem : it.second) {
+                elem.ClearComboList();
+            }
+            it.second.clear();
+
+            Add(it.first, UI::Element(UI::TEXT, "Name:", []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
+            Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
+            Add(it.first, UI::Element(UI::LISTBOX, "Objects", Core::Scene::GetInstance()->GetGameObjects()->GetObjectNames(), [](std::string tag) -> void { return; }));
+            Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
+            break;
+        }
+    }
 }
 
 void Core::ImGuiHelper::Combo(UI::Element& element)
 {
-    std::vector<const char*> items = element.GetComboList() ;
-
-    const char* currvalue = items[element.ComboInd];
-    if (ImGui::BeginCombo(element.GetLabel().c_str(), currvalue, 0)) {
-        for (int n = 0; n < items.size(); n++) {
+    if (ImGui::BeginCombo(element.GetLabel().c_str(), element.GetComboList()[element.ComboInd].c_str(), 0)) {
+        size_t size = element.GetComboList().size();
+        for (int n = 0; n < size; n++) {
             const bool is_selected = (element.ComboInd == n);
-            if (ImGui::Selectable(items[n], is_selected)) {
+            if (ImGui::Selectable(element.GetComboList()[n].c_str(), is_selected)) {
                 element.ComboInd = n;
                 if (n != 0) {
-                    element.Definition(items[element.ComboInd]);
+                    element.Definition(element.GetComboList()[element.ComboInd]);
                 }
             }
 
@@ -211,11 +235,35 @@ void Core::ImGuiHelper::Combo(UI::Element& element)
     }
 }
 
+void Core::ImGuiHelper::ListBox(UI::Element& element)
+{
+    ImGui::Text(element.GetLabel().c_str());
+
+    if (ImGui::BeginListBox(std::string("##" + element.GetLabel()).c_str())) {
+        size_t size = element.GetComboList().size();
+        for (int n = 0; n < size; n++) {
+            const bool is_selected = (element.ComboInd == n);
+            if (ImGui::Selectable(element.GetComboList()[n].c_str(), is_selected)) {
+                element.ComboInd = n;
+            }
+            if (is_selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndListBox();
+    }
+
+}
+
 void Core::ImGuiHelper::ProcessUI(UI::Element& element)
 {
     switch (element.GetType()) {
         case UI::COMBO: {
             Combo(element);
+            break;
+        }
+        case UI::LISTBOX: {
+            ListBox(element);
             break;
         }
         case UI::FLOAT: {
@@ -255,6 +303,8 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
 
 void Core::ImGuiHelper::Render()
 {
+    ImGui::ShowDemoWindow();
+
     bool active = true;
 
     std::vector<UI::Window>& windows = UIWindows[EditorWindow];

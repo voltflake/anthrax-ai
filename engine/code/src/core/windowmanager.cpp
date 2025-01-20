@@ -330,7 +330,7 @@ void Core::WindowManager::ProcessEvents()
 {
     if (Utils::IsBitSet(Event, WINDOW_EVENT_KEY_PRESSED)) {
         if (PressedKey == ESC_KEY) {
-            Engine::GetInstance()->ToogleEditorMode();
+            Engine::GetInstance()->CheckState();
             Utils::ClearBit(&Event, WINDOW_EVENT_KEY_PRESSED);
         }
         if (PressedKey == MINUS_KEY) {
@@ -380,6 +380,7 @@ void Core::WindowManager::ProcessEvents()
         Vector2<int> tmp = Extents;
         Extents.x = OnResizeExtents.x;
         Extents.y = OnResizeExtents.y;
+        //printf("----!AAAAAAAAA\n");
         if (!Engine::GetInstance()->OnResize()) {
             Extents = tmp;
         }

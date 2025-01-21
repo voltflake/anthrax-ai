@@ -22,7 +22,7 @@ void Gfx::Vulkan::Init()
 bool Gfx::Vulkan::ReloadShaders()
 {
     vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
-    Core::PipelineDeletor::GetInstance()->CleanAll();
+    Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::PIPELINE);
 
 	Gfx::Pipeline::GetInstance()->Build();
 
@@ -35,9 +35,17 @@ bool Gfx::Vulkan::OnResize()
 {
     if (Gfx::Renderer::GetInstance()->IsOnResize() && Core::WindowManager::GetInstance()->GetScreenResolution().x > 0 && Core::WindowManager::GetInstance()->GetScreenResolution().y > 0) {
 	    Gfx::Device::GetInstance()->RecreateSwapchain();
+	    
+        Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::CMD);
+        Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::SYNC);
+        
+        Gfx::Renderer::GetInstance()->CreateCommands();
         Gfx::Renderer::GetInstance()->CreateRenderTargets();
+	    
+        Gfx::Renderer::GetInstance()->Sync();
+        vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
+        
         Gfx::Pipeline::GetInstance()->Build();
-
         return true;
     }
     return false;
@@ -53,7 +61,6 @@ void Gfx::Vulkan::CleanUp()
 	Gfx::Mesh::GetInstance()->CleanAll();
 	Gfx::Model::GetInstance()->CleanAll();
 
-    Core::PipelineDeletor::GetInstance()->CleanAll();
 	Gfx::Renderer::GetInstance()->CleanResources();
 	Gfx::DescriptorsBase::GetInstance()->CleanAll();
 	Gfx::DescriptorsBase::GetInstance()->CleanBindless();
@@ -103,7 +110,7 @@ void Gfx::Vulkan::CreateVkInstance()
 
 	Debug.Setup(Instance, ValidationLayersOn);
 
-	Core::Deletor::GetInstance()->Push([=, this]() {
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
 		if (ValidationLayersOn) {
 			Debug.Destroy(Instance, nullptr);
 		}

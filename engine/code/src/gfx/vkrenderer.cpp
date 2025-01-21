@@ -137,15 +137,18 @@ void Gfx::Renderer::NullTmpBindings()
 	TmpBindMesh = nullptr;
 }
 
-void Gfx::Renderer::BeginFrame()
+bool Gfx::Renderer::BeginFrame()
 {
     Gfx::Renderer::GetInstance()->NullTmpBindings();
 	ImGui::Render();
 
 	SwapchainIndex = SyncFrame();
-
+    if (SwapchainIndex == -1) {
+        return false;
+    }
     Cmd.SetCmd(GetFrame().MainCommandBuffer);
 	Cmd.BeginCmd(Cmd.InfoCmd(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
+    return true;
 }
 
 void Gfx::Renderer::EndRender()
@@ -421,12 +424,12 @@ uint32_t Gfx::Renderer::SyncFrame()
 
 void Gfx::Renderer::Sync()
 {
-	VkFenceCreateInfo fencecreateinfo = FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
+   	VkFenceCreateInfo fencecreateinfo = FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
 	VkSemaphoreCreateInfo semcreateinfo = SemaphoreCreateInfo(0);
 	
 	VkFenceCreateInfo uploadfencecreateinfo = FenceCreateInfo(0);
 	VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &uploadfencecreateinfo, nullptr, &Upload.UploadFence), "failder to create upload fence ! ");
-	Core::Deletor::GetInstance()->Push([=, this]() {
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::SYNC, [=, this]() {
 		vkDestroyFence(Gfx::Device::GetInstance()->GetDevice(), Upload.UploadFence, nullptr);
 	});
 	for (int i = 0; i < MAX_FRAMES; i++) {
@@ -435,7 +438,7 @@ void Gfx::Renderer::Sync()
 		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].PresentSemaphore), "failder to create present semaphore!");
 		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].RenderSemaphore), "failder to create render semaphore!");
 
-		Core::Deletor::GetInstance()->Push([=, this]() {
+		Core::Deletor::GetInstance()->Push(Core::Deletor::Type::SYNC, [=, this]() {
 			vkDestroyFence(Gfx::Device::GetInstance()->GetDevice(), Frames[i].RenderFence, nullptr);
 			vkDestroySemaphore(Gfx::Device::GetInstance()->GetDevice(), Frames[i].PresentSemaphore, nullptr);
 			vkDestroySemaphore(Gfx::Device::GetInstance()->GetDevice(), Frames[i].RenderSemaphore, nullptr);
@@ -518,26 +521,26 @@ VkCommandBufferAllocateInfo CommandBufferCreateInfo(VkCommandPool pool, uint32_t
 
 void Gfx::Renderer::CreateCommands()
 {
-	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");
+  	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");
 	vkCmdEndRenderingKHR = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdEndRenderingKHR");
 
     Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFimilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
     VkCommandPoolCreateInfo poolinfo = CommandPoolCreateInfo(indices.Graphics.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     for (int i = 0; i < MAX_FRAMES; i++) {
-    	VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Frames[i].CommandPool), "failed to create command pool!");
+       	VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Frames[i].CommandPool), "failed to create command pool!");
 		
 		VkCommandBufferAllocateInfo cmdinfo = CommandBufferCreateInfo(Frames[i].CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 		VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdinfo, &Frames[i].MainCommandBuffer), "failed to allocate command buffers!");
 
-		Core::Deletor::GetInstance()->Push([=, this]() {
+		Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
 			vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Frames[i].CommandPool, nullptr);
 		});
 	}
 
 	//VkCommandPoolCreateInfo uploadcommandpoolinfo = commandpoolcreateinfo(queuefamilyindices.graphicsfamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Upload.CommandPool), "failed to create upload command pool!");
-	Core::Deletor::GetInstance()->Push([=, this]() {
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
 		vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Upload.CommandPool, nullptr);
 	});
 	VkCommandBufferAllocateInfo cmdallocinfo = CommandBufferCreateInfo(Upload.CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);

@@ -48,7 +48,7 @@ namespace Gfx
             uint32_t SyncFrame();
             void SetFrameInd() { FrameIndex = (FrameIndex + 1) % MAX_FRAMES; }
 
-            void BeginFrame();
+            bool BeginFrame();
             void EndFrame();
             void EndRender();
             void StartRender(AttachmentFlags attachmentflags);

@@ -1,6 +1,7 @@
 #include "anthraxAI/core/scene.h"
 #include "anthraxAI/core/animator.h"
 #include "anthraxAI/core/audio.h"
+#include "anthraxAI/core/deletor.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
@@ -48,32 +49,33 @@ void Core::Scene::Render(const std::string& scene)
 
 void Core::Scene::RenderScene()
 {
-    Gfx::Renderer::GetInstance()->BeginFrame();
-    Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
+    if (Gfx::Renderer::GetInstance()->BeginFrame()) {
+        Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
 
-    {
-        // objects from map
-        Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
-        Render(CurrentScene);
-        if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
-            Render("grid");
-        }
-        Gfx::Renderer::GetInstance()->EndRender();
+        {
+            // objects from map
+            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
+            Render(CurrentScene);
+            if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
+                Render("grid");
+            }
+            Gfx::Renderer::GetInstance()->EndRender();
 
-        // gizmo
-        if (HasFrameGizmo) {
-            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
-            Render("gizmo");
+            // gizmo
+            if (HasFrameGizmo) {
+                Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
+                Render("gizmo");
+                Gfx::Renderer::GetInstance()->EndRender();
+            }
+
+            // ui
+            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD)));
+            Gfx::Renderer::GetInstance()->RenderUI();
             Gfx::Renderer::GetInstance()->EndRender();
         }
 
-        // ui
-        Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD)));
-        Gfx::Renderer::GetInstance()->RenderUI();
-        Gfx::Renderer::GetInstance()->EndRender();
+        Gfx::Renderer::GetInstance()->EndFrame();
     }
-
-    Gfx::Renderer::GetInstance()->EndFrame();
 }
 
 void Core::Scene::Loop()
@@ -214,7 +216,7 @@ void Core::Scene::ReloadResources()
 	Gfx::Mesh::GetInstance()->CleanAll();
 	Gfx::Model::GetInstance()->CleanAll();
 
-    Core::PipelineDeletor::GetInstance()->CleanAll();
+    Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::PIPELINE);
 	Gfx::Renderer::GetInstance()->CleanTextures();
 	Gfx::DescriptorsBase::GetInstance()->CleanAll();
 

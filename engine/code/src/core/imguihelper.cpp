@@ -89,7 +89,7 @@ void Core::ImGuiHelper::Init()
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-    Core::Deletor::GetInstance()->Push([=, this]() {
+    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
         vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), imguiPool, nullptr);
 		ImGui_ImplVulkan_Shutdown();
 	});

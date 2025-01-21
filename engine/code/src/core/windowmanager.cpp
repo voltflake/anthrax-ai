@@ -376,11 +376,10 @@ void Core::WindowManager::ProcessEvents()
         Engine::GetInstance()->SetState(ENGINE_STATE_EXIT);
         running = false;
     }
-    if (Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE)) {
+    if (Gfx::Renderer::GetInstance()->IsOnResize() && Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE) && (OnResizeExtents.x != Extents.x || OnResizeExtents.y != Extents.y)) {
         Vector2<int> tmp = Extents;
         Extents.x = OnResizeExtents.x;
-        Extents.y = OnResizeExtents.y;
-        //printf("----!AAAAAAAAA\n");
+        Extents.y = OnResizeExtents.y; 
         if (!Engine::GetInstance()->OnResize()) {
             Extents = tmp;
         }

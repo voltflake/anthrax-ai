@@ -155,10 +155,10 @@ Gfx::Material* Gfx::Pipeline::CreateMaterial(VkPipeline pipelinew, VkPipelineLay
 	mat.PipelineLayout = layout;
 	Materials[name] = mat;
 
-    Core::PipelineDeletor::GetInstance()->Push([=, this]() {
+    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::PIPELINE, [=, this]() {
         vkDestroyPipelineLayout(Gfx::Device::GetInstance()->GetDevice(), mat.PipelineLayout, nullptr);
     });
-    Core::Deletor::GetInstance()->Push([=, this]() {
+    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
         vkDestroyPipeline(Gfx::Device::GetInstance()->GetDevice(), mat.Pipeline, nullptr);
 	});
 

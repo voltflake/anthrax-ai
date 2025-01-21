@@ -121,7 +121,7 @@ void Gfx::DescriptorsBase::AllocateDataBuffers()
 	info.pObjectName = "data buffer";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-	Core::Deletor::GetInstance()->Push([=, this]() {
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
 		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.Buffer, nullptr);
     	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.DeviceMemory, nullptr);
 	});
@@ -138,7 +138,7 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
 	info.pObjectName = "storage buffer";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-	Core::Deletor::GetInstance()->Push([=, this]() {
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
 		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.Buffer, nullptr);
     	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.DeviceMemory, nullptr);
 	});
@@ -152,7 +152,7 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
 	info.pObjectName = "INSTANCE buffer";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-    Core::Deletor::GetInstance()->Push([=, this]() {
+    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
 		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.Buffer, nullptr);
     	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.DeviceMemory, nullptr);
 	});

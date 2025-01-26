@@ -41,8 +41,10 @@ void Core::AnimatorBase::Init()
             }
             data.CurrentPath = data.Paths[0];
             data.PathIndex = 0;
-            data.SceneInd = Animations.size() - 1;
-            Scenes[data.SceneInd] = Importer[data.SceneInd].ReadFile(data.CurrentPath, IMPORT_PROPS);
+            data.SceneInd = 0;// Animations.size() - 1;
+            if (!Scenes[0]) {
+                Scenes[data.SceneInd] = Importer[data.SceneInd].ReadFile(data.CurrentPath, IMPORT_PROPS);
+            }
         }
     }
     GlobalInverse = glm::inverse(glm::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0));

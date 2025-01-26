@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <cstring>
 #include <sys/types.h>
+#include <thread>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -294,6 +295,17 @@ void Gfx::Renderer::PrepareStorageBuffer()
     
 }
 
+/*void Gfx::Renderer::GetTransforms(InstanceData* datas, Gfx::RenderObject obj, int i)*/
+/*{*/
+/*    std::vector<glm::mat4> bonevec = {}; */
+/*                bonevec = Core::Scene::GetInstance()->UpdateAnimation(obj);*/
+/**/
+/*                for(int k = 0; (k < obj.Model->Bones.FinTransform.size() ); k++) {*/
+/*                    datas[i].bonesmatrices[k] = obj.Model->Bones.FinTransform[k];//vec[i]*/
+/*                }*/
+/**/
+/*}*/
+
 void Gfx::Renderer::PrepareInstanceBuffer()
 {
     const size_t buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
@@ -308,19 +320,21 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     //for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
     Core::RQSceneMap map =  Core::Scene::GetInstance()->GetScenes();
     bool hasanim = false;
+
     for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].RenderQueue) {
         if (!obj.Model || !obj.IsVisible) continue;
         hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
         
             if (hasanim) {
-                std::vector<glm::mat4> bonevec = {}; 
-                bonevec = Core::Scene::GetInstance()->UpdateAnimation(obj);
-
-                for(int k = 0; (k < bonevec.size() ); k++) {
-                    datas[i].bonesmatrices[k] = obj.Model->Bones.FinTransform[k];//vec[i]
+               // printf("IIIIII ======================================== %d\n", i);
+                for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {
+                    datas[i].bonesmatrices[k] = obj.Model->Bones.Info[k].FinTransform;
                 }
-            }
+                    //vec[i]
+                /*std::thread upd(&Gfx::Renderer::GetTransforms, this, datas, obj, i);*/
+                /*upd.join();*/
+                            }
             datas[i].hasanimation = hasanim ? 1 : 0;
             datas[i].rendermatrix =glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
             //glm::mat4(1.0f);

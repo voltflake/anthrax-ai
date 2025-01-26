@@ -4,7 +4,6 @@
 #include "anthraxAI/core/deletor.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
-#include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
@@ -13,18 +12,18 @@
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/parser.h"
-#include <algorithm>
 #include <cstdio>
+#include <ctime>
 #include <string>
 #include <vulkan/vulkan_core.h>
 
-
+#include <thread>
 void Core::Scene::Render(const std::string& scene)
 {
+    bool del_cam = false;
     if (RQScenes[scene].HasCameraBuffer) {
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
     }
-        
     for (Gfx::RenderObject& obj :  RQScenes[scene].RenderQueue) {
         if (!obj.IsVisible) continue;
 
@@ -32,11 +31,13 @@ void Core::Scene::Render(const std::string& scene)
             BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.InstanceBind, obj.TextureBind, }));
         }
         else if (RQScenes[scene].BindlessType == Gfx::BINDLESS_DATA_CAM_BUFFER) { 
+            del_cam = true;
             BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::CamBufferParams>(Gfx::CamBufferParams({ obj.BufferBind }));
         }
         if (RQScenes[scene].BindlessType != Gfx::BINDLESS_DATA_NONE) {
             Gfx::DescriptorsBase::GetInstance()->Build();
             obj.BindlessOffset = BindlessRange;
+            //printf("BINDLESS OFFSET ========== %d, %d \n", obj.BindlessOffset, obj.ID);
         }
         if (obj.VertexBase) {
             Gfx::Renderer::GetInstance()->DrawSimple(obj);
@@ -45,13 +46,19 @@ void Core::Scene::Render(const std::string& scene)
             Gfx::Renderer::GetInstance()->Draw(obj);
         }
     }
+    if (del_cam) {
+        Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::CamBufferParams>();
+    }
+    else {
+
+        Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::BasicParams>();
+    }
 }
 
 void Core::Scene::RenderScene()
 {
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
-
         {
             // objects from map
             Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
@@ -95,10 +102,26 @@ void Core::Scene::Loop()
         if (RQScenes[CurrentScene].HasStorageBuffer) {
               Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
         }
-        GameObjects->Update();
-        UpdateRQ();
-        RenderScene();
-    }
+        
+        
+    double start, end = 0.0;
+        start = (double)Engine::GetInstance()->GetTime() ;
+        std::thread game(&Keeper::Base::Update, GameObjects);
+        std::thread updaterq(&Core::Scene::UpdateRQ, this);
+        std::thread render(&Core::Scene::RenderScene, this);
+        /*GameObjects->Update();*/
+        /**/
+        /*UpdateRQ();*/
+        /**/
+        /*RenderScene();*/
+
+
+        game.join();
+        updaterq.join();
+        render.join();
+                end = (double)Engine::GetInstance()->GetTime() ;
+        printf("TIME: %lf\n", (end - start));
+            }
 }
 
 void Core::Scene::UpdateRQ()
@@ -118,6 +141,12 @@ void Core::Scene::UpdateRQ()
             RQScenes["gizmo"].RenderQueue[i].IsVisible = info->IsVisible();
             RQScenes["gizmo"].RenderQueue[i].Position = info->GetPosition();
             i++;
+        }
+    }
+
+    for (Gfx::RenderObject& obj : RQScenes[CurrentScene].RenderQueue) {
+        if (HasAnimation(obj.ID)) {
+            UpdateAnimation(obj); 
         }
     }
 }
@@ -378,6 +407,16 @@ void Core::Scene::LoadScene(const std::string& filename)
             ypos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Y, 0.0);
             zpos = Parse.GetElement<float>(position, Utils::LEVEL_ELEMENT_Z, 0.0);
             info.Position = { xpos, ypos, zpos };
+        }
+
+        Utils::NodeIt spawn = Parse.GetChild(node, Utils::LEVEL_ELEMENT_SPAWN);
+        if (Parse.IsNodeValid(spawn)) {
+            xpos = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_X, 0.0);
+            ypos = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_Y, 0.0);
+            zpos = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_Z, 0.0);
+            int size = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_AMOUNT, 0);
+            info.Offset = { xpos, ypos, zpos };
+            info.Size = size;
         }
 
         Utils::NodeIt material = Parse.GetChild(node, Utils::LEVEL_ELEMENT_MATERIAL);

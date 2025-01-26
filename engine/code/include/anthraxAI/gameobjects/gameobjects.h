@@ -14,12 +14,14 @@ namespace Keeper {
 
     struct Info {
         Vector3<float> Position;
+        Vector3<float> Offset;
         std::string Material;
         std::string Vertex;
         std::string Fragment;
         std::string Texture;
         std::string Model;
         std::vector<std::string> Animations;
+        int Size = -1;
         bool IsModel = false;
     };
 
@@ -104,6 +106,8 @@ namespace Keeper {
             const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
                    
         private:
+            void SpawnObjects(const Info& info);
+
             GameObjectsMap ObjectsList;
             Info GizmoInfo[3];
             uint32_t SelectedID = 0;

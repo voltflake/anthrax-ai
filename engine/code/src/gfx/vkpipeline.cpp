@@ -194,6 +194,10 @@ void Gfx::Pipeline::Build()
     
 	VkShaderModule fragshader;
 	VkShaderModule vertexshader;
+
+    std::map<std::string, VkShaderModule> fragmap;
+    std::map<std::string, VkShaderModule> vertmap;
+
 // sprite pipeline
 	VkPipelineLayoutCreateInfo pipelinelayoutinfo = PipelineLayoutCreateInfo();
 	
@@ -234,15 +238,22 @@ void Gfx::Pipeline::Build()
             if (info->GetFragmentName().empty() || info->GetVertexName().empty() || info->GetMaterialName().empty()) continue;
     
             VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-    
+                
+            std::string frag = "./shaders/" + info->GetFragmentName();
+            std::string vert = "./shaders/" + info->GetVertexName();
+            
+            if (fragmap.find(frag) != fragmap.end() && vertmap.find(vert) != vertmap.end()) {
+Setup(0);
+            CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
+
+            }
+            else {
             if (!ShaderStages.empty()) {
                 ShaderStages.clear();
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
                 vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
             }
-            std::string frag = "./shaders/" + info->GetFragmentName();
-            std::string vert = "./shaders/" + info->GetVertexName();
-			CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+            CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
 			LoadShader(shaderbuf, &fragshader);
 			shaderbuf.clear();
 			CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
@@ -253,6 +264,7 @@ void Gfx::Pipeline::Build()
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
             Setup(0);
             CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
+            }
         }
     }
 

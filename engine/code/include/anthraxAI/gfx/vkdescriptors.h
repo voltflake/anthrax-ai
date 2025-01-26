@@ -68,6 +68,15 @@ namespace Gfx
                 LastOffset += PadUniformBufferSize(datasize);
                 return curoffset;
             }
+            
+            template<class TData>
+            void ResetRanges() {
+                for (Range r : Ranges) {
+                    delete[] reinterpret_cast<TData*>(r.data);
+                }
+                Ranges.clear();
+                LastOffset = 0;
+            }
 
             void Build();
 

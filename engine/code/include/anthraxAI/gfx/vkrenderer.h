@@ -34,6 +34,7 @@ namespace Gfx
 
             void PrepareCameraBuffer(Keeper::Camera& camera);
             void PrepareInstanceBuffer();
+            void GetTransforms(InstanceData* datas, Gfx::RenderObject obj, int i);
             void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);

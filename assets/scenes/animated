@@ -1,0 +1,22 @@
+Scene: animated
+    Object:
+        Spawn:
+            amount: 1
+            x: 8
+            y: 0
+            z: 8
+        ID: 0
+        Position:
+            x: 0
+            y: 0
+            z: 0
+        Material:
+            name: models
+            frag: model.frag
+            vert: model.vert
+        Texture:
+            name: zeroone.png
+        Model:
+            name: Defeated.dae
+        Animation:
+            name: Defeated.dae

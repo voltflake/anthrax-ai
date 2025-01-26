@@ -3,6 +3,7 @@
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/utils/mathdefines.h"
 #include <cstdio>
 Keeper::Base::~Base()
 {
@@ -121,11 +122,32 @@ void Keeper::Base::Update()
     }
 }
 
+void Keeper::Base::SpawnObjects(const Keeper::Info& info)
+{
+    int size = info.Size;
+    Vector3<float> offsets = info.Offset;
+
+    Keeper::Info spawn = info; 
+    for (float x = info.Position.x; x < offsets.x; x += 1.0f ) {
+        for (float y = info.Position.y; y < 1; y += 1.0f ) {
+            for (float z = info.Position.z; z < offsets.z; z += 1.0f ) {
+                spawn.Position = { x, y, z };
+                Create<Keeper::Npc>(new Keeper::Npc(spawn));
+            }
+        }
+    }
+}
+
 void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
 {
     for (const Keeper::Info& obj : info) {
         if (obj.IsModel) {
-           Create<Keeper::Npc>(new Keeper::Npc(obj));
+            if (obj.Size != -1) {
+                SpawnObjects(obj);
+            }
+            else {
+                Create<Keeper::Npc>(new Keeper::Npc(obj));
+            }
         }
         else {
             Create<Keeper::Sprite>(new Keeper::Sprite(obj));

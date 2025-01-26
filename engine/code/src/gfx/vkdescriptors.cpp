@@ -16,7 +16,7 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 {
 	VkDescriptorSetLayoutBinding setbind = {};
 	setbind.binding = binding;
-	setbind.descriptorCount = 100;
+	setbind.descriptorCount = 1000;
 	setbind.descriptorType = type;
 	setbind.pImmutableSamplers = nullptr;
 	setbind.stageFlags = stageFlags;
@@ -37,6 +37,7 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 	write.dstSet = BindlessDescriptor;
 	write.descriptorCount = 1;
 	write.dstArrayElement = TextureHandle;
+    printf("!!!!!-------TEXTURE-------------- %d\n", TextureHandle);
 	write.pImageInfo = &imageinfo;
 
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
@@ -56,6 +57,7 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 	writes.dstSet = BindlessDescriptor;
 	writes.descriptorCount = 1;
 	writes.dstArrayElement = BufferHandle;
+    printf("!!!!!-------BUFFER-------------- %d\n", BufferHandle);
 	writes.pBufferInfo = &bufferinfo;
 
 	if ((usage & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) == VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT) {
@@ -66,7 +68,7 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 		writes.dstBinding = StorageBinding;
 		writes.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	}
-
+    
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &writes, 0, nullptr);
 	BufferHandle++;
 

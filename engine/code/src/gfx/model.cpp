@@ -123,6 +123,9 @@ void Gfx::Model::LoadModels()
     for (auto& it : scene->GetGameObjects()->GetObjects()) {
         for (Keeper::Objects* info : it.second) {
             if (info->GetModelName().empty()) continue;
+            if (GetModel(info->GetModelName())) {
+                continue; ;
+            }
             LoadModel(path + info->GetModelName());
         }
     }
@@ -130,6 +133,7 @@ void Gfx::Model::LoadModels()
 
 void Gfx::Model::LoadModel(const std::string& path)
 {
+
     Assimp::Importer importer;
     const aiScene* scene = nullptr;
 

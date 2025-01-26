@@ -14,6 +14,8 @@ Keeper::Npc::Npc(const Info& info)
     Fragment = info.Fragment;
     Animations = info.Animations;
     IsAnimated = !Animations.empty();
+
+    PrintInfo();
 }
 
 void Keeper::Npc::PrintInfo()

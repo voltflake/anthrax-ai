@@ -13,6 +13,8 @@ namespace Utils
     X(LEVEL_ELEMENT_SCENE, "Scene") \
     X(LEVEL_ELEMENT_OBJECT, "Object") \
     X(LEVEL_ELEMENT_POSITION, "Position") \
+    X(LEVEL_ELEMENT_SPAWN, "Spawn") \
+    X(LEVEL_ELEMENT_AMOUNT, "Amount") \
     X(LEVEL_ELEMENT_ID, "ID") \
     X(LEVEL_ELEMENT_MATERIAL, "Material") \
     X(LEVEL_ELEMENT_TEXTURE, "Texture") \

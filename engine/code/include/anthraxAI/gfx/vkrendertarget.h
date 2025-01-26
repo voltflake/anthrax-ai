@@ -3,6 +3,7 @@
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
 #include "anthraxAI/gfx/vkdefines.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Gfx
 {
@@ -30,6 +31,9 @@ namespace Gfx
 
             void Clean();
 
+            VkDescriptorSet GetImGuiDescriptor() const { return ImGuiDescriptor; }
+            void SetImGuiDescriptor() { ImGuiDescriptor = ImGui_ImplVulkan_AddTexture(Sampler, ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL); } 
+
         private:
             VkImage Image;
             VkImageView ImageView;
@@ -38,6 +42,8 @@ namespace Gfx
             VkSampler Sampler;
             VkFormat Format;
             Vector2<int> Dimensions;
+
+            VkDescriptorSet ImGuiDescriptor;
 
             bool IsDepth = false;
             bool IsStorage = false;

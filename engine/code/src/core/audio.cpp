@@ -172,7 +172,9 @@ void Core::Audio::Release()
 void Core::Audio::Play()
 {
     if (State == AL_PLAYING) {
+        alSourcef(Source, AL_GAIN, 0.2f);
         alGetSourcei(Source, AL_SOURCE_STATE, &State);
+
     }
     else if (State == AL_PAUSED) {
         //alGetSourcei(Source, AL_SOURCE_STATE, &State);

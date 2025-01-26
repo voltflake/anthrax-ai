@@ -8,8 +8,11 @@
 #include "imgui.h"
 #include <algorithm>
 #include <cstddef>
+#include <cstdio>
 #include <iterator>
 #include <string>
+#include <vector>
+#include <vulkan/vulkan_core.h>
 
 void Core::ImGuiHelper::UpdateFrame()
 {
@@ -164,40 +167,88 @@ void Core::ImGuiHelper::InitUIElements()
         
         std::string tablabel = "Editor";
         UI::Element tab(UI::TAB, tablabel);
-        Add(tab, UI::Element(UI::COMBO, "Scenes", Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
+        Add(tab, UI::Element(UI::COMBO, "Scenes", false, Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
         Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
-        Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
+        Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", false, []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
     }
     
     {
         UI::Element scenetab(UI::TAB, "Scene");
-        Add(scenetab, UI::Element(UI::TEXT, "Name:", []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
+        Add(scenetab, UI::Element(UI::TEXT, "Name:", false, []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
         Add(scenetab, UI::Element(UI::SEPARATOR, "sep"));
     }
     
     {
         UI::Element audiotab(UI::TAB, "Audio");
-        Add(audiotab, UI::Element(UI::COMBO, "Sounds", Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
+        Add(audiotab, UI::Element(UI::COMBO, "Sounds", false, Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
         Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
-        Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
+        Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", false, []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
         Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
-        Add(audiotab, UI::Element(UI::CHECKBOX, "play", nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
+        Add(audiotab, UI::Element(UI::CHECKBOX, "play", false, nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
     }
 
     {
         UI::Element debugtab(UI::TAB, "Debug");
         Add(debugtab, UI::Element(UI::TEXT, "This is debug tab"));
         Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
-        Add(debugtab, UI::Element(UI::FLOAT, "fps", []() -> float { return Utils::Debug::GetInstance()->FPS; }));
+        Add(debugtab, UI::Element(UI::FLOAT, "fps", false, []() -> float { return Utils::Debug::GetInstance()->FPS; }));
         Add(debugtab, UI::Element(UI::SEPARATOR, "sep"));
-        Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
-        Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
+        Add(debugtab, UI::Element(UI::CHECKBOX, "3d grid", false, nullptr, [](bool visible) -> void {  Utils::Debug::GetInstance()->Grid = visible; }));
+        Add(debugtab, UI::Element(UI::CHECKBOX, "show bones weight", false, nullptr, [](bool show) -> void {  Utils::Debug::GetInstance()->Bones = show; }));
     }
 
 }
 
+Keeper::Objects* Core::ImGuiHelper::ParseObjectID(const std::string& id)
+{
+    Keeper::Type type;
+    if (id.find("Camera:") != std::string::npos) {
+        type = Keeper::Type::CAMERA; 
+    }
+    else if (id.find("NPC:") != std::string::npos) {
+        type = Keeper::Type::NPC; 
+    }
+    else {
+        type = Keeper::Type::SPRITE;
+    }
+
+    std::string trimstr = id;
+    auto it = std::find_if(trimstr.begin(), trimstr.end(), [](char c) { return c == ':'; });
+    
+    std::string type_str(trimstr.begin(), it);
+
+    trimstr.erase(trimstr.begin(), it + 1);
+
+    Keeper::Objects* game_obj = const_cast<Keeper::Base*>(Core::Scene::GetInstance()->GetGameObjects())->GetNotConstObject(type, stoi(trimstr));
+    
+    return game_obj;
+}
+
+void Core::ImGuiHelper::DisplayObjectInfo(const std::string& obj, const UI::Element& elem)
+{
+    if (!IsDisplayInReset) return;
+
+    auto ui_it = std::remove_if(UITabs[elem].begin(), UITabs[elem].end(), [](const UI::Element& el) { return el.IsUIDynamic(); });
+    const Keeper::Objects* game_obj = ParseObjectID(obj);
+
+    UITabs[elem].erase(ui_it, UITabs[elem].end());
+    Add(elem, UI::Element(UI::TEXT, "Type: ", true));
+    Add(elem, UI::Element(UI::TEXT, "Position: " + game_obj->GetPosition().ToString(), true));
+    Add(elem, UI::Element(UI::TEXT, "Texture: " + game_obj->GetTextureName(), true));
+    Add(elem, UI::Element(UI::TEXT, "Model: " + game_obj->GetModelName(), true));
+    std::vector<std::string> s = { "Fragment: " + game_obj->GetFragmentName(), "Vertex: " + game_obj->GetVertexName() };
+    Add(elem, UI::Element(UI::TREE, "Material: " + game_obj->GetMaterialName(), true, s ,[](std::string tag) -> void { return; }));
+    Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+    Add(elem, UI::Element(UI::IMAGE, "Textures", true));
+    Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+    IsDisplayInReset = false;
+}
+
 void Core::ImGuiHelper::UpdateObjectInfo()
 {
+    SelectedElement.clear();
+
+    IsDisplayInReset = true;
     for (auto& it : UITabs) {
         if (it.first.GetLabel() == "Scene") {
             for (auto& elem : it.second) {
@@ -205,9 +256,9 @@ void Core::ImGuiHelper::UpdateObjectInfo()
             }
             it.second.clear();
 
-            Add(it.first, UI::Element(UI::TEXT, "Name:", []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
+            Add(it.first, UI::Element(UI::TEXT, "Name:", false, []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
             Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
-            Add(it.first, UI::Element(UI::LISTBOX, "Objects", Core::Scene::GetInstance()->GetGameObjects()->GetObjectNames(), [](std::string tag) -> void { return; }));
+            Add(it.first, UI::Element(UI::LISTBOX, "Objects", false, Core::Scene::GetInstance()->GetGameObjects()->GetObjectNames(), [this](std::string tag, const UI::Element& elem) -> void { DisplayObjectInfo(tag, elem); }));
             Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
             break;
         }
@@ -245,6 +296,10 @@ void Core::ImGuiHelper::ListBox(UI::Element& element)
             const bool is_selected = (element.ComboInd == n);
             if (ImGui::Selectable(element.GetComboList()[n].c_str(), is_selected)) {
                 element.ComboInd = n;
+                if (n != 0) {
+                    SelectedElement = element.GetComboList()[element.ComboInd];
+                    IsDisplayInReset = true;
+                }
             }
             if (is_selected) {
                 ImGui::SetItemDefaultFocus();
@@ -255,9 +310,47 @@ void Core::ImGuiHelper::ListBox(UI::Element& element)
 
 }
 
+void Core::ImGuiHelper::Tree(UI::Element& element) 
+{
+    if (ImGui::TreeNode(element.GetLabel().c_str()))
+    {
+        for (const std::string& s : element.GetComboList()) {
+            ImGui::Text(s.c_str());
+        }
+        
+        ImGui::TreePop();
+    }
+   
+}
+
+void Core::ImGuiHelper::Image(UI::Element& element)
+{
+    ImGui::Text(element.GetLabel().c_str());
+    for (auto& it : Gfx::Renderer::GetInstance()->GetTextureMap()) {
+        Gfx::RenderTarget* rt = Gfx::Renderer::GetInstance()->GetTexture(it.first);
+        if (ImGui::ImageButton((ImTextureID)rt->GetImGuiDescriptor(), ImVec2(50, 50))) {
+            Keeper::Objects* obj = ParseObjectID(SelectedElement);
+            TextureUpdateInfo.OldTextureName = obj->GetTextureName();
+            obj->SetTextureName(it.first);
+            TextureUpdateInfo.NewTextureName = it.first;
+            printf("OBJECT INFO TEXTURE: new ->%s !!! old->%s\n", TextureUpdateInfo.NewTextureName.c_str(), TextureUpdateInfo.OldTextureName.c_str());
+            TextureUpdate = true;
+        }
+        ImGui::SameLine();
+    }
+}
+
 void Core::ImGuiHelper::ProcessUI(UI::Element& element)
 {
     switch (element.GetType()) {
+        case UI::TREE: {
+            Tree(element);
+            break;
+        }
+        case UI::IMAGE: {
+            Image(element);
+            break;
+        }
         case UI::COMBO: {
             Combo(element);
             break;
@@ -330,12 +423,16 @@ void Core::ImGuiHelper::Render()
                 ImGui::EndTabBar();
             }
         }
-        
+         
         for (UI::Element& element : windowelements) {
             ProcessUI(element);
         }
 
         ImGui::End();
+    }
+    if (!SelectedElement.empty()) {
+        auto it = std::find_if(UITabs.begin(), UITabs.end(), [](std::pair<UI::Element, std::vector<UI::Element>> pair) { return pair.first.GetLabel() == "Scene"; } );
+        DisplayObjectInfo(SelectedElement, it->first);
     }
 }
 

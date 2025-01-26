@@ -23,6 +23,8 @@ namespace Keeper
             bool HasAnimations() const override { return IsAnimated; }
             void SetGizmo(Keeper::Objects* gizmo) override { GizmoHandle = reinterpret_cast<Keeper::Gizmo*>(gizmo); }
             
+            void SetTextureName(const std::string& str) override { TextureName = str; }
+           
             Keeper::Objects* GetGizmo() const override { return  reinterpret_cast<Keeper::Objects*>(GizmoHandle);}
             Vector3<float> GetPosition() const override { return Position; }
             std::string GetModelName() const override { return ModelName; }

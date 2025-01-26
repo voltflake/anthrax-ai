@@ -21,7 +21,8 @@ bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
     }
     Textures[texture] = CreateTexture(path + texture);
     CreateSampler(Textures[texture]);
-
+    
+    Textures[texture].SetImGuiDescriptor();
     return true;
 }
 

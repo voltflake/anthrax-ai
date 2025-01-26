@@ -21,7 +21,7 @@ namespace Keeper {
         std::string Texture;
         std::string Model;
         std::vector<std::string> Animations;
-        int Size = -1;
+        bool Spawn = false;
         bool IsModel = false;
     };
 
@@ -55,6 +55,7 @@ namespace Keeper {
             virtual Keeper::Objects* GetHandle() const { return nullptr; } 
             virtual Keeper::Objects* GetGizmo() const { return  nullptr;}
     
+            virtual void SetTextureName(const std::string& str) {}
             virtual void SetSelected(bool id) { }
             virtual void SetGizmo(Keeper::Objects* gizmo) {}
             virtual void SetPosition(const Vector3<float> pos) { }
@@ -68,7 +69,8 @@ namespace Keeper {
             virtual void PrintInfo() {}
 
             virtual int GetID() const { return UniqueID; }
-
+            virtual void ResetCounterID() { IDCounter = 1; }
+            
         private:
             std::vector<std::string> EmptyAnimations;
             int UniqueID = 0;
@@ -82,8 +84,7 @@ namespace Keeper {
         public:
             Base();
             ~Base();
-            void CleanIfNot(Keeper::Type type);
-    
+            void CleanIfNot(Keeper::Type type, bool resetID = false);
             template<typename T>
             void Create(T* type) { ASSERT(type->GetType() == SIZE, "Keeper::Base::Create(): Error: child has no GetType() defined"); ObjectsList[type->GetType()].push_back(type); }
 
@@ -103,6 +104,9 @@ namespace Keeper {
 
             size_t GetObjectsSize() const;
             void UpdateObjectNames();
+            
+            Keeper::Objects* GetNotConstObject(Keeper::Type type, int id); 
+            const Keeper::Objects* GetObject(Keeper::Type type, int id) const;
             const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
                    
         private:

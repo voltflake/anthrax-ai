@@ -9,7 +9,7 @@ void main()
     vec4 mousepos = GetResource(Camera, GetUniformInd()).mousepos;
 
     uint depth_ind = uint(gl_FragCoord.z * DEPTH_ARRAY_SCALE);
-    if( length(mousepos.xy - gl_FragCoord.xy) < 1)
+    if( length(mousepos.xy - gl_FragCoord.xy) < 1.5)
     {
         GetResource(Storage, GetStorageInd()).data[depth_ind] = pushconstants.objectID;
     }

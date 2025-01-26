@@ -2,6 +2,7 @@
 #include "anthraxAI/core/animator.h"
 #include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/deletor.h"
+#include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gfx/renderhelpers.h"
@@ -37,7 +38,6 @@ void Core::Scene::Render(const std::string& scene)
         if (RQScenes[scene].BindlessType != Gfx::BINDLESS_DATA_NONE) {
             Gfx::DescriptorsBase::GetInstance()->Build();
             obj.BindlessOffset = BindlessRange;
-            //printf("BINDLESS OFFSET ========== %d, %d \n", obj.BindlessOffset, obj.ID);
         }
         if (obj.VertexBase) {
             Gfx::Renderer::GetInstance()->DrawSimple(obj);
@@ -50,12 +50,11 @@ void Core::Scene::Render(const std::string& scene)
         Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::CamBufferParams>();
     }
     else {
-
         Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::BasicParams>();
     }
 }
 
-void Core::Scene::RenderScene()
+void Core::Scene::RenderScene(bool playmode)
 {
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
@@ -69,7 +68,7 @@ void Core::Scene::RenderScene()
             Gfx::Renderer::GetInstance()->EndRender();
 
             // gizmo
-            if (HasFrameGizmo) {
+            if (playmode && HasFrameGizmo) {
                 Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
                 Render("gizmo");
                 Gfx::Renderer::GetInstance()->EndRender();
@@ -89,44 +88,61 @@ void Core::Scene::Loop()
 {
     Core::Audio::GetInstance()->Play();
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
-        RenderScene();
+        RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
+        UpdateUIRQ();
         if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
             ReloadResources();
         }
-        RenderScene();
+        RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
         if (RQScenes[CurrentScene].HasStorageBuffer) {
               Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
         }
         
-        
-    double start, end = 0.0;
+        double start, end = 0.0;
         start = (double)Engine::GetInstance()->GetTime() ;
         std::thread game(&Keeper::Base::Update, GameObjects);
         std::thread updaterq(&Core::Scene::UpdateRQ, this);
-        std::thread render(&Core::Scene::RenderScene, this);
+        std::thread render(&Core::Scene::RenderScene, this, true);
         /*GameObjects->Update();*/
         /**/
         /*UpdateRQ();*/
         /**/
         /*RenderScene();*/
 
-
         game.join();
         updaterq.join();
         render.join();
-                end = (double)Engine::GetInstance()->GetTime() ;
-        printf("TIME: %lf\n", (end - start));
-            }
+        end = (double)Engine::GetInstance()->GetTime() ;
+//        printf("TIME: %lf\n", (end - start));
+    }
+}
+
+void Core::Scene::UpdateUIRQ()
+{
+ if (Core::ImGuiHelper::GetInstance()->TextureNeedsUpdate()) {
+        Core::ImGuiHelper::TextureForUpdate upd = Core::ImGuiHelper::GetInstance()->GetTextureForUpdate();
+        std::string s = upd.OldTextureName;
+        // IT IS BEING RETURNED ACCORDING TO TEXURE NAME ___ RENDER OBJECTS CAN HAVE THE SAME TEXTURE NAME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        auto it = std::find_if(RQScenes[CurrentScene].RenderQueue.begin(), RQScenes[CurrentScene].RenderQueue.end(), [s](Gfx::RenderObject& obj) { return obj.TextureName == s; });
+        if (it != RQScenes[CurrentScene].RenderQueue.end()) {
+        printf("AaaaaaaAAA\n");
+            it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
+            it->TextureName = upd.NewTextureName;
+            it->TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()));
+        }
+        Core::ImGuiHelper::GetInstance()->ResetTextureUpdate();
+    }
+
 }
 
 void Core::Scene::UpdateRQ()
 {
-    if (GameObjects->IsValid(Keeper::Type::NPC)) {
+       if (GameObjects->IsValid(Keeper::Type::NPC)) {
         int i = 0;
         auto npc = GameObjects->Get(Keeper::Type::NPC);
         for (Keeper::Objects* info : npc) {
@@ -230,7 +246,8 @@ void Core::Scene::ReloadResources()
     ParsedSceneInfo.reserve(10);
     LoadScene(CurrentScene);
     
-    GameObjects->CleanIfNot(Keeper::Type::CAMERA);
+    GameObjects->CleanIfNot(Keeper::Type::CAMERA, true);
+
     GameObjects->Create(ParsedSceneInfo);
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
@@ -257,6 +274,8 @@ void Core::Scene::ReloadResources()
 
     Core::Audio::GetInstance()->ResetState();
 //----
+    RQScenes.clear();
+
     Engine::GetInstance()->ClearState(ENGINE_STATE_RESOURCE_RELOAD);
     Engine::GetInstance()->SetState(ENGINE_STATE_EDITOR);
     Core::SceneInfo scene;
@@ -324,6 +343,7 @@ Gfx::RenderObject Core::Scene::LoadResources(const std::string& tag, const Keepe
     rqobj.MaterialName = info->GetMaterialName();
     rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(info->GetMaterialName());
     rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture(info->GetTextureName());
+    rqobj.TextureName = info->GetTextureName();
     if (!info->GetModelName().empty()) {
         rqobj.Model = Gfx::Model::GetInstance()->GetModel(info->GetModelName());
     }
@@ -416,7 +436,7 @@ void Core::Scene::LoadScene(const std::string& filename)
             zpos = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_Z, 0.0);
             int size = Parse.GetElement<float>(spawn, Utils::LEVEL_ELEMENT_AMOUNT, 0);
             info.Offset = { xpos, ypos, zpos };
-            info.Size = size;
+            info.Spawn = true;
         }
 
         Utils::NodeIt material = Parse.GetChild(node, Utils::LEVEL_ELEMENT_MATERIAL);
@@ -439,7 +459,7 @@ void Core::Scene::LoadScene(const std::string& filename)
         info.Animations.reserve(10);
         while (Parse.IsNodeValidInRange(anim)) {
             std::string animstr = Parse.GetElement<std::string>(anim, Utils::LEVEL_ELEMENT_NAME, "");
-           info.Animations.push_back(animstr);
+            info.Animations.push_back(animstr);
             anim = Parse.GetChild(++anim, Utils::LEVEL_ELEMENT_ANIMATION);
         }
     

@@ -35,7 +35,6 @@ namespace Core
     };
         
     typedef std::unordered_map<std::string, Core::SceneInfo> RQSceneMap;
-   // typedef std::unordered_map<std::string, std::vector<Keeper::Info>> SceneObjectMap;
 
     class Scene : public Utils::Singleton<Scene>
     {
@@ -51,7 +50,7 @@ namespace Core
             void UpdateResources(SceneInfo& info);
             std::vector<Gfx::RenderObject> LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info);
             Gfx::RenderObject LoadResources(const std::string& tag, const Keeper::Objects* info);
-            void RenderScene();
+            void RenderScene(bool playmode);
 std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
             bool HasAnimation(uint32_t id) { return Animator->HasAnimation(id); }
 
@@ -70,6 +69,7 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
 
         private:
             void UpdateRQ();
+            void UpdateUIRQ();
 
             void LoadScene(const std::string& filename);
             void Render(const std::string& scene);
@@ -79,7 +79,6 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
 
             std::string CurrentScene = "intro";
             RQSceneMap RQScenes;
-           // SceneObjectMap SceneObjects;
             std::vector<Keeper::Info> ParsedSceneInfo;
 
             std::vector<std::string> SceneNames;

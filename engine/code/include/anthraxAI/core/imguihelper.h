@@ -1,6 +1,7 @@
 #pragma once
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
+#include "anthraxAI/gameobjects/gameobjects.h"
 #include "imgui.h"
 #include <string>
 
@@ -24,35 +25,44 @@ namespace UI
         FLOAT,
         CHECKBOX,
         LISTBOX,
+        TREE,
+        IMAGE,
     };
    
     class Element
     {
         public:
 
-            Element(ElementType type, const std::string& label)
-            : Type(type), Label(label) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
+            Element(ElementType type, const std::string& label, bool isdyn = false)
+            : Type(type), Label(label), IsDynamic(isdyn) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
           
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, T t, Args... args, std::function<void (std::string)> func) 
-            : Type(type), Label(label), Definition(func) { EvaluateArgs(t, args...); }
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), Definition(func) { EvaluateArgs(t, args...); }
+
+            template<typename T, typename... Args>
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionWithElem(func) { EvaluateArgs(t, args...); }
+
             
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, T t, Args... args, std::function<void (bool)> func) 
-            : Type(type), Label(label), DefinitionBool(func) { EvaluateArgs(t, args...); }
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (bool)> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionBool(func) { EvaluateArgs(t, args...); }
 
-            Element(ElementType type, const std::string& label,std::function<float ()> func) 
-            : Type(type), Label(label), DefinitionFloat(func) { }
+            Element(ElementType type, const std::string& label, bool isdyn,std::function<float ()> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionFloat(func) { }
 
-            Element(ElementType type, const std::string& label, std::function<std::string ()> func) 
-            : Type(type), Label(label), DefinitionString(func) { }
+            Element(ElementType type, const std::string& label, bool isdyn, std::function<std::string ()> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionString(func) { }
 
             int GetID() const { return ID; }
             ElementType GetType() const { return Type; }
             std::string GetLabel() const { return Label; }
+            bool IsUIDynamic() const { return IsDynamic; }        
 
             std::vector<std::string> GetComboList() { return ComboList;}
-            
+
+            std::function<void (std::string, const UI::Element& elem)> DefinitionWithElem;
             std::function<void (std::string)> Definition;
             std::function<bool ()> DefinitionBoolRet;
             std::function<void (bool)> DefinitionBool;
@@ -81,6 +91,7 @@ namespace UI
             int ID = 0;
             ElementType Type;
             std::string Label;
+            bool IsDynamic = false;
             bool Checkbox = true;
 };
     
@@ -115,7 +126,8 @@ namespace Core
     {
         public:
             ~ImGuiHelper();
-
+            
+            void DisplayObjectInfo(const std::string& obj, const UI::Element& elem);
             void UpdateObjectInfo();
             void Init();
             void InitUIElements();
@@ -128,15 +140,31 @@ namespace Core
 #ifdef AAI_LINUX
             void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
 #endif
+            bool TextureNeedsUpdate() { return TextureUpdate; }
+            void ResetTextureUpdate() { TextureUpdate = false;}
+            
+            struct TextureForUpdate {
+                std::string OldTextureName;
+                std::string NewTextureName;
+            };
+
+            TextureForUpdate GetTextureForUpdate() { return TextureUpdateInfo; }
         private:
+            Keeper::Objects* ParseObjectID(const std::string& id);
+            void Image(UI::Element& element);
             void Combo(UI::Element& element);
+            void Tree(UI::Element& element); 
             void ListBox(UI::Element& element);
             void ProcessUI(UI::Element& element);
             ImGuiStyle 	EditorStyle;
             std::string EditorWindow;
-            
+            std::string SelectedElement;
             UI::UITabsElementsMap UITabs;
             UI::UIElementsMap UIElements;
             UI::UIWindowsMap UIWindows;
+            
+            TextureForUpdate TextureUpdateInfo;
+            bool TextureUpdate = false;
+            bool IsDisplayInReset = false;
     };
 }

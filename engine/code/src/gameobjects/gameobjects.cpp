@@ -3,7 +3,9 @@
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
+#include <algorithm>
 #include <cstdio>
 Keeper::Base::~Base()
 {
@@ -17,18 +19,39 @@ Keeper::Base::~Base()
   ObjectsList.clear();
 }
 
-void Keeper::Base::CleanIfNot(Keeper::Type type)
+void Keeper::Base::CleanIfNot(Keeper::Type type, bool resetID)
 {
   for (auto& it : ObjectsList) {
     if (it.first != type) {
       for (auto* obj : it.second) {
-      if (obj) {
-        delete obj;
-      }
+        if (resetID) {
+            obj->ResetCounterID();  
+        }
+        if (obj) {
+            delete obj;
+        }
     }
     it.second.clear();
     }
   }
+}
+
+const Keeper::Objects* Keeper::Base::GetObject(Keeper::Type type, int id) const 
+{
+    std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
+
+    auto it = std::find_if(vec.begin(), vec.end(), [id](Keeper::Objects* o) { return o->GetID() == id; });
+
+    return *it;
+}
+
+Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, int id) 
+{
+    std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
+
+    auto it = std::find_if(vec.begin(), vec.end(), [id](Keeper::Objects* o) { return o->GetID() == id; });
+
+    return *it;
 }
 
 void Keeper::Base::UpdateObjectNames()
@@ -85,7 +108,7 @@ void Keeper::Base::Update()
     std::vector<Objects*>::iterator gizmo_it = std::find_if(ObjectsList[Keeper::Type::GIZMO].begin(), ObjectsList[Keeper::Type::GIZMO].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id;});
     static bool gizmo = false;
     if (gizmo) {
-        gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
+        gizmo = Core::WindowManager::GetInstance()->IsMouseSelected();
     }
     for (Keeper::Objects* obj : ObjectsList[Keeper::Type::GIZMO]) {
         if (selected_it != ObjectsList[Keeper::Type::NPC].end()) {
@@ -124,12 +147,12 @@ void Keeper::Base::Update()
 
 void Keeper::Base::SpawnObjects(const Keeper::Info& info)
 {
-    int size = info.Size;
     Vector3<float> offsets = info.Offset;
+    ASSERT(offsets.x == 0 && offsets.y == 0 && offsets.z == 0, "Keeper::Base::SpawnObjects(): offsets can't be 0");
 
     Keeper::Info spawn = info; 
     for (float x = info.Position.x; x < offsets.x; x += 1.0f ) {
-        for (float y = info.Position.y; y < 1; y += 1.0f ) {
+        for (float y = info.Position.y; y < offsets.y; y += 1.0f ) {
             for (float z = info.Position.z; z < offsets.z; z += 1.0f ) {
                 spawn.Position = { x, y, z };
                 Create<Keeper::Npc>(new Keeper::Npc(spawn));
@@ -142,7 +165,7 @@ void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
 {
     for (const Keeper::Info& obj : info) {
         if (obj.IsModel) {
-            if (obj.Size != -1) {
+            if (obj.Spawn) {
                 SpawnObjects(obj);
             }
             else {
@@ -161,6 +184,5 @@ size_t Keeper::Base::GetObjectsSize() const
     for (auto& it : ObjectsList) {
         size += it.second.size();
     }
-    printf("-----------KEEPER OBJ SIZE: %d\n\n", size);
     return size;
 }

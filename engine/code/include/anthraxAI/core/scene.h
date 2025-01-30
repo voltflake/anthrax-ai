@@ -52,7 +52,7 @@ namespace Core
             Gfx::RenderObject LoadResources(const std::string& tag, const Keeper::Objects* info);
             void RenderScene(bool playmode);
 std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
-            bool HasAnimation(uint32_t id) { return Animator->HasAnimation(id); }
+            bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
 
             void SetCurrentScene(const std::string& str);
             RQSceneMap& GetScenes() { return RQScenes; }
@@ -88,6 +88,7 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
             Utils::Parser Parse;
 
             bool HasFrameGizmo = false;
+            bool HasFrameOutline = false;
             bool HasFrameGrid = false;
 
             uint32_t BindlessRange = 0;

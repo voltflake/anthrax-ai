@@ -5,6 +5,7 @@
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/gizmo.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
@@ -27,6 +28,10 @@ void Core::Scene::Render(const std::string& scene)
     }
     for (Gfx::RenderObject& obj :  RQScenes[scene].RenderQueue) {
         if (!obj.IsVisible) continue;
+        if (scene == "mask" && !obj.IsSelected) {
+            Gfx::Renderer::GetInstance()->IncInstanceInd(obj.Model->Meshes.size());
+            continue;
+        }
 
         if (RQScenes[scene].BindlessType == Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER) {
             BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.InstanceBind, obj.TextureBind, }));
@@ -60,7 +65,7 @@ void Core::Scene::RenderScene(bool playmode)
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         {
             // objects from map
-            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR));
+            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR));
             Render(CurrentScene);
             if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
                 Render("grid");
@@ -69,13 +74,24 @@ void Core::Scene::RenderScene(bool playmode)
 
             // gizmo
             if (playmode && HasFrameGizmo) {
-                Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD));
+                Gfx::Renderer::GetInstance()->ResetInstanceInd();
+                Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["mask"].Attachments), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR));
+                Render("mask");
+                Gfx::Renderer::GetInstance()->EndRender();
+                
+                if (HasFrameOutline) {
+                    Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes[CurrentScene].Attachments), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
+                    Render("outline");
+                    Gfx::Renderer::GetInstance()->EndRender();
+                }
+
+                Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(RQScenes["gizmo"].Attachments), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
                 Render("gizmo");
                 Gfx::Renderer::GetInstance()->EndRender();
             }
 
             // ui
-            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH | Gfx::AttachmentFlags::RENDER_ATTACHMENT_LOAD)));
+            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH ), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
             Gfx::Renderer::GetInstance()->RenderUI();
             Gfx::Renderer::GetInstance()->EndRender();
         }
@@ -105,20 +121,20 @@ void Core::Scene::Loop()
         
         double start, end = 0.0;
         start = (double)Engine::GetInstance()->GetTime() ;
-        std::thread game(&Keeper::Base::Update, GameObjects);
-        std::thread updaterq(&Core::Scene::UpdateRQ, this);
-        std::thread render(&Core::Scene::RenderScene, this, true);
-        /*GameObjects->Update();*/
-        /**/
-        /*UpdateRQ();*/
-        /**/
-        /*RenderScene();*/
+        /*std::thread game(&Keeper::Base::Update, GameObjects);*/
+        /*std::thread updaterq(&Core::Scene::UpdateRQ, this);*/
+        //std::thread render(&Core::Scene::RenderScene, this, true);
+        GameObjects->Update();
 
-        game.join();
-        updaterq.join();
-        render.join();
+        UpdateRQ();
+
+        RenderScene(true);
+
+        /*game.join();*/
+        /*updaterq.join();*/
+        /*render.join();*/
         end = (double)Engine::GetInstance()->GetTime() ;
-//        printf("TIME: %lf\n", (end - start));
+        printf("TIME: %lf\n", (end - start));
     }
 }
 
@@ -130,7 +146,6 @@ void Core::Scene::UpdateUIRQ()
         // IT IS BEING RETURNED ACCORDING TO TEXURE NAME ___ RENDER OBJECTS CAN HAVE THE SAME TEXTURE NAME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         auto it = std::find_if(RQScenes[CurrentScene].RenderQueue.begin(), RQScenes[CurrentScene].RenderQueue.end(), [s](Gfx::RenderObject& obj) { return obj.TextureName == s; });
         if (it != RQScenes[CurrentScene].RenderQueue.end()) {
-        printf("AaaaaaaAAA\n");
             it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
             it->TextureName = upd.NewTextureName;
             it->TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()));
@@ -146,7 +161,11 @@ void Core::Scene::UpdateRQ()
         int i = 0;
         auto npc = GameObjects->Get(Keeper::Type::NPC);
         for (Keeper::Objects* info : npc) {
-            RQScenes[CurrentScene].RenderQueue[i].IsSelected = info->GetGizmo() ? 1 : 0;  
+            RQScenes[CurrentScene].RenderQueue[i].IsSelected = info->GetGizmo() || RQScenes[CurrentScene].RenderQueue[i].ID == Core::Scene::GetInstance()->GetSelectedID() ? 1 : 0;  
+            RQScenes["mask"].RenderQueue[i].IsSelected = info->GetGizmo() || RQScenes[CurrentScene].RenderQueue[i].ID == Core::Scene::GetInstance()->GetSelectedID() ? 1 : 0;
+            if (RQScenes["mask"].RenderQueue[i].IsSelected) {
+                HasFrameOutline = true;
+            }
             RQScenes[CurrentScene].RenderQueue[i].IsVisible = info->IsVisible();
             RQScenes[CurrentScene].RenderQueue[i].Position = info->GetPosition();
             i++;
@@ -158,11 +177,17 @@ void Core::Scene::UpdateRQ()
             RQScenes["gizmo"].RenderQueue[i].Position = info->GetPosition();
             i++;
         }
+
+        if (Gfx::Renderer::GetInstance()->GetUpdateSamplers()) {
+            RQScenes["outline"].RenderQueue = LoadResources("outline", { Keeper::Info() });
+            UpdateResources(RQScenes["outline"]);
+            Gfx::Renderer::GetInstance()->SetUpdateSamplers(false);
+        }
     }
 
     for (Gfx::RenderObject& obj : RQScenes[CurrentScene].RenderQueue) {
         if (HasAnimation(obj.ID)) {
-            UpdateAnimation(obj); 
+            UpdateAnimation(obj);
         }
     }
 }
@@ -177,7 +202,6 @@ void Core::Scene::UpdateResources(Core::SceneInfo& info)
                 obj.StorageBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
                 obj.InstanceBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
                 obj.HasStorage = obj.Model ? true : false;
-
                 info.HasCameraBuffer = true;
                 info.HasStorageBuffer = true;
                 info.HasTexture = true;
@@ -252,7 +276,8 @@ void Core::Scene::ReloadResources()
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Z), Keeper::Gizmo::Type::Z));
-    
+    EditorCamera->SetPosition({0.0f, 0.0f, 3.0f});
+
     if (Animator) {
         delete Animator;
     }
@@ -317,6 +342,29 @@ void Core::Scene::ReloadResources()
         info.RenderQueue = LoadResources(tag, { Keeper::Info() });
         RQScenes[tag] = info;
         UpdateResources(RQScenes[tag]);
+
+        Core::SceneInfo maskinfo;
+        tag = "mask";
+        attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_MASK);
+        maskinfo.Attachments = attachments;
+        maskinfo.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER;
+        maskinfo.RenderQueue = scene.RenderQueue;
+        int i = 1;
+        for (Gfx::RenderObject& obj : maskinfo.RenderQueue) {
+            obj.MaterialName = "mask";
+            obj.Material =  Gfx::Pipeline::GetInstance()->GetMaterial(obj.MaterialName);
+        }
+        RQScenes[tag] = maskinfo;
+        UpdateResources(RQScenes[tag]);
+ 
+        Core::SceneInfo outlineinfo;
+        tag = "outline";
+        attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH);
+        outlineinfo.Attachments = attachments;
+        outlineinfo.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER;
+        outlineinfo.RenderQueue = LoadResources(tag, { Keeper::Info() });
+        RQScenes[tag] = outlineinfo;
+        UpdateResources(RQScenes[tag]);
     }
     
     Animator->Init();
@@ -337,6 +385,9 @@ void Core::Scene::ReloadResources()
 Gfx::RenderObject Core::Scene::LoadResources(const std::string& tag, const Keeper::Objects* info)
 {
     Gfx::RenderObject rqobj;
+    if (info->GetAxis() != -1) {
+       rqobj.GizmoType = info->GetAxis(); 
+    }
     rqobj.ID = info->GetID();
     rqobj.IsVisible = info->IsVisible();
     rqobj.Position = info->GetPosition();
@@ -371,8 +422,8 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
     if (tag == "grid") {
         Gfx::RenderObject rqobj;
         rqobj.Position = {0.0f};
-        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial("grid");
-        rqobj.Texture =Gfx::Renderer::GetInstance()->GetTexture("dummy");
+        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(tag);
+        rqobj.Texture =Gfx::Renderer::GetInstance()->GetTexture("dummy.png");
         rqobj.Mesh = nullptr;
         rqobj.IsGrid = true;
         rqobj.VertexBase = true;
@@ -380,6 +431,19 @@ std::vector<Gfx::RenderObject> Core::Scene::LoadResources(const std::string& tag
         rq.push_back(rqobj);
         return rq;
     }
+    if (tag == "outline") {
+        Gfx::RenderObject rqobj;
+        rqobj.Position = {0.0f};
+        rqobj.Material = Gfx::Pipeline::GetInstance()->GetMaterial(tag);
+        rqobj.Texture = Gfx::Renderer::GetInstance()->GetMaskRT();
+        rqobj.Mesh = Gfx::Mesh::GetInstance()->GetMesh("dummy.png");
+        rqobj.IsGrid = true;
+        rqobj.VertexBase = true;
+        rqobj.IsVisible = true;
+        rq.push_back(rqobj);
+        return rq;
+    }
+
 
     ASSERT(rq.empty(), "Render Queue is empty, you probably passed a wrong tag");
     return rq;

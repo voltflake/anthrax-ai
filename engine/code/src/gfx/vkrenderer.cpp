@@ -14,6 +14,7 @@
 #include <cstring>
 #include <sys/types.h>
 #include <thread>
+#include <vulkan/vulkan_core.h>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -30,8 +31,16 @@ void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 	Gfx::MeshPushConstants constants;
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
+    constants.selected = 0;
+    constants.boneID = -1;
+    if (object.HasStorage) {
+        constants.storagebind = object.StorageBind;
+        constants.instancebind = object.InstanceBind;
+        constants.objectID = object.ID;
+        constants.selected = (object.IsSelected || object.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
+        constants.boneID = Utils::Debug::GetInstance()->BoneID;
+    }
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
-
 	vkCmdDraw(Cmd.GetCmd(), 6, 1, 0, 0);
 }
 
@@ -58,15 +67,17 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
     constants.selected = 0;
-    constants.debugbones = 0;
-    constants.boneID = 0;
+    constants.boneID = -1;
     if (object.HasStorage) {
         constants.storagebind = object.StorageBind;
         constants.instancebind = object.InstanceBind;
         constants.objectID = object.ID;
         constants.selected = (object.IsSelected || object.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
-        constants.boneID = Utils::Debug::GetInstance()->BoneID;
-        constants.debugbones = Utils::Debug::GetInstance()->Bones ? 1 : 0;
+        if (Utils::Debug::GetInstance()->Bones) {
+            constants.boneID = Utils::Debug::GetInstance()->BoneID;
+        }
+        constants.gizmo = object.GizmoType;
+        printf("giiiiiizmo : %d\n", constants.gizmo);
     }
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 
@@ -95,17 +106,33 @@ void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 	}
 }
 
-VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag, AttachmentFlags loadop)
+VkFormat Gfx::Renderer::GetRTFormat(Gfx::AttachmentFlags flag)
+{
+    if ((flag & Gfx::RENDER_ATTACHMENT_MASK) == Gfx::RENDER_ATTACHMENT_MASK) {
+        return MaskRT->GetFormat();
+    }
+    return MainRT->GetFormat();
+}
+
+VkImageView Gfx::Renderer::GetRTImageView(AttachmentFlags flag)
+{
+	if (flag == Gfx::RENDER_ATTACHMENT_COLOR) {
+        return MainRT->GetImageView();
+    } 
+    return MaskRT->GetImageView();
+}
+
+VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag, AttachmentRules loadop)
 {
 	VkClearValue clearvalue;
-	if (flag == Gfx::RENDER_ATTACHMENT_COLOR) {
+	if (flag == Gfx::RENDER_ATTACHMENT_COLOR || flag == Gfx::RENDER_ATTACHMENT_MASK) {
 		clearvalue.color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 
         AttachmentInfos[flag].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        AttachmentInfos[flag].imageView = MainRT->GetImageView();
+        AttachmentInfos[flag].imageView = GetRTImageView(flag);
         AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
-        AttachmentInfos[flag].loadOp = ((loadop & Gfx::RENDER_ATTACHMENT_LOAD) == Gfx::RENDER_ATTACHMENT_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+        AttachmentInfos[flag].loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
         AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         AttachmentInfos[flag].clearValue = clearvalue;
 
@@ -117,7 +144,7 @@ VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags f
 		AttachmentInfos[flag].imageView = DepthRT->GetImageView();
 		AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
-		AttachmentInfos[flag].loadOp = ((loadop & Gfx::RENDER_ATTACHMENT_LOAD) == Gfx::RENDER_ATTACHMENT_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+		AttachmentInfos[flag].loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
 		AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		AttachmentInfos[flag].clearValue = clearvalue;
 	}
@@ -156,7 +183,7 @@ void Gfx::Renderer::EndRender()
 {
     EndRendering(Cmd.GetCmd());
 }
-void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags)
+void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags, AttachmentRules rules)
 {
    	std::vector<RenderingAttachmentInfo> attachmentinfo;
 	attachmentinfo.reserve(Gfx::RENDER_ATTACHMENT_SIZE);
@@ -164,14 +191,24 @@ void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags)
 		Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = false;
 		info.Image = MainRT->GetImage();
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR, attachmentflags);
+        if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
+            info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR, rules);
+		attachmentinfo.push_back(info);
+	}
+    if ((attachmentflags & Gfx::RENDER_ATTACHMENT_MASK) == Gfx::RENDER_ATTACHMENT_MASK) {
+		Gfx::RenderingAttachmentInfo info;
+		info.IsDepth = false;
+		info.Image = MaskRT->GetImage();
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_MASK, rules);
 		attachmentinfo.push_back(info);
 	}
 	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_DEPTH) == Gfx::RENDER_ATTACHMENT_DEPTH) {
 		Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = true;
 		info.Image = DepthRT->GetImage();
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_DEPTH, attachmentflags);
+		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_DEPTH, rules);
 		attachmentinfo.push_back(info);
 	}
 	
@@ -344,12 +381,26 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     for (Gfx::RenderObject& obj : map["gizmo"].RenderQueue) {
          if (!obj.Model || !obj.IsVisible) continue;
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
-        datas[i].rendermatrix =  glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
-//glm::mat4(1.0f);
-            i++;
+        datas[i].rendermatrix =  glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));                i++;
         }
 
     }
+    /*for (Gfx::RenderObject& obj : map["mask"].RenderQueue) {*/
+    /*    if (!obj.Model || !obj.IsVisible) continue;*/
+    /*    hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);*/
+    /*    for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {*/
+    /**/
+    /*        if (hasanim) {*/
+    /*            for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {*/
+    /*                datas[i].bonesmatrices[k] = obj.Model->Bones.Info[k].FinTransform;*/
+    /*            }*/
+    /*        }*/
+    /*        datas[i].hasanimation = hasanim ? 1 : 0;*/
+    /*        i++;*/
+    /*    }*/
+    /*}*/
+    /**/
+
     InstanceCount = i;
     InstanceIndex = 0;
     //}
@@ -482,6 +533,13 @@ void Gfx::Renderer::CleanResources()
 		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetDeviceMemory(), nullptr);
 		delete MainRT;
 	}
+    if (MaskRT) {
+        vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(MaskRT->GetSampler()), nullptr);
+		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImageView(), nullptr);
+		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImage(), nullptr);
+		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetDeviceMemory(), nullptr);
+		delete MaskRT;
+	}
 }
 
 void Gfx::Renderer::CreateRenderTargets()
@@ -508,6 +566,18 @@ void Gfx::Renderer::CreateRenderTargets()
 	MainRT->SetFormat(VK_FORMAT_B8G8R8A8_SRGB);
 	MainRT->SetDepth(false);
 	MainRT->CreateRenderTarget();
+
+    if (MaskRT) {
+        vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(MaskRT->GetSampler()), nullptr);
+		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImageView(), nullptr);
+		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImage(), nullptr);
+		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetDeviceMemory(), nullptr);
+		delete MaskRT;
+	}
+	MaskRT = new RenderTarget(*MainRT);
+    MaskRT->SetFormat(VK_FORMAT_R8_UNORM);
+    MaskRT->CreateRenderTarget();
+    CreateSampler(MaskRT);
 }
 
 VkCommandPoolCreateInfo CommandPoolCreateInfo(uint32_t graphicsfamily, VkCommandPoolCreateFlags flags) {

@@ -191,7 +191,9 @@ void Gfx::Pipeline::Build()
         VertexDescription.Bindings.clear();
         VertexDescription.Attributes.clear();
     }
-    
+    Gfx::AttachmentFlags mainflag = Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR;
+    Gfx::AttachmentFlags maskflag = Gfx::AttachmentFlags::RENDER_ATTACHMENT_MASK;
+
 	VkShaderModule fragshader;
 	VkShaderModule vertexshader;
 
@@ -243,9 +245,8 @@ void Gfx::Pipeline::Build()
             std::string vert = "./shaders/" + info->GetVertexName();
             
             if (fragmap.find(frag) != fragmap.end() && vertmap.find(vert) != vertmap.end()) {
-Setup(0);
-            CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
-
+                Setup(mainflag);
+                CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
             }
             else {
             if (!ShaderStages.empty()) {
@@ -262,7 +263,7 @@ Setup(0);
 
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
             ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-            Setup(0);
+            Setup(mainflag);
             CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
             }
         }
@@ -287,7 +288,7 @@ Setup(0);
     
 	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 	
-	Setup(0);
+	Setup(mainflag);
 	CreateMaterial(Pipeline, PipelineLayout, "intro");
 
 //grid
@@ -308,15 +309,38 @@ Setup(0);
     
 	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 	
-	Setup(0);
+	Setup(mainflag);
 	CreateMaterial(Pipeline, PipelineLayout, "grid");
 
 //gizmo
+	/*   ShaderStages.clear();*/
+	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);*/
+	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);*/
+	/**/
+	/*frag = "./shaders/gizmo.frag";*/
+	/*   vert = "./shaders/model.vert";*/
+	/*CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);*/
+	/*LoadShader(shaderbuf, &fragshader);*/
+	/*shaderbuf.clear();*/
+	/*CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);*/
+	/*LoadShader(shaderbuf, &vertexshader);*/
+	/*shaderbuf.clear();*/
+	/**/
+	/*ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));*/
+	/*ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));*/
+	/**/
+	/*VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");*/
+	/**/
+	/*Setup(mainflag);*/
+	/*CreateMaterial(Pipeline, PipelineLayout, "gizmo");*/
+
+
+// mask
     ShaderStages.clear();
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
 	
-	frag = "./shaders/model.frag";
+	frag = "./shaders/mask.frag";
     vert = "./shaders/model.vert";
 	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
 	LoadShader(shaderbuf, &fragshader);
@@ -330,23 +354,53 @@ Setup(0);
     
 	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 	
-	Setup(0);
-	CreateMaterial(Pipeline, PipelineLayout, "gizmo");
+	Setup(maskflag);
+	CreateMaterial(Pipeline, PipelineLayout, "mask");
+
+// outline
+    ShaderStages.clear();
+	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
+	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
+	
+	frag = "./shaders/outline.frag";
+    vert = "./shaders/outline.vert";
+	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+	LoadShader(shaderbuf, &fragshader);
+	shaderbuf.clear();
+	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
+	LoadShader(shaderbuf, &vertexshader);
+	shaderbuf.clear();
+	
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
+	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
+    
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	
+	Setup(mainflag);
+	CreateMaterial(Pipeline, PipelineLayout, "outline");
 
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
     ShaderStages.clear();
+
 }
 
-void Gfx::Pipeline::Setup(int ind) {
+void Gfx::Pipeline::Setup(Gfx::AttachmentFlags flags) {
 
 	VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
+    if ((flags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {
+        format = *(Gfx::Device::GetInstance()->GetSwapchainFormat());
+    }
+    else {
+        format = Gfx::Renderer::GetInstance()->GetRTFormat(flags);
+    }
 	VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
+    VkFormat formats[1] = { format };
 
 	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
     pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfo.pColorAttachmentFormats = Gfx::Device::GetInstance()->GetSwapchainFormat();
+    pipelineRenderingCreateInfo.pColorAttachmentFormats = formats;
     pipelineRenderingCreateInfo.depthAttachmentFormat = depthformat;
 
 	VkPipelineViewportStateCreateInfo viewportstate = {};

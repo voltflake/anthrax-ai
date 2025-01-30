@@ -21,7 +21,7 @@ namespace Keeper
             ~Gizmo() {}
             
             Keeper::Type GetType() const override { return ObjectType; }
-            Gizmo::Type GetAxis() const  { return Axis; }
+            int GetAxis() const override { return Axis; }
             void SetSelected(bool id) override { }
             void SetVisible(bool vis) override { Visible = vis; }
             bool IsVisible() const override{ return Visible; }

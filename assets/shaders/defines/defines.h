@@ -40,8 +40,8 @@ layout( push_constant ) uniform constants
 
     int objectID;
     int selected;
-    int debugbones;
     int boneID;
+    int gizmo;
 } pushconstants;
 
 int GetStorageInd() {
@@ -75,6 +75,10 @@ RegisterUniform(Camera, {
 #define DEPTH_ARRAY_SCALE 512
 #define INSTANCE_SIZE 20
 const int MAX_BONES = 200;
+
+#define GIZMO_X 0
+#define GIZMO_Y 1
+#define GIZMO_Z 2
 
 struct InstanceData {
     mat4 bonesmatrices[MAX_BONES];

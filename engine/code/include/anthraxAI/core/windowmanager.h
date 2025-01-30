@@ -81,7 +81,7 @@ namespace Core
             Vector2<int> GetMouseBegin() const { return Mouse.Begin; }
             Vector2<int> GetMouseDelta() const { return Mouse.Delta; }
             bool IsMousePressed() const { return Mouse.Pressed; }
-            bool IsMouseSelected() const { return Mouse.Selected && Mouse.Pressed; }
+            bool IsMouseSelected() const { return Mouse.Selected; }
             void ReleaseMouseSelected() { Mouse.Selected = false;}
             void SetResizeExtents(int x, int y) { OnResizeExtents.x = x; OnResizeExtents.y = y; }
             void SetEvent(int event) { Event |= event; }

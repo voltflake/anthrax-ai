@@ -28,8 +28,8 @@ namespace Gfx
         int bufferbind = 0; 
         int objectID = 0; 
         int selected = 0;
-        int debugbones = 0;
         int boneID = 0;
+        int gizmo = 0;
     };
 
     struct MeshInfo {

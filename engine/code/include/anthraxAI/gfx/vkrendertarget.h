@@ -19,6 +19,8 @@ namespace Gfx
 	        void MemoryBarrier(VkCommandBuffer cmd, VkImageLayout oldlayout, VkImageLayout newlayout);
 	        void Copy(VkCommandBuffer cmd, VkBuffer buffer, uint32_t width, uint32_t height);
             
+            VkFormat GetFormat() { return Format; }
+            
             void SetFormat(VkFormat format) { Format = format; }
             void SetDimensions(Vector2<int> dim) { Dimensions = dim; }
             void SetDepth(bool depth) { IsDepth = depth; }

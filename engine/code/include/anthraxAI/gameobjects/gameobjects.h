@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <sys/types.h>
@@ -43,7 +44,8 @@ namespace Keeper {
             virtual ~Objects() {}
             
             virtual Type GetType() const { return SIZE; }
-            
+            virtual int GetAxis() const { return -1; }
+
             virtual std::string GetModelName() const { return ""; }
             virtual std::string GetTextureName() const { return ""; }
             virtual std::string GetFragmentName() const { return ""; }

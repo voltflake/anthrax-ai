@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkbase.h"
+#include "anthraxAI/gfx/vkrenderer.h"
 
 void Gfx::Vulkan::Init()
 {
@@ -41,6 +42,7 @@ bool Gfx::Vulkan::OnResize()
         
         Gfx::Renderer::GetInstance()->CreateCommands();
         Gfx::Renderer::GetInstance()->CreateRenderTargets();
+        Gfx::Renderer::GetInstance()->SetUpdateSamplers(true);
 	    
         Gfx::Renderer::GetInstance()->Sync();
         vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());

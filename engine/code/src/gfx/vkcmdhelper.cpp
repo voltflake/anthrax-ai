@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkcmdhelper.h"
+#include <vulkan/vulkan_core.h>
 
 VkAccessFlags GetAccessFlags(VkImageLayout layout)
 {
@@ -167,7 +168,8 @@ const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<Render
 			renderinfo.pDepthAttachment = info.Info;
 		}
 		else {
-			MemoryBarrier(info.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, range);
+			MemoryBarrier(info.Image, info.Layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, range);
+            //info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			colorattachmantcount++;
 			renderinfo.colorAttachmentCount = colorattachmantcount;
 			renderinfo.pColorAttachments = info.Info;

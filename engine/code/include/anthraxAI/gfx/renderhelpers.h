@@ -1,7 +1,6 @@
 #pragma once
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/gfx/model.h"
-#include "anthraxAI/gfx/vkpipeline.h"
 #include <cstdint>
 namespace Gfx
 {
@@ -11,7 +10,11 @@ namespace Gfx
         BINDLESS_DATA_CAM_BUFFER,
         BINDLESS_DATA_SIZE
     };
-   
+    struct Material {
+        VkPipelineLayout PipelineLayout;
+        VkPipeline Pipeline;
+    };
+
     struct RenderObject {
 	    Gfx::MeshInfo* Mesh = nullptr;
 	    Gfx::ModelInfo* Model = nullptr;
@@ -31,6 +34,8 @@ namespace Gfx
         bool IsVisible = true;
         uint32_t ID;
         bool IsSelected = false;
+
+        uint32_t GizmoType;
 
         uint32_t BufferBind;
         uint32_t StorageBind;
@@ -87,12 +92,16 @@ namespace Gfx
     };
 
     enum AttachmentFlags {
-        RENDER_ATTACHMENT_NONE  = 0,
-        RENDER_ATTACHMENT_COLOR = 1 << 0,
-        RENDER_ATTACHMENT_DEPTH = 1 << 1,
-        RENDER_ATTACHMENT_LOAD  = 1 << 2,
-        RENDER_ATTACHMENT_CLEAR = 1 << 3,
+        RENDER_ATTACHMENT_NONE  = 1 << 0,
+        RENDER_ATTACHMENT_COLOR = 1 << 1,
+        RENDER_ATTACHMENT_DEPTH = 1 << 2,
+        RENDER_ATTACHMENT_MASK = 1 << 3,
         RENDER_ATTACHMENT_SIZE
+    };
+    enum AttachmentRules {
+        ATTACHMENT_RULE_DONT_CARE = 1 << 0,
+        ATTACHMENT_RULE_LOAD  = 1 << 1,
+        ATTACHMENT_RULE_CLEAR = 1 << 2, 
     };
 
     typedef std::array<FrameData, MAX_FRAMES> FrameArray;

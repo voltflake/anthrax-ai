@@ -44,22 +44,22 @@ glm::vec3 UnprojectMouse(glm::vec2 mouse, glm::vec2 dimensions, glm::vec3 pos)
 
 void Keeper::Npc::Update()
 {
-   if (GizmoHandle && Core::WindowManager::GetInstance()->IsMousePressed()) {
+   if (GizmoHandle && Core::WindowManager::GetInstance()->IsMousePressed() && Selected) {
         Vector2<int> mouse = Core::WindowManager::GetInstance()->GetMousePos();
         Vector2<int> dimensions = Core::WindowManager::GetInstance()->GetScreenResolution();
 
         glm::vec3 newpos = UnprojectMouse({ mouse.x, mouse.y }, { dimensions.x, dimensions.y }, {Position.x, Position.y, Position.z});
        
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Y) {
-            Position.y += newpos.y ;
+            Position.y += newpos.y * 1.2;
             GizmoHandle->SetSelected(true);
         }
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::X) {
-            Position.x += newpos.x ;
+            Position.x += newpos.x * 1.2;
             GizmoHandle->SetSelected(true);
         }
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Z) {
-            Position.z += newpos.y ;
+            Position.z += newpos.y * 1.2;
             GizmoHandle->SetSelected(true);
         }
     } 

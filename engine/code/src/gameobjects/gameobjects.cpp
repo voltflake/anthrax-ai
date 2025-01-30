@@ -85,11 +85,11 @@ void Keeper::Base::UpdateObjectNames()
 Keeper::Base::Base()
 {
     Keeper::Info info;
-    info.Fragment = "model.frag";
+    info.Fragment = "gizmo.frag";
     info.Vertex = "model.vert";
     info.IsModel = true;
     info.Model = "axisy.obj";
-    info.Material = "models";
+    info.Material = "gizmo";
     info.Position = {0.0};
     info.Texture = "dummy.png";
 
@@ -108,7 +108,7 @@ void Keeper::Base::Update()
     std::vector<Objects*>::iterator gizmo_it = std::find_if(ObjectsList[Keeper::Type::GIZMO].begin(), ObjectsList[Keeper::Type::GIZMO].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id;});
     static bool gizmo = false;
     if (gizmo) {
-        gizmo = Core::WindowManager::GetInstance()->IsMouseSelected();
+        gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
     }
     for (Keeper::Objects* obj : ObjectsList[Keeper::Type::GIZMO]) {
         if (selected_it != ObjectsList[Keeper::Type::NPC].end()) {
@@ -132,6 +132,9 @@ void Keeper::Base::Update()
                     gizmo = true; 
                     obj->SetGizmo(*gizmo_it);
                     obj->SetSelected(true);
+                }
+                else {
+                    obj->SetSelected(false);
                 }
             }
             else if (!gizmo) {

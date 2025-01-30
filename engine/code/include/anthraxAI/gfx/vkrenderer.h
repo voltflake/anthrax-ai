@@ -1,5 +1,6 @@
 #pragma once
 
+#include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/core/windowmanager.h"
@@ -9,6 +10,7 @@
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkmesh.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Gfx
 {
@@ -26,10 +28,12 @@ namespace Gfx
             bool CreateTextureFromInfo(const std::string& texturename);
             RenderTarget CreateTexture(const std::string& path);
             void CreateSampler(RenderTarget& rt);
+            void CreateSampler(RenderTarget* rt);
 
             TexturesMap GetTextureMap() const { return Textures; }
             RenderTarget* GetTexture(const std::string& path);
             RenderTarget* GetMainRT() { return MainRT; }
+            RenderTarget* GetMaskRT() { return MaskRT; }
             RenderTarget* GetDepthRT() { return DepthRT; }
 
             void PrepareCameraBuffer(Keeper::Camera& camera);
@@ -39,7 +43,7 @@ namespace Gfx
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
             
-            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag, AttachmentFlags loadop = Gfx::AttachmentFlags::RENDER_ATTACHMENT_CLEAR);
+            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag, AttachmentRules loadop = Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
 
             void RenderUI();
 
@@ -52,7 +56,7 @@ namespace Gfx
             bool BeginFrame();
             void EndFrame();
             void EndRender();
-            void StartRender(AttachmentFlags attachmentflags);
+            void StartRender(AttachmentFlags attachmentflags, AttachmentRules rules);
 
             void Draw(Gfx::RenderObject& object);
             void DrawMeshes(Gfx::RenderObject& object);
@@ -73,10 +77,18 @@ namespace Gfx
             const glm::mat4& GetProjection() const { return CamData.proj; }
             const glm::mat4& GetView() const { return CamData.view; }
 
+            VkImageView GetRTImageView(AttachmentFlags flag);
+            VkFormat GetRTFormat(AttachmentFlags flag);
 
+            void ResetInstanceInd() { InstanceIndex = 0; }
+            void IncInstanceInd(int size) { InstanceIndex += size; }
+
+            void SetUpdateSamplers(bool upd) { UpdateSamples = upd; }
+            bool GetUpdateSamplers() const { return UpdateSamples; }
         private:
             RenderTarget* DepthRT;
             RenderTarget* MainRT;
+            RenderTarget* MaskRT;
 
             TexturesMap Textures;
 	        
@@ -87,7 +99,8 @@ namespace Gfx
             
             uint32_t InstanceCount = 0;
             uint32_t InstanceIndex = 0;
-
+            
+            bool UpdateSamples = false;
             bool OnResize = false;
 	        int FrameIndex = 0;
             uint32_t SwapchainIndex = 0;

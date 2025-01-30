@@ -1,5 +1,6 @@
 #pragma once
 
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/gfx/vkdefines.h"
@@ -22,10 +23,6 @@ namespace Gfx
 		    void ReleaseInclude(shaderc_include_result* data) override;
 	};
 
-    struct Material {
-        VkPipelineLayout PipelineLayout;
-        VkPipeline Pipeline;
-    };
     struct VertexInputDescription {
         std::vector<VkVertexInputBindingDescription> Bindings;
         std::vector<VkVertexInputAttributeDescription> Attributes;
@@ -59,7 +56,7 @@ namespace Gfx
 
             bool LoadShader(const char* filepath, VkShaderModule* outshadermodule);
             Material* CreateMaterial(VkPipeline pipelinew, VkPipelineLayout layout, const std::string& name);
-            void Setup(int ind);
+            void Setup(Gfx::AttachmentFlags flags);
             void GetVertexDescription();
             VkPipelineVertexInputStateCreateInfo VertexInputStageCreateInfo();
 

@@ -12,4 +12,5 @@ void main()
    
     outcolor = vcolor;
     outcoord = vuv;
+    outpos = gl_Position;
 }

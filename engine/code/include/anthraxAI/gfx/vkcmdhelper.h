@@ -9,6 +9,7 @@ namespace Gfx
     struct RenderingAttachmentInfo {
         VkRenderingAttachmentInfoKHR* Info;
         VkImage Image;
+        VkImageLayout Layout = VK_IMAGE_LAYOUT_UNDEFINED;
         bool IsDepth;
     };
 

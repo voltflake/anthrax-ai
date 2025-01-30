@@ -104,3 +104,18 @@ void Gfx::Renderer::CreateSampler(RenderTarget& rt)
 
 	VK_ASSERT(vkCreateSampler(Gfx::Device::GetInstance()->GetDevice(), &samplerinfo, nullptr, rt.GetSampler()), "failed to create sampler!");
 }
+
+void Gfx::Renderer::CreateSampler(RenderTarget* rt)
+{
+    VkSamplerCreateInfo samplerinfo{};
+	samplerinfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerinfo.pNext = nullptr;
+
+	samplerinfo.magFilter = VK_FILTER_NEAREST;
+	samplerinfo.minFilter = VK_FILTER_NEAREST;
+	samplerinfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerinfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerinfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+	VK_ASSERT(vkCreateSampler(Gfx::Device::GetInstance()->GetDevice(), &samplerinfo, nullptr, rt->GetSampler()), "failed to create sampler!");
+}

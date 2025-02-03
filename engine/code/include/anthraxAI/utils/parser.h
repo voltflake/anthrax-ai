@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #define LEVEL_PATH "./scenes/"
 
@@ -48,11 +49,14 @@ namespace Utils
 
     typedef std::vector<std::pair<std::string, std::string>> TokensPair;
     typedef std::vector<std::pair<std::string, std::string>>::const_iterator NodeIt;
+    typedef std::vector<std::pair<std::string, std::string>>::iterator NotConstNodeIt;
     class Parser
     {
         public:
             void Load(const std::string& filename);
+            void Write(const std::string& filename);
             NodeIt GetChild(const NodeIt& node, const LevelElements& elem)  const;
+            NodeIt GetChildByID(const NodeIt& node, const std::string& id)  const;
             template<typename T>
             T GetElement(const NodeIt& node, const LevelElements& element, T defval) const;
 
@@ -62,6 +66,8 @@ namespace Utils
             NodeIt GetRootNode() const { return RootNode; }
 
             void Clear() { if (!File.empty()) { File.clear(); Tokens.clear(); }  }
+            void UpdateElement(NodeIt it, const std::string& s) { const_cast<std::pair<std::string, std::string>&>(*it).second = s; }
+            void PrintTokenized();
         private:
             std::vector<std::string> File;
             TokensPair Tokens;

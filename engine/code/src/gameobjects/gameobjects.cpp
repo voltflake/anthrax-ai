@@ -7,6 +7,7 @@
 #include "anthraxAI/utils/mathdefines.h"
 #include <algorithm>
 #include <cstdio>
+#include <string>
 Keeper::Base::~Base()
 {
   for (auto& it : ObjectsList) {
@@ -53,6 +54,14 @@ Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, int id)
 
     return *it;
 }
+Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, const std::string& str) 
+{
+    std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
+
+    auto it = std::find_if(vec.begin(), vec.end(), [str](Keeper::Objects* o) { return o->GetParsedID() == str; });
+
+    return *it;
+}
 
 void Keeper::Base::UpdateObjectNames()
 {
@@ -75,7 +84,12 @@ void Keeper::Base::UpdateObjectNames()
             if (obj->GetType() == Keeper::Type::SPRITE) {
                 objtype = "Sprite";
             }
-            objname = objtype + ": " + std::to_string(obj->GetID());
+            std::string def = obj->GetParsedID();
+            if (def.empty()) {
+                def = std::to_string(obj->GetID());
+                printf("%d ----------\n", obj->GetID());
+            }
+            objname = objtype + ": " + def;
             ObjectNames.emplace_back(objname);
         }
     }
@@ -153,11 +167,16 @@ void Keeper::Base::SpawnObjects(const Keeper::Info& info)
     Vector3<float> offsets = info.Offset;
     ASSERT(offsets.x == 0 && offsets.y == 0 && offsets.z == 0, "Keeper::Base::SpawnObjects(): offsets can't be 0");
 
-    Keeper::Info spawn = info; 
+    Keeper::Info spawn = info;
+    int i = 0;
     for (float x = info.Position.x; x < offsets.x; x += 1.0f ) {
         for (float y = info.Position.y; y < offsets.y; y += 1.0f ) {
             for (float z = info.Position.z; z < offsets.z; z += 1.0f ) {
                 spawn.Position = { x, y, z };
+                if (!spawn.ParsedID.empty()) {
+                    spawn.ParsedID = info.ParsedID + "_" + std::to_string(i);
+                    i++;
+                }
                 Create<Keeper::Npc>(new Keeper::Npc(spawn));
             }
         }

@@ -22,6 +22,7 @@ namespace Keeper {
         std::string Texture;
         std::string Model;
         std::vector<std::string> Animations;
+        std::string ParsedID = "";
         bool Spawn = false;
         bool IsModel = false;
     };
@@ -71,9 +72,11 @@ namespace Keeper {
             virtual void PrintInfo() {}
 
             virtual int GetID() const { return UniqueID; }
+            virtual const std::string& GetParsedID() const { return ParsedID; }
             virtual void ResetCounterID() { IDCounter = 1; }
             
         private:
+            std::string ParsedID = "";
             std::vector<std::string> EmptyAnimations;
             int UniqueID = 0;
             inline static std::atomic_int IDCounter = 1;
@@ -108,6 +111,7 @@ namespace Keeper {
             void UpdateObjectNames();
             
             Keeper::Objects* GetNotConstObject(Keeper::Type type, int id); 
+            Keeper::Objects* GetNotConstObject(Keeper::Type type, const std::string& str); 
             const Keeper::Objects* GetObject(Keeper::Type type, int id) const;
             const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
                    

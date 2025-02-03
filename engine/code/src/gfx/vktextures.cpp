@@ -1,8 +1,10 @@
+#include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/sprite.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
+#include <cstdio>
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -22,7 +24,9 @@ bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
     Textures[texture] = CreateTexture(path + texture);
     CreateSampler(Textures[texture]);
     
-    Textures[texture].SetImGuiDescriptor();
+    if (Core::ImGuiHelper::GetInstance()->IsInit()) {
+        Textures[texture].SetImGuiDescriptor();
+    }
     return true;
 }
 
@@ -47,7 +51,27 @@ void Gfx::Renderer::CreateTextures()
             }
         }
     }
-
+    
+    // load others from texture folder
+    //
+    std::string path = "textures/";
+    std::vector<std::string> names;
+    names.reserve(20);
+    for (const auto& name : std::filesystem::directory_iterator(path)) {
+        std::string str = name.path().string();
+        std::string basename = str.substr(str.find_last_of("/\\") + 1);
+        bool exists = basename.find(".jpg") != std::string::npos || basename.find(".png") != std::string::npos;
+        if (exists) {
+            names.emplace_back(basename.c_str());
+            printf("BASENAME: %s\n", basename.c_str());
+        }
+    }
+    
+    for (const std::string& s : names) {
+        if (!CreateTextureFromInfo(s)) {
+            continue;
+        }
+    }
     // std::string path = "./textures/dummy.png";
 	// Textures["dummy"] = CreateTexture(path);
 	// CreateSampler(Textures["dummy"]);

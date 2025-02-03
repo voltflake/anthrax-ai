@@ -130,6 +130,7 @@ namespace Core
             void DisplayObjectInfo(const std::string& obj, const UI::Element& elem);
             void UpdateObjectInfo();
             void Init();
+            bool IsInit() const { return Initialized; };
             void InitUIElements();
             void Render();
             void UpdateFrame();
@@ -144,6 +145,7 @@ namespace Core
             void ResetTextureUpdate() { TextureUpdate = false;}
             
             struct TextureForUpdate {
+                int ID;
                 std::string OldTextureName;
                 std::string NewTextureName;
             };
@@ -156,6 +158,7 @@ namespace Core
             void Tree(UI::Element& element); 
             void ListBox(UI::Element& element);
             void ProcessUI(UI::Element& element);
+
             ImGuiStyle 	EditorStyle;
             std::string EditorWindow;
             std::string SelectedElement;
@@ -166,5 +169,6 @@ namespace Core
             TextureForUpdate TextureUpdateInfo;
             bool TextureUpdate = false;
             bool IsDisplayInReset = false;
+            bool Initialized = false;
     };
 }

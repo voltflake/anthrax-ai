@@ -140,11 +140,10 @@ void Core::Scene::Loop()
 
 void Core::Scene::UpdateUIRQ()
 {
- if (Core::ImGuiHelper::GetInstance()->TextureNeedsUpdate()) {
+    if (Core::ImGuiHelper::GetInstance()->TextureNeedsUpdate()) {
         Core::ImGuiHelper::TextureForUpdate upd = Core::ImGuiHelper::GetInstance()->GetTextureForUpdate();
-        std::string s = upd.OldTextureName;
-        // IT IS BEING RETURNED ACCORDING TO TEXURE NAME ___ RENDER OBJECTS CAN HAVE THE SAME TEXTURE NAME !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        auto it = std::find_if(RQScenes[CurrentScene].RenderQueue.begin(), RQScenes[CurrentScene].RenderQueue.end(), [s](Gfx::RenderObject& obj) { return obj.TextureName == s; });
+        int id = upd.ID; 
+        auto it = std::find_if(RQScenes[CurrentScene].RenderQueue.begin(), RQScenes[CurrentScene].RenderQueue.end(), [id](Gfx::RenderObject& obj) { return obj.ID == id; });
         if (it != RQScenes[CurrentScene].RenderQueue.end()) {
             it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
             it->TextureName = upd.NewTextureName;
@@ -469,6 +468,32 @@ void Core::Scene::SetCurrentScene(const std::string& str)
     Engine::GetInstance()->SetState(ENGINE_STATE_RESOURCE_RELOAD); 
 }
 
+void Core::Scene::ExportObjectInfo(const Keeper::Objects* obj)
+{
+    std::string rootname = Parse.GetRootElement();
+    
+    Utils::NodeIt obj_node = Parse.GetChildByID(Parse.GetRootNode(), obj->GetParsedID());
+
+    if (!Parse.IsNodeValid(obj_node)) {
+        printf("Can't save file without ID Node!!!! ;p \n");
+        return;
+    }
+    
+    Utils::NodeIt obj_texture = Parse.GetChild(obj_node, Utils::LEVEL_ELEMENT_TEXTURE);
+    Utils::NodeIt obj_textname = Parse.GetChild(obj_texture, Utils::LEVEL_ELEMENT_NAME);
+    Parse.UpdateElement(obj_textname, obj->GetTextureName());
+    
+    Utils::NodeIt obj_position = Parse.GetChild(obj_node, Utils::LEVEL_ELEMENT_POSITION);
+    Utils::NodeIt x = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_X);
+    Parse.UpdateElement(x, std::to_string(obj->GetPosition().x));
+    Utils::NodeIt y = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Y);
+    Parse.UpdateElement(y, std::to_string(obj->GetPosition().y));
+    Utils::NodeIt z = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Z);
+    Parse.UpdateElement(z, std::to_string(obj->GetPosition().z));
+
+    Parse.Write(CurrentScene);
+}
+
 void Core::Scene::LoadScene(const std::string& filename)
 {
     Parse.Clear();
@@ -477,13 +502,13 @@ void Core::Scene::LoadScene(const std::string& filename)
     std::string scenename = Parse.GetRootElement(); 
 
     float xpos, ypos, zpos = 0.0f;
-    std::string matname, textname, modname, frag, vert;
-    int idi = -1;
+    std::string matname, textname, modname, frag, vert, id;
     
     Utils::NodeIt node = Parse.GetChild(Parse.GetRootNode(), Utils::LEVEL_ELEMENT_OBJECT);
     while (Parse.IsNodeValid(node)) { 
         Keeper::Info info;
-        idi = Parse.GetElement<int>(node, Utils::LEVEL_ELEMENT_ID, 0);
+        id = Parse.GetElement<std::string>(node, Utils::LEVEL_ELEMENT_ID, "");
+        info.ParsedID = id;
 
         Utils::NodeIt position = Parse.GetChild(node, Utils::LEVEL_ELEMENT_POSITION);
         if (Parse.IsNodeValid(position)) {
@@ -531,8 +556,8 @@ void Core::Scene::LoadScene(const std::string& filename)
 
         node = Parse.GetChild(texture, Utils::LEVEL_ELEMENT_OBJECT);
     printf("\n-----------------PARSED--------------------------");
-    printf("\n[scene]: |%s|\n[id]: %d\n[position]: [x]: %f [y]: %f [z]: %f\n[material][name]: %s [frag]: %s [vert]: %s\n[texture][name]: %s\n[model][name]: %s\n", 
-        scenename.c_str(), idi, xpos, ypos, zpos, info.Material.c_str(), info.Fragment.c_str(), info.Vertex.c_str(), info.Texture.c_str(), info.Model.c_str());
+    printf("\n[scene]: |%s|\n[id]: %s\n[position]: [x]: %f [y]: %f [z]: %f\n[material][name]: %s [frag]: %s [vert]: %s\n[texture][name]: %s\n[model][name]: %s\n", 
+        scenename.c_str(), id.c_str(), xpos, ypos, zpos, info.Material.c_str(), info.Fragment.c_str(), info.Vertex.c_str(), info.Texture.c_str(), info.Model.c_str());
     printf("Parsed animations:\n");
     for (std::string s : info.Animations) {
             printf("%s\n", s.c_str());

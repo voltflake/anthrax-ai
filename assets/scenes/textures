@@ -1,18 +1,18 @@
 Scene: sprites
-    Object:
-        ID: 0
-        Material:
-            name: sprites
-            frag: sprite.frag
-            vert: sprite.vert
-        Texture:
-            name: placeholder.jpg
-    Object:
-        ID: 1
-        Material:
-            name: sprites
-            frag: sprite.frag
-            vert: sprite.vert
-        Texture:
-            name: kote-v-bote.jpg
+Object:
+ID: test
+Material:
+name: sprites
+frag: sprite.frag
+vert: sprite.vert
+Texture:
+name: engine.png
+Object:
+ID: test1
+Material:
+name: sprites
+frag: sprite.frag
+vert: sprite.vert
+Texture:
+name: kote-v-bote.jpg
 

@@ -14,6 +14,7 @@ Keeper::Npc::Npc(const Info& info)
     Fragment = info.Fragment;
     Animations = info.Animations;
     IsAnimated = !Animations.empty();
+    ParsedID = info.ParsedID;
 
     PrintInfo();
 }
@@ -21,7 +22,7 @@ Keeper::Npc::Npc(const Info& info)
 void Keeper::Npc::PrintInfo()
 {
     printf("-------------------------------\n");
-    printf("NPC []\nPosition [%f, %f, %f]\nMaterial: [%s]\nTexture: [%s]\nModel: [%s]\n", 
+    printf("NPC [%s]\nPosition [%f, %f, %f]\nMaterial: [%s]\nTexture: [%s]\nModel: [%s]\n", ParsedID.c_str(), 
            Position.x, Position.y, Position.z, MaterialName.c_str(), TextureName.c_str(), ModelName.c_str());
     printf("-------------------------------\n");
 }

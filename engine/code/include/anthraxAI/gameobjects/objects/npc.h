@@ -33,12 +33,14 @@ namespace Keeper
             std::string GetFragmentName() const override { return Fragment; }
             std::string GetVertexName() const override { return Vertex; }
 
+            const std::string& GetParsedID() const override { return ParsedID; }
             const std::vector<std::string>& GetAnimations() const override { return Animations; }        
         private:
             Keeper::Type ObjectType = Type::NPC;
             
             Vector3<float> Position;
            
+            std::string ParsedID = ""; 
             std::string Vertex; 
             std::string Fragment;
             std::string TextureName;

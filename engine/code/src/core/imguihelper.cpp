@@ -7,6 +7,7 @@
 #include "anthraxAI/utils/debug.h"
 #include "imgui.h"
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
 #include <cstdio>
 #include <iterator>
@@ -143,6 +144,8 @@ void Core::ImGuiHelper::Init()
 
 	EditorStyle = style;
     InitUIElements();
+
+    Initialized = true;
 }
 
 void UI::Element::GetArg(const std::vector<std::string>& vec) 
@@ -218,9 +221,16 @@ Keeper::Objects* Core::ImGuiHelper::ParseObjectID(const std::string& id)
     std::string type_str(trimstr.begin(), it);
 
     trimstr.erase(trimstr.begin(), it + 1);
-
-    Keeper::Objects* game_obj = const_cast<Keeper::Base*>(Core::Scene::GetInstance()->GetGameObjects())->GetNotConstObject(type, stoi(trimstr));
-    
+    Keeper::Objects* game_obj = nullptr;
+ 
+    it = std::find_if(trimstr.begin(), trimstr.end(), [](char c) { return !(c >= '0' && c <= '9') && c != ' '; });
+    if (it == trimstr.end()) {
+        game_obj = const_cast<Keeper::Base*>(Core::Scene::GetInstance()->GetGameObjects())->GetNotConstObject(type, std::stoi(trimstr));
+    }
+    else {
+        trimstr.erase(std::remove_if(trimstr.begin(), trimstr.end(), isspace));
+        game_obj = const_cast<Keeper::Base*>(Core::Scene::GetInstance()->GetGameObjects())->GetNotConstObject(type, trimstr);
+    }
     return game_obj;
 }
 
@@ -230,10 +240,10 @@ void Core::ImGuiHelper::DisplayObjectInfo(const std::string& obj, const UI::Elem
 
     auto ui_it = std::remove_if(UITabs[elem].begin(), UITabs[elem].end(), [](const UI::Element& el) { return el.IsUIDynamic(); });
     const Keeper::Objects* game_obj = ParseObjectID(obj);
-
+  
     UITabs[elem].erase(ui_it, UITabs[elem].end());
     Add(elem, UI::Element(UI::TEXT, "Type: ", true));
-    Add(elem, UI::Element(UI::TEXT, "Position: " + game_obj->GetPosition().ToString(), true));
+    Add(elem, UI::Element(UI::TEXT, "Position: ", true, [game_obj]() -> std::string { return game_obj->GetPosition().ToString(); } ));
     Add(elem, UI::Element(UI::TEXT, "Texture: " + game_obj->GetTextureName(), true));
     Add(elem, UI::Element(UI::TEXT, "Model: " + game_obj->GetModelName(), true));
     std::vector<std::string> s = { "Fragment: " + game_obj->GetFragmentName(), "Vertex: " + game_obj->GetVertexName() };
@@ -241,6 +251,7 @@ void Core::ImGuiHelper::DisplayObjectInfo(const std::string& obj, const UI::Elem
     Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
     Add(elem, UI::Element(UI::IMAGE, "Textures", true));
     Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+    Add(elem, UI::Element(UI::BUTTON, "Update Object", true, [game_obj]() -> float { Core::Scene::GetInstance()->ExportObjectInfo(game_obj); return 0.0f; }));
     IsDisplayInReset = false;
 }
 
@@ -333,7 +344,9 @@ void Core::ImGuiHelper::Image(UI::Element& element)
             TextureUpdateInfo.OldTextureName = obj->GetTextureName();
             obj->SetTextureName(it.first);
             TextureUpdateInfo.NewTextureName = it.first;
-            printf("OBJECT INFO TEXTURE: new ->%s !!! old->%s\n", TextureUpdateInfo.NewTextureName.c_str(), TextureUpdateInfo.OldTextureName.c_str());
+            TextureUpdateInfo.ID = obj->GetID();
+            IsDisplayInReset = true;
+            printf("OBJECT [%d] INFO TEXTURE: new ->%s !!! old->%s\n",obj->GetID(), TextureUpdateInfo.NewTextureName.c_str(), TextureUpdateInfo.OldTextureName.c_str());
             TextureUpdate = true;
         }
         ImGui::SameLine();
@@ -383,8 +396,7 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
                 ImGui::Text((element.GetLabel() + ": %s").c_str(), element.DefinitionString().c_str());
             }
             else {
-             ImGui::TextUnformatted(element.GetLabel().c_str());
-
+                ImGui::TextUnformatted(element.GetLabel().c_str());
             }
             break;
         case UI::SEPARATOR:

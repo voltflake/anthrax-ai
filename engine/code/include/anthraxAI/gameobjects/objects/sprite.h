@@ -22,6 +22,9 @@ namespace Keeper
             bool IsVisible() const override{ return Visible; }
             void PrintInfo() override;
 
+            void SetTextureName(const std::string& str) override { TextureName = str; }
+
+            const std::string& GetParsedID() const override { return ParsedID; }
             Vector3<float> GetPosition() const override { return Position; }
             std::string GetTextureName() const override { return TextureName; }
             std::string GetMaterialName() const override { return MaterialName; }
@@ -32,6 +35,7 @@ namespace Keeper
             
             Vector3<float> Position;
            
+            std::string ParsedID = ""; 
             std::string Vertex; 
             std::string Fragment;
             std::string TextureName;

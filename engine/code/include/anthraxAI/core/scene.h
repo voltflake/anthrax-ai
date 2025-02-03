@@ -45,7 +45,8 @@ namespace Core
             void LoadIntro();
 
             void Loop();
-                
+            
+            void ExportObjectInfo(const Keeper::Objects* obj);
             void UpdateMaterials();
             void UpdateResources(SceneInfo& info);
             std::vector<Gfx::RenderObject> LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info);

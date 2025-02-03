@@ -77,7 +77,6 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
             constants.boneID = Utils::Debug::GetInstance()->BoneID;
         }
         constants.gizmo = object.GizmoType;
-        printf("giiiiiizmo : %d\n", constants.gizmo);
     }
 	vkCmdPushConstants(Cmd.GetCmd(), object.Material->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
 

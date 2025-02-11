@@ -1,17 +1,13 @@
 #include "anthraxAI/core/scene.h"
-#include "anthraxAI/core/animator.h"
-#include "anthraxAI/core/assets.h"
 #include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/engine.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
-#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/utils/debug.h"
-#include "anthraxAI/utils/parser.h"
 #include <cstdio>
 #include <ctime>
 #include <string>

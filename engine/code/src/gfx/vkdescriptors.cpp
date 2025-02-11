@@ -124,10 +124,8 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
 
 void Gfx::DescriptorsBase::CleanAll()
 {
-	Ranges.clear();
 	TextureHandle = 0;
     BufferHandle = 0;
-    LastOffset = 0;
 
 	vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool, nullptr);
 	

@@ -23,12 +23,6 @@ namespace Gfx
         DESC_SET_LAYOUT_STORAGE,
         DESC_SET_LAYOUT_TRANSFORMS
     };
- 
-    struct Range {
-        uint32_t offset;
-        uint32_t size;
-        void* data;
-    };
 
     class DescriptorsBase : public Utils::Singleton<DescriptorsBase>
     {
@@ -56,28 +50,6 @@ namespace Gfx
             uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler);
             uint32_t UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage);
 
-            template<class TData>
-            uint32_t AddRange(TData&& data) {
-                size_t datasize = sizeof(TData);
-                auto* bytes = new TData;
-                *bytes = data;
-
-                uint32_t curoffset = LastOffset;
-                Ranges.push_back({ curoffset, static_cast<uint32_t>(datasize), bytes });
-
-                LastOffset += PadUniformBufferSize(datasize);
-                return curoffset;
-            }
-            
-            template<class TData>
-            void ResetRanges() {
-                for (Range r : Ranges) {
-                    delete[] reinterpret_cast<TData*>(r.data);
-                }
-                Ranges.clear();
-                LastOffset = 0;
-            }
-
             VkDescriptorSet* GetBindlessSet() { return &BindlessDescriptor; }
             VkDescriptorSetLayout GetBindlessLayout() { return BindlessLayout; }
 
@@ -96,8 +68,6 @@ namespace Gfx
             uint32_t TextureHandle = 0;
             uint32_t BufferHandle = 0;
 
-            uint32_t LastOffset = 0;
-            std::vector<Range> Ranges;
             BufferHelper::Buffer BindlessBuffer;
     };
 }

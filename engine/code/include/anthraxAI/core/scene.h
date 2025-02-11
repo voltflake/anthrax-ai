@@ -1,16 +1,10 @@
 #pragma once
 
 #include "anthraxAI/core/animator.h"
-#include "anthraxAI/core/assets.h"
+#include "anthraxAI/gamemodules/modules.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
-#include "anthraxAI/utils/defines.h"
-#include "anthraxAI/utils/mathdefines.h"
-#include "anthraxAI/gfx/vkmesh.h"
-#include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/utils/parser.h"
-
-#include "anthraxAI/core/animator.h"
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/camera.h"

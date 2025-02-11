@@ -1,4 +1,4 @@
-#include "anthraxAI/core/assets.h"
+#include "anthraxAI/gamemodules/modules.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/utils/defines.h"
 
@@ -9,18 +9,6 @@
 
 void Modules::Base::Clear()
 {
-    for (auto& it : SceneModules) {
-        auto& module = it.second;
-        for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
-            if (module.GetBindlessType() == Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER) {  
-                Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::BasicParams>();
-            }
-            else if (module.GetBindlessType() == Gfx::BINDLESS_DATA_CAM_BUFFER) { 
-                Gfx::DescriptorsBase::GetInstance()->ResetRanges<Gfx::CamBufferParams>();
-            }
-        }
-    }
-
     SceneModules.clear();
 }
 
@@ -78,7 +66,6 @@ void Modules::Base::Populate(const std::string& key, Modules::Info scene, Keeper
 
 void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& obj)
 {
-    uint32_t BindlessRange = 0;
     switch (module.GetBindlessType()) {
         case Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER: {
             obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()));
@@ -90,22 +77,17 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
             module.SetStorageBuffer(true);
             module.SetTexture(true);
             
-            BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::BasicParams>(Gfx::BasicParams({ obj.BufferBind, obj.StorageBind, obj.InstanceBind, obj.TextureBind, }));
-
             break;
         }
         case Gfx::BINDLESS_DATA_CAM_BUFFER: {
     	    obj.BufferBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
             module.SetCameraBuffer(true);
-            
-            BindlessRange = Gfx::DescriptorsBase::GetInstance()->AddRange<Gfx::CamBufferParams>(Gfx::CamBufferParams({ obj.BufferBind }));
             break;
         }
         default:
             break;
     }
 
-    obj.BindlessOffset = BindlessRange;
 }
 
 void Modules::Base::UpdateResources()

@@ -73,42 +73,6 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 	return BufferHandle - 1;
 }
 
-void Gfx::DescriptorsBase::Build()
-{
-    // this destroying and recreation seems odd
-	vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.Buffer, nullptr);
-    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, nullptr);
-	
-    BufferHelper::CreateBuffer(BindlessBuffer, LastOffset, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-
-	uint8_t* data = nullptr;
-	vkMapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, 0, LastOffset, 0, (void**)&data);
-    for (const auto& range : Ranges) {
-		memcpy(data + range.offset, range.data, range.size);
-	}
-  	vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory);
-    
-	uint32_t maxrangesize = 0;
-	for (auto& range : Ranges) {
-		maxrangesize = std::max(range.size, maxrangesize);
-	}
-
-	VkDescriptorBufferInfo bufinfo{};
-	bufinfo.buffer = BindlessBuffer.Buffer;
-	bufinfo.offset = 0;
-	bufinfo.range = maxrangesize;
-
-	VkWriteDescriptorSet write{};
-	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	write.dstBinding = 0;
-	write.dstSet = GlobalDescriptor;
-	write.descriptorCount = 1;
-	write.dstArrayElement = 0;
-	write.pBufferInfo = &bufinfo;
-	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
-}
-
 void Gfx::DescriptorsBase::AllocateDataBuffers()
 {
 	const size_t cambuffersize = (sizeof(CameraData));
@@ -168,14 +132,12 @@ void Gfx::DescriptorsBase::CleanAll()
 	vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool, nullptr);
 	
 	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), BindlessLayout, nullptr);
-	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), GlobalLayout, nullptr);
 }
 
 void Gfx::DescriptorsBase::CleanBindless()
 {
 	vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.Buffer, nullptr);
     vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), BindlessBuffer.DeviceMemory, nullptr);
-	
 }
 
 void Gfx::DescriptorsBase::Init()
@@ -240,28 +202,6 @@ void Gfx::DescriptorsBase::Init()
 	allocinfo.pSetLayouts = &BindlessLayout;
 	allocinfo.descriptorSetCount = 1;
 	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, &BindlessDescriptor);
-
-// dynamic buffer layout for final global descriptor which stores bindless resources
-
-	VkDescriptorSetLayoutBinding binding{};
-	binding.binding = 0;
-	binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	binding.descriptorCount = 1;
-	binding.stageFlags = VK_SHADER_STAGE_ALL;
-
-	VkDescriptorSetLayoutCreateInfo createinfo2{};
-	createinfo2.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	createinfo2.bindingCount = 1;
-	createinfo2.pBindings = &binding;
-	vkCreateDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), &createinfo2, nullptr, &GlobalLayout);
-
-	VkDescriptorSetAllocateInfo allocateinfo{};
-	allocateinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocateinfo.pNext = nullptr;
-	allocateinfo.descriptorPool = Pool;
-	allocateinfo.pSetLayouts = &GlobalLayout;
-	allocateinfo.descriptorSetCount = 1;
-	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocateinfo, &GlobalDescriptor);
 }
 
 void Gfx::DescriptorsBase::AllocateBuffers()

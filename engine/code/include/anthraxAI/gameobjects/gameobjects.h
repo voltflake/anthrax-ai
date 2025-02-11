@@ -21,10 +21,12 @@ namespace Keeper {
         std::string Fragment;
         std::string Texture;
         std::string Model;
+        std::string Mesh;
         std::vector<std::string> Animations;
         std::string ParsedID = "";
         bool Spawn = false;
         bool IsModel = false;
+        bool VertexBase = false;
     };
 
     enum Type {
@@ -36,6 +38,14 @@ namespace Keeper {
         SIZE
     };
     
+    enum Infos {
+        INFO_INTRO = 0,
+        INFO_GRID,
+        INFO_MASK,
+        INFO_OUTLINE,
+        INFO_SIZE
+    };
+
     class Objects
     {
         public:
@@ -83,7 +93,7 @@ namespace Keeper {
     };
     
     typedef std::map<int, std::vector<Objects*>> GameObjectsMap;
-    
+
     class Base
     {
         public:
@@ -114,12 +124,17 @@ namespace Keeper {
             Keeper::Objects* GetNotConstObject(Keeper::Type type, const std::string& str); 
             const Keeper::Objects* GetObject(Keeper::Type type, int id) const;
             const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
-                   
+
+            Info GetInfo(Infos info) const { return DefaultObjects[info]; }
+
+            bool Find(Keeper::Type type) const;
+
         private:
             void SpawnObjects(const Info& info);
 
             GameObjectsMap ObjectsList;
             Info GizmoInfo[3];
+            Info DefaultObjects[INFO_SIZE];
             uint32_t SelectedID = 0;
 
             std::vector<std::string> ObjectNames;

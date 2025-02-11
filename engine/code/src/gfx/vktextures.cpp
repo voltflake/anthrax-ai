@@ -63,7 +63,7 @@ void Gfx::Renderer::CreateTextures()
         bool exists = basename.find(".jpg") != std::string::npos || basename.find(".png") != std::string::npos;
         if (exists) {
             names.emplace_back(basename.c_str());
-            printf("BASENAME: %s\n", basename.c_str());
+           // printf("BASENAME: %s\n", basename.c_str());
         }
     }
     

@@ -209,9 +209,9 @@ void Gfx::Pipeline::Build()
 	push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 	pipelinelayoutinfo.pPushConstantRanges = &push_constant;
 	pipelinelayoutinfo.pushConstantRangeCount = 1;	
-
-	VkDescriptorSetLayout setLayouts[] = {  Gfx::DescriptorsBase::GetInstance()->GetBindlessLayout(), Gfx::DescriptorsBase::GetInstance()->GetDescriptorSetLayout()};
-	pipelinelayoutinfo.setLayoutCount = 2;
+    
+    VkDescriptorSetLayout setLayouts[] = {  Gfx::DescriptorsBase::GetInstance()->GetBindlessLayout() };
+	pipelinelayoutinfo.setLayoutCount = 1;
 	pipelinelayoutinfo.pSetLayouts = setLayouts;
 
 	VertexInputInfo = VertexInputStageCreateInfo();

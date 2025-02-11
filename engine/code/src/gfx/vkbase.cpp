@@ -26,10 +26,27 @@ bool Gfx::Vulkan::ReloadShaders()
     Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::PIPELINE);
 
 	Gfx::Pipeline::GetInstance()->Build();
-
-	Core::Scene::GetInstance()->UpdateMaterials();
+    Engine::GetInstance()->SetState(ENGINE_STATE_SHADER_RELOAD);
+//	Core::Scene::GetInstance()->UpdateMaterials();
 
 	return true;
+}
+
+void Gfx::Vulkan::ReloadResources()
+{
+    vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
+    Gfx::Mesh::GetInstance()->CleanAll();
+	Gfx::Model::GetInstance()->CleanAll();
+
+    Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::PIPELINE);
+	Gfx::Renderer::GetInstance()->CleanTextures();
+	Gfx::DescriptorsBase::GetInstance()->CleanAll();
+
+	Gfx::DescriptorsBase::GetInstance()->Init();
+	Gfx::Renderer::GetInstance()->CreateTextures();
+	Gfx::Pipeline::GetInstance()->Build();
+    Gfx::Mesh::GetInstance()->CreateMeshes();
+	Gfx::Model::GetInstance()->LoadModels();
 }
 
 bool Gfx::Vulkan::OnResize()

@@ -2,9 +2,9 @@ Scene: models
 Object:
 ID: monkey
 Position:
-x: 3
-y: 1
-z: 3
+x: 1.681950
+y: 1.000000
+z: 3.000000
 Material:
 name: models
 frag: model.frag

@@ -78,20 +78,12 @@ namespace Gfx
                 LastOffset = 0;
             }
 
-            void Build();
-
             VkDescriptorSet* GetBindlessSet() { return &BindlessDescriptor; }
             VkDescriptorSetLayout GetBindlessLayout() { return BindlessLayout; }
-
-            VkDescriptorSet* GetDescriptorSet() { return &GlobalDescriptor; }
-            VkDescriptorSetLayout GetDescriptorSetLayout() { return GlobalLayout; }
 
         private:
             void AllocateDataBuffers();
             void AllocateStorageBuffers();
-
-            VkDescriptorSet GlobalDescriptor;
-            VkDescriptorSetLayout GlobalLayout;
 
             BufferHelper::Buffer CameraBuffer;
             BufferHelper::Buffer StorageBuffer;

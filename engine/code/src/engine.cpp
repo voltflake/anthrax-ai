@@ -44,7 +44,7 @@ void Engine::Init()
     
     Gfx::Vulkan::GetInstance()->Init();
 
-    Core::Scene::GetInstance()->LoadIntro();
+    Core::Scene::GetInstance()->InitModules();
     
     Core::ImGuiHelper::GetInstance()->Init();
     

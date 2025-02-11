@@ -1,6 +1,7 @@
 #pragma once
 
 #include "anthraxAI/core/animator.h"
+#include "anthraxAI/core/assets.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
@@ -24,39 +25,26 @@
 #include <filesystem>
 namespace Core
 {
-    struct SceneInfo {
-        Gfx::AttachmentFlags Attachments;
-        std::vector<Gfx::RenderObject> RenderQueue;
-        Gfx::BindlessDataType BindlessType;
 
-        bool HasCameraBuffer;
-        bool HasStorageBuffer;
-        bool HasTexture;
-    };
         
-    typedef std::unordered_map<std::string, Core::SceneInfo> RQSceneMap;
+   // typedef std::unordered_map<std::string, Core::SceneInfo> RQSceneMap;
 
     class Scene : public Utils::Singleton<Scene>
     {
         public:
             ~Scene() { if (GameObjects) delete GameObjects; if (Animator) delete Animator; }
             void Init();
-            
-            void LoadIntro();
+            void InitModules();
 
             void Loop();
             
             void ExportObjectInfo(const Keeper::Objects* obj);
-            void UpdateMaterials();
-            void UpdateResources(SceneInfo& info);
-            std::vector<Gfx::RenderObject> LoadResources(const std::string& tag, const std::vector<Keeper::Info>& info);
-            Gfx::RenderObject LoadResources(const std::string& tag, const Keeper::Objects* info);
             void RenderScene(bool playmode);
 std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
             bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
 
             void SetCurrentScene(const std::string& str);
-            RQSceneMap& GetScenes() { return RQScenes; }
+            Modules::ScenesMap& GetScenes() { return GameModules->GetSceneModules(); }
 
             Keeper::Camera& GetCamera() { return *EditorCamera; }
             const Keeper::Base* GetGameObjects() const { return GameObjects; }
@@ -70,16 +58,16 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
 
         private:
             void UpdateRQ();
-            void UpdateUIRQ();
 
             void LoadScene(const std::string& filename);
-            void Render(const std::string& scene);
+            void Render(Modules::Module& module);
 
             Keeper::Base* GameObjects = nullptr;
+            Modules::Base* GameModules = nullptr;
             Core::AnimatorBase* Animator = nullptr;
 
             std::string CurrentScene = "intro";
-            RQSceneMap RQScenes;
+           // RQSceneMap RQScenes;
             std::vector<Keeper::Info> ParsedSceneInfo;
 
             std::vector<std::string> SceneNames;
@@ -91,8 +79,6 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
             bool HasFrameGizmo = false;
             bool HasFrameOutline = false;
             bool HasFrameGrid = false;
-
-            uint32_t BindlessRange = 0;
 
     };
 }

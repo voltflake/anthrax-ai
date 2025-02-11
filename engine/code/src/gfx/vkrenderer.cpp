@@ -13,19 +13,16 @@
 #include <cstdio>
 #include <cstring>
 #include <sys/types.h>
-#include <thread>
-#include <vulkan/vulkan_core.h>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
     bool bindpipe, bindindex = false;
 	CheckTmpBindings(object.Mesh, object.Material, &bindpipe, &bindindex);
-
-	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
-
+	
     if (bindpipe) {
+        vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+
 		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
-    	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 1, 1, Gfx::DescriptorsBase::GetInstance()->GetDescriptorSet(), 1, &object.BindlessOffset);
     }
 
 	Gfx::MeshPushConstants constants;
@@ -57,12 +54,12 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 {
 	bool bindpipe, bindindex = false;
 	CheckTmpBindings(mesh, object.Material, &bindpipe, &bindindex);
-	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
 
 	if (bindpipe) {
+	    vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
 		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
-    	vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 1, 1, Gfx::DescriptorsBase::GetInstance()->GetDescriptorSet(), 1, &object.BindlessOffset);
-	}
+    }
+
 	Gfx::MeshPushConstants constants;
 	constants.texturebind = object.TextureBind;
 	constants.bufferbind = object.BufferBind;
@@ -354,10 +351,10 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     /*}*/
     int i = 0;
     //for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
-    Core::RQSceneMap map =  Core::Scene::GetInstance()->GetScenes();
+    Modules::ScenesMap map =  Core::Scene::GetInstance()->GetScenes();
     bool hasanim = false;
 
-    for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].RenderQueue) {
+    for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].GetRenderQueue()) {
         if (!obj.Model || !obj.IsVisible) continue;
         hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
@@ -377,7 +374,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
             i++;
         }
     }
-    for (Gfx::RenderObject& obj : map["gizmo"].RenderQueue) {
+    for (Gfx::RenderObject& obj : map["gizmo"].GetRenderQueue()) {
          if (!obj.Model || !obj.IsVisible) continue;
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
         datas[i].rendermatrix =  glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));                i++;

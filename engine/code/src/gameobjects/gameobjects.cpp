@@ -22,19 +22,23 @@ Keeper::Base::~Base()
 
 void Keeper::Base::CleanIfNot(Keeper::Type type, bool resetID)
 {
-  for (auto& it : ObjectsList) {
-    if (it.first != type) {
-      for (auto* obj : it.second) {
-        if (resetID) {
-            obj->ResetCounterID();  
+    for (auto it = ObjectsList.begin(); it != ObjectsList.end(); ) {
+        if (it->first != type) {
+            for (auto* obj : it->second) {
+                if (resetID) {
+                    obj->ResetCounterID();  
+                }
+                if (obj) {
+                    delete obj;
+                }
+            }
+            it->second.clear();
+            ObjectsList.erase(it++);
         }
-        if (obj) {
-            delete obj;
+        else {
+            ++it;
         }
     }
-    it.second.clear();
-    }
-  }
 }
 
 const Keeper::Objects* Keeper::Base::GetObject(Keeper::Type type, int id) const 
@@ -87,7 +91,6 @@ void Keeper::Base::UpdateObjectNames()
             std::string def = obj->GetParsedID();
             if (def.empty()) {
                 def = std::to_string(obj->GetID());
-                printf("%d ----------\n", obj->GetID());
             }
             objname = objtype + ": " + def;
             ObjectNames.emplace_back(objname);
@@ -113,6 +116,25 @@ Keeper::Base::Base()
     GizmoInfo[Keeper::Gizmo::Type::X] = info;
     info.Model = "axisz.obj";
     GizmoInfo[Keeper::Gizmo::Type::Z] = info;
+
+    Keeper::Info modules;
+    modules.IsModel = false;
+    modules.Position = {0.0f, 0.0f, 0.0f};
+    modules.Material = "intro";
+    modules.Mesh = "dummy";
+    DefaultObjects[Infos::INFO_INTRO] = modules;
+
+    modules.Material = "grid";
+    modules.Texture = "dummy.png";
+    modules.VertexBase = true;
+    modules.Mesh = "";
+    DefaultObjects[Infos::INFO_GRID] = modules;
+
+    modules.Material = "outline";
+    modules.Texture = "mask";
+    modules.Mesh = "dummy.png";
+    DefaultObjects[Infos::INFO_OUTLINE] = modules;
+    DefaultObjects[Infos::INFO_MASK] = modules;
 }
 
 void Keeper::Base::Update()
@@ -200,6 +222,11 @@ void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
     } 
 }
 
+bool Keeper::Base::Find(Keeper::Type type) const 
+{
+    return ObjectsList.find(type) != ObjectsList.end();     
+}
+
 size_t Keeper::Base::GetObjectsSize() const
 {
     size_t size = 0;
@@ -208,3 +235,4 @@ size_t Keeper::Base::GetObjectsSize() const
     }
     return size;
 }
+

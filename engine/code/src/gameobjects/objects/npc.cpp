@@ -38,7 +38,7 @@ glm::vec3 UnprojectMouse(glm::vec2 mouse, glm::vec2 dimensions, glm::vec3 pos)
     glm::vec3 realpos = glm::unProject({mouse.x, mouse.y, 1.0}, glm::translate(glm::mat4(1.0f), pos), Gfx::Renderer::GetInstance()->GetProjection(), viewport);
 
     float delta = Utils::Debug::GetInstance()->DeltaMs;
-    float speed = delta * 0.001f;
+    float speed = delta * 0.01f;
 
     return  glm::vec3(realpos.x * speed, realpos.y * speed, 1.0) ;//* glm::vec3(speed);
 }

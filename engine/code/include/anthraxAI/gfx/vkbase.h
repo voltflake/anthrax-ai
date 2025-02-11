@@ -19,6 +19,8 @@ namespace Gfx
             void CleanUp();
             
             bool ReloadShaders();
+            void ReloadResources();
+
             bool OnResize();
 
             VkInstance GetVkInstance() const { return Instance; }

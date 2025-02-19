@@ -8,20 +8,12 @@
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/camera.h"
-#include "anthraxAI/gameobjects/objects/sprite.h"
-#include "anthraxAI/gameobjects/objects/npc.h"
-#include "anthraxAI/gameobjects/objects/gizmo.h"
 
 #include <atomic>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
-#include <filesystem>
 namespace Core
 {
-
-        
-   // typedef std::unordered_map<std::string, Core::SceneInfo> RQSceneMap;
 
     class Scene : public Utils::Singleton<Scene>
     {
@@ -34,7 +26,7 @@ namespace Core
             
             void ExportObjectInfo(const Keeper::Objects* obj);
             void RenderScene(bool playmode);
-std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
+            std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
             bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
 
             void SetCurrentScene(const std::string& str);
@@ -51,6 +43,8 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
             uint32_t GetSelectedID() { return GameObjects->GetSelectedID(); }
 
         private:
+            void RestartAnimator();
+            void PopulateModules();
             void UpdateRQ();
 
             void LoadScene(const std::string& filename);
@@ -61,7 +55,6 @@ std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Anima
             Core::AnimatorBase* Animator = nullptr;
 
             std::string CurrentScene = "intro";
-           // RQSceneMap RQScenes;
             std::vector<Keeper::Info> ParsedSceneInfo;
 
             std::vector<std::string> SceneNames;

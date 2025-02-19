@@ -336,9 +336,11 @@ void Core::WindowManager::ProcessEvents()
         if (PressedKey == MINUS_KEY) {
             if (Utils::Debug::GetInstance()->BoneID > 0) {
                 Utils::Debug::GetInstance()->BoneID--;
+                PressedKey = 0;
             }
         }
         if (PressedKey == PLUS_KEY) {
+            PressedKey = 0;
             Utils::Debug::GetInstance()->BoneID++;
         }
     }

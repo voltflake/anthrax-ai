@@ -42,9 +42,6 @@ void Gfx::Model::ProcessBones(std::vector<Vertex>& vert, const std::string& path
             ASSERT(!(vertexID <= vert.size()), "vertex weight loading error\n");
             SetVertexBoneData(vert[vertexID], boneID, weight);
         }
-        // for (int i  = 0; i < 4; i++) {
-        //     printf("[%d] %d %f\n", vertexID, vert[vertexID].boneID[i], vert[vertexID].weights[i]);
-        // }
     }
 }
 
@@ -60,20 +57,7 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
 
         Gfx::MeshInfo* meshinfo = new Gfx::MeshInfo;
         Gfx::Mesh::GetInstance()->CreateMesh(aimesh, meshinfo);
-	/*  VkDebugUtilsObjectNameInfoEXT info;*/
-	/*info.pNext = nullptr;*/
-	/*info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;*/
-	/*info.objectHandle = reinterpret_cast<uint64_t>(meshinfo->IndexBuffer.DeviceMemory);*/
-	/*info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;*/
-	/*info.pObjectName = std::string("moedl index buffer" + meshinfo->Path).c_str();*/
-	/*Gfx::Vulkan::GetInstance()->SetDebugName(info);*/
-	/**/
-	/*info.pNext = nullptr;*/
-	/*info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;*/
-	/*info.objectHandle = reinterpret_cast<uint64_t>(meshinfo->VertexBuffer.DeviceMemory);*/
-	/*info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;*/
-	/*info.pObjectName = std::string("moedl vertex buffer" + meshinfo->Path).c_str();*/
-	/*Gfx::Vulkan::GetInstance()->SetDebugName(info);*/
+
         Models[path].MeshBase[i] = TotalVertex;
         TotalVertex += aimesh->mNumVertices;
         Models[path].Bones.Vertext2Bone.resize(TotalVertex);
@@ -83,24 +67,6 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
         }
         Gfx::Mesh::GetInstance()->UpdateMesh(meshinfo); 
         Models[path].Meshes.push_back(meshinfo);
-         
-        // printf("-----!!!!------\n\n mesh \n\n ----!!!!--");
-        //   if (mesh->mMaterialIndex >= 0) {
-            // aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-            // aiString texturepath;
-            // // material->GetTexture(aiTextureType_DIFFUSE, 0, &texturepath);
-            // // models[id].texturepath = texturepath.C_Str();
-
-            // printf("------ [%d] assimp model texture path: %s \n\n", id, models[id].texturepath.c_str());
-        // }
-
-        // models[id].meshbase[i] = totalvert;
-        // // totalvert += mesh->mNumVertices;
-        // // models[id].vert2bones.resize(totalvert);
-
-        // if (mesh->HasBones()) {
-            // processbones(tmpmesh->vertices, id, mesh);        
-        // }
     }
 }
 
@@ -133,7 +99,6 @@ void Gfx::Model::LoadModels()
 
 void Gfx::Model::LoadModel(const std::string& path)
 {
-
     Assimp::Importer importer;
     const aiScene* scene = nullptr;
 

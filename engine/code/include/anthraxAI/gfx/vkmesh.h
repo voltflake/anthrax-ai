@@ -40,8 +40,8 @@ namespace Gfx
         
         std::vector<uint16_t> AIindices;
         std::vector<uint16_t> Indices = {
-         0, 1, 3,  3, 1, 2,
-         4, 5, 6, 6, 7, 4
+            0, 1, 3,  3, 1, 2,
+            4, 5, 6, 6, 7, 4
         };
 
         BufferHelper::Buffer IndexBuffer;

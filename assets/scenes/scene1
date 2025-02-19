@@ -24,15 +24,15 @@ name: models
 frag: model.frag
 vert: model.vert
 Texture:
-name: kote-v-bote.jpg
+name: zeroone.png
 Model:
 name: cube.obj
 Object:
 ID: anim
 Position:
-x: 0
-y: 2
-z: 0
+x: 0.000000
+y: 2.000000
+z: 0.000000
 Material:
 name: models
 frag: model.frag

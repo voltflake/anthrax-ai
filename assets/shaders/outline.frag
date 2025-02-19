@@ -6,10 +6,12 @@
 #define LINE_WEIGHT 2.5
 void main()
 {
+    if (inpos.x >= 0.996 || inpos.y <= -0.996) {
+        discard;
+    }
 
     vec2 uv = inpos.xy * 0.5 - 0.5;
-  
-    float w = GetResource(Camera, GetUniformInd()).viewport.x;
+    float w = GetResource(Camera, GetUniformInd()).viewport.x ;
     float h =  GetResource(Camera, GetUniformInd()).viewport.y ;
 
     float dx = (1.0 / w) * LINE_WEIGHT;
@@ -17,7 +19,7 @@ void main()
 
     vec2 uv_center = uv;
     vec2 uv_right = vec2(uv_center.x + dx, uv_center.y);
-    vec2 uv_top = vec2(uv_center.x,      uv_center.y - dx);
+    vec2 uv_top = vec2(uv_center.x, uv_center.y - dx);
     vec2 uv_top_right = vec2(uv_center.x + dx, uv_center.y - dx);
 
     float center = texture(textures[GetTextureInd()], uv_center).r;

@@ -49,7 +49,7 @@ VkPipelineRasterizationStateCreateInfo RasterezationCreateInfo(VkPolygonMode pol
 
 	info.polygonMode = polygonmode;
 	info.lineWidth = 1.0f;
-	info.cullMode = VK_CULL_MODE_NONE;
+	info.cullMode = VK_CULL_MODE_FRONT_BIT;
 	info.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	info.depthBiasEnable = VK_FALSE;
 	info.depthBiasConstantFactor = 0.0f;
@@ -249,22 +249,22 @@ void Gfx::Pipeline::Build()
                 CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
             }
             else {
-            if (!ShaderStages.empty()) {
-                ShaderStages.clear();
-                vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-                vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-            }
-            CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
-			LoadShader(shaderbuf, &fragshader);
-			shaderbuf.clear();
-			CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
-			LoadShader(shaderbuf, &vertexshader);
-			shaderbuf.clear();
+                if (!ShaderStages.empty()) {
+                    ShaderStages.clear();
+                    vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
+                    vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
+                }
+                CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
+			    LoadShader(shaderbuf, &fragshader);
+			    shaderbuf.clear();
+			    CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
+			    LoadShader(shaderbuf, &vertexshader);
+			    shaderbuf.clear();
 
-            ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-            ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-            Setup(mainflag);
-            CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
+                ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
+                ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
+                Setup(mainflag);
+                CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
             }
         }
     }
@@ -311,29 +311,6 @@ void Gfx::Pipeline::Build()
 	
 	Setup(mainflag);
 	CreateMaterial(Pipeline, PipelineLayout, "grid");
-
-//gizmo
-	/*   ShaderStages.clear();*/
-	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);*/
-	/*vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);*/
-	/**/
-	/*frag = "./shaders/gizmo.frag";*/
-	/*   vert = "./shaders/model.vert";*/
-	/*CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);*/
-	/*LoadShader(shaderbuf, &fragshader);*/
-	/*shaderbuf.clear();*/
-	/*CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);*/
-	/*LoadShader(shaderbuf, &vertexshader);*/
-	/*shaderbuf.clear();*/
-	/**/
-	/*ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));*/
-	/*ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));*/
-	/**/
-	/*VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");*/
-	/**/
-	/*Setup(mainflag);*/
-	/*CreateMaterial(Pipeline, PipelineLayout, "gizmo");*/
-
 
 // mask
     ShaderStages.clear();

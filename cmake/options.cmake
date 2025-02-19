@@ -7,7 +7,7 @@ string(TOLOWER ${aai_platform} aai_lower_platform)
 #========================================== Options =========================================#
 
 option(AAI_BUILD_DEMOS                 "Build the demos"                    ON)
-option(AAI_COMPILE_SHADERS             "Compile the shaders"                ON)
+option(AAI_COMPILE_SHADERS             "Compile the shaders"                OFF)
 
 #======================================== Directories ========================================#
 

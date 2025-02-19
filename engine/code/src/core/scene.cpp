@@ -16,9 +16,6 @@
 #include <thread>
 void Core::Scene::Render(Modules::Module& module)
 {
-    if (module.GetCameraBuffer()) {
-        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
-    }
     for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
         if (!obj.IsVisible) continue;
         if (module.GetTag() == "mask" && !obj.IsSelected) {
@@ -38,6 +35,7 @@ void Core::Scene::RenderScene(bool playmode)
 {
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
+        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
             // objects from map
             Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
@@ -47,7 +45,7 @@ void Core::Scene::RenderScene(bool playmode)
             }
             Gfx::Renderer::GetInstance()->EndRender();
 
-            // gizmo
+            // gizmo, outline
             if (playmode && HasFrameGizmo) {
                 Gfx::Renderer::GetInstance()->ResetInstanceInd();
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("mask").GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
@@ -110,7 +108,7 @@ void Core::Scene::Loop()
         GameObjects->Update();
 
         GameModules->Update(Modules::Update::RQ);
-UpdateRQ();
+        UpdateRQ();
 
         RenderScene(true);
 
@@ -156,7 +154,6 @@ void Core::Scene::InitModules()
 
 void Core::Scene::ReloadResources()
 {
-
     ParsedSceneInfo.clear();
     ParsedSceneInfo.reserve(10);
     LoadScene(CurrentScene);
@@ -171,13 +168,46 @@ void Core::Scene::ReloadResources()
 
     Gfx::Vulkan::GetInstance()->ReloadResources();
     Core::Audio::GetInstance()->ResetState();
- 
-    GameModules->Clear();
-    GameModules->SetCurrentScene(CurrentScene); 
 
     Engine::GetInstance()->ClearState(ENGINE_STATE_RESOURCE_RELOAD);
     Engine::GetInstance()->SetState(ENGINE_STATE_EDITOR);
+     
+    PopulateModules();
     
+    RestartAnimator();
+     
+    GameObjects->UpdateObjectNames();
+    Core::ImGuiHelper::GetInstance()->UpdateObjectInfo();
+}
+
+void Core::Scene::ParseSceneNames()
+{
+    std::string path = "scenes/";
+    
+    SceneNames.reserve(20);
+    for (const auto& name : std::filesystem::directory_iterator(path)) {
+        std::string str = name.path().string();
+        std::string basename = str.substr(str.find_last_of("/\\") + 1);
+        SceneNames.push_back(basename.c_str());
+    }
+}
+
+void Core::Scene::RestartAnimator()
+{
+    if (Animator) {
+        delete Animator;
+    }
+    Animator = new AnimatorBase();
+
+    Utils::Debug::GetInstance()->AnimStartMs = Engine::GetInstance()->GetTime();
+    Animator->Init();
+}
+
+void Core::Scene::PopulateModules()
+{
+    GameModules->Clear();
+    GameModules->SetCurrentScene(CurrentScene);
+
     GameModules->Populate(CurrentScene, {
         .Attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH),
         .BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER },
@@ -216,29 +246,6 @@ void Core::Scene::ReloadResources()
         HasFrameGizmo = true;
     }
     GameModules->Update(Modules::Update::RESOURCES);
-    
-    if (Animator) {
-        delete Animator;
-    }
-    Animator = new AnimatorBase();
-
-    Utils::Debug::GetInstance()->AnimStartMs = Engine::GetInstance()->GetTime();
-    Animator->Init();
-
-    GameObjects->UpdateObjectNames();
-    Core::ImGuiHelper::GetInstance()->UpdateObjectInfo();
-}
-
-void Core::Scene::ParseSceneNames()
-{
-    std::string path = "scenes/";
-    
-    SceneNames.reserve(20);
-    for (const auto& name : std::filesystem::directory_iterator(path)) {
-        std::string str = name.path().string();
-        std::string basename = str.substr(str.find_last_of("/\\") + 1);
-        SceneNames.push_back(basename.c_str());
-    }
 }
 
 void Core::Scene::SetCurrentScene(const std::string& str) 
@@ -262,15 +269,18 @@ void Core::Scene::ExportObjectInfo(const Keeper::Objects* obj)
     
     Utils::NodeIt obj_texture = Parse.GetChild(obj_node, Utils::LEVEL_ELEMENT_TEXTURE);
     Utils::NodeIt obj_textname = Parse.GetChild(obj_texture, Utils::LEVEL_ELEMENT_NAME);
-    Parse.UpdateElement(obj_textname, obj->GetTextureName());
-    
+    if (Parse.IsNodeValid(obj_textname)) {
+        Parse.UpdateElement(obj_textname, obj->GetTextureName());
+    }
     Utils::NodeIt obj_position = Parse.GetChild(obj_node, Utils::LEVEL_ELEMENT_POSITION);
-    Utils::NodeIt x = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_X);
-    Parse.UpdateElement(x, std::to_string(obj->GetPosition().x));
-    Utils::NodeIt y = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Y);
-    Parse.UpdateElement(y, std::to_string(obj->GetPosition().y));
-    Utils::NodeIt z = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Z);
-    Parse.UpdateElement(z, std::to_string(obj->GetPosition().z));
+    if (Parse.IsNodeValid(obj_position)) {
+        Utils::NodeIt x = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_X);
+        Parse.UpdateElement(x, std::to_string(obj->GetPosition().x));
+        Utils::NodeIt y = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Y);
+        Parse.UpdateElement(y, std::to_string(obj->GetPosition().y));
+        Utils::NodeIt z = Parse.GetChild(obj_position, Utils::LEVEL_ELEMENT_Z);
+        Parse.UpdateElement(z, std::to_string(obj->GetPosition().z));
+    }
 
     Parse.Write(CurrentScene);
 }

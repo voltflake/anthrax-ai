@@ -38,8 +38,7 @@ void Keeper::Camera::UpdateDirection()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs; 
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
-    Vector2<int> curmousepos = Core::WindowManager::GetInstance()->GetMouseDelta();
-    if (curmousepos.x == 0 && curmousepos.y == 0) return;
+    if (mousemove.x == 0 && mousemove.y == 0) return;
     float rotspeed = delta * 0.001f;
 
     if (mousemove.x || mousemove.y) {

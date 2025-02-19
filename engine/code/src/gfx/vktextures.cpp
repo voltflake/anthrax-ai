@@ -72,9 +72,6 @@ void Gfx::Renderer::CreateTextures()
             continue;
         }
     }
-    // std::string path = "./textures/dummy.png";
-	// Textures["dummy"] = CreateTexture(path);
-	// CreateSampler(Textures["dummy"]);
 }
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)

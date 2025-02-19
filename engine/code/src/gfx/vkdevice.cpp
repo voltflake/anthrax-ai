@@ -130,10 +130,6 @@ void Gfx::Device::CreateSwapchain()
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-	// VkSurfaceFullScreenExclusiveWin32InfoEXT surface_full_screen_exclusive_Win32_info_EXT{};
-
-	// createInfo.pNext = &surface_full_screen_exclusive_Win32_info_EXT;
-
 	QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
 	uint32_t queueFamilyIndices[] = {indices.Graphics.value(), indices.Present.value()};
 	if (indices.Graphics != indices.Present) {

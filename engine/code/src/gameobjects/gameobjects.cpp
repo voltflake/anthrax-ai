@@ -103,7 +103,7 @@ Keeper::Base::Base()
 {
     Keeper::Info info;
     info.Fragment = "gizmo.frag";
-    info.Vertex = "model.vert";
+    info.Vertex = "gizmo.vert";
     info.IsModel = true;
     info.Model = "axisy.obj";
     info.Material = "gizmo";

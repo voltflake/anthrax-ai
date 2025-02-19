@@ -7,8 +7,8 @@ void Gfx::Vulkan::Init()
 
     Gfx::Device::GetInstance()->Init();
 	
-	Gfx::Renderer::GetInstance()->CreateCommands();
 	Gfx::Renderer::GetInstance()->CreateRenderTargets();
+	Gfx::Renderer::GetInstance()->CreateCommands();
 	Gfx::Renderer::GetInstance()->Sync();
 	Gfx::Renderer::GetInstance()->CreateTextures();
 
@@ -17,7 +17,6 @@ void Gfx::Vulkan::Init()
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
-	
 }
 
 bool Gfx::Vulkan::ReloadShaders()
@@ -27,7 +26,6 @@ bool Gfx::Vulkan::ReloadShaders()
 
 	Gfx::Pipeline::GetInstance()->Build();
     Engine::GetInstance()->SetState(ENGINE_STATE_SHADER_RELOAD);
-//	Core::Scene::GetInstance()->UpdateMaterials();
 
 	return true;
 }

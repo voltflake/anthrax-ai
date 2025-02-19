@@ -9,6 +9,9 @@
 #include "anthraxAI/gameobjects/objects/camera.h"
 #include "anthraxAI/utils/debug.h"
 #include "glm/detail/qualifier.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -377,7 +380,18 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     for (Gfx::RenderObject& obj : map["gizmo"].GetRenderQueue()) {
          if (!obj.Model || !obj.IsVisible) continue;
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
-        datas[i].rendermatrix =  glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));                i++;
+            float dist = glm::distance(glm::vec3(CamData.viewpos.x, CamData.viewpos.y, CamData.viewpos.z), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z) )* 0.05;
+            if (dist <= 0.5) {
+                dist = 0.5;
+            }
+            
+
+            glm::vec3 distfin = glm::vec3(dist);
+
+
+            datas[i].rendermatrix = glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));
+            datas[i].rendermatrix = glm::scale(datas[i].rendermatrix, distfin); 
+            i++;
         }
 
     }

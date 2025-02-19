@@ -23,13 +23,14 @@ void main()
     int gizmo = pushconstants.gizmo;
     if (gizmo == GIZMO_X)
     {
-        color.rgb = vec3(0,1,0);
+        color.rgb = pushconstants.selected == 1 ? vec3(0.0,0.8,0.0) : vec3(0.1,0.7,0.1);
     }
     if (gizmo == GIZMO_Y){
-            color.rgb = vec3(0,0,1);
+        color.rgb = pushconstants.selected == 1 ? vec3(0.03,0.03,0.7) : vec3(0.1,0.1,0.7);
+
     }
     if (gizmo == GIZMO_Z) {
-            color.rgb = vec3(1,0,0);
+        color.rgb = pushconstants.selected == 1 ? vec3(0.7,0.02,0.02) : vec3(0.7,0.1,0.1);
     }
 
     outfragcolor = color;

@@ -64,6 +64,18 @@ void Modules::Base::Populate(const std::string& key, Modules::Info scene, Keeper
     }
 }
 
+void Modules::Base::RestartAnimator()
+{
+    if (Animator) {
+        delete Animator;
+    }
+    Animator = new Core::AnimatorBase();
+
+    Utils::Debug::GetInstance()->AnimStartMs = Engine::GetInstance()->GetTime();
+    Animator->Init();
+
+}
+
 void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& obj)
 {
     switch (module.GetBindlessType()) {
@@ -110,6 +122,12 @@ void Modules::Base::UpdateMaterials()
 
 void Modules::Base::UpdateRQ()
 {
+    /*for (Gfx::RenderObject& obj : GameModules->Get(CurrentScene).GetRenderQueue()) {*/
+    /*    if (HasAnimation(obj.ID)) {*/
+    /*        UpdateAnimation(obj);*/
+    /*    }*/
+    /*}*/
+
     if (GameObjects->IsValid(Keeper::Type::NPC)) {
         int i = 0;
         auto npc = GameObjects->Get(Keeper::Type::NPC);
@@ -122,6 +140,10 @@ void Modules::Base::UpdateRQ()
             }
             SceneModules[CurrentScene].GetRenderQueue()[i].IsVisible = info->IsVisible();
             SceneModules[CurrentScene].GetRenderQueue()[i].Position = info->GetPosition();
+
+            if (HasAnimation(SceneModules[CurrentScene].GetRenderQueue()[i].ID)) {
+                Animator->Update(SceneModules[CurrentScene].GetRenderQueue()[i]);
+            }
             i++;
         }
         i = 0;

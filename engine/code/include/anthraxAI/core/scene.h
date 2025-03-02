@@ -1,6 +1,5 @@
 #pragma once
 
-#include "anthraxAI/core/animator.h"
 #include "anthraxAI/gamemodules/modules.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gfx/renderhelpers.h"
@@ -18,7 +17,7 @@ namespace Core
     class Scene : public Utils::Singleton<Scene>
     {
         public:
-            ~Scene() { if (GameObjects) delete GameObjects; if (Animator) delete Animator; }
+            ~Scene() { if (GameObjects) delete GameObjects; if (GameModules) delete GameModules; }
             void Init();
             void InitModules();
 
@@ -26,8 +25,8 @@ namespace Core
             
             void ExportObjectInfo(const Keeper::Objects* obj);
             void RenderScene(bool playmode);
-            std::vector<glm::mat4> UpdateAnimation(Gfx::RenderObject& object) { return Animator->Update(object); }
-            bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
+            bool HasAnimation(uint32_t id) { if (GameModules) { return GameModules->HasAnimation(id); } return false; }
+            void ReloadAnimation(uint32_t id, const std::string& s) { if (GameModules) { return GameModules->ReloadAnimation(id, s); }}        
 
             void SetCurrentScene(const std::string& str);
             Modules::ScenesMap& GetScenes() { return GameModules->GetSceneModules(); }
@@ -43,16 +42,13 @@ namespace Core
             uint32_t GetSelectedID() { return GameObjects->GetSelectedID(); }
 
         private:
-            void RestartAnimator();
             void PopulateModules();
-            void UpdateRQ();
 
             void LoadScene(const std::string& filename);
             void Render(Modules::Module& module);
 
             Keeper::Base* GameObjects = nullptr;
             Modules::Base* GameModules = nullptr;
-            Core::AnimatorBase* Animator = nullptr;
 
             std::string CurrentScene = "intro";
             std::vector<Keeper::Info> ParsedSceneInfo;

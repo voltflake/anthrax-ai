@@ -8,7 +8,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/anim.h>
+#include <cstdint>
 #include <map>
+#include <string>
+#include <vector>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -22,7 +25,39 @@ namespace Core
   	int PathIndex = 0;
   	int SceneInd = 0;
   };
-  
+    
+    struct NodeRoots {
+        std::string Name;
+        glm::mat4 Tranform;
+
+        int ChildrenNum;
+        std::vector<NodeRoots> Children;
+    };
+    struct NodeAnim {
+        std::string NodeName;
+        uint32_t NumPositionsKeys;
+        std::vector<glm::vec3> PositionKeys;
+        std::vector<float> PositionTime;
+        uint32_t NumRotationKeys;
+        std::vector<glm::quat> RotationKeys;
+        std::vector<float> RotationTime;
+        uint32_t NumScalingKeys;
+        std::vector<glm::vec3> ScalingKeys;
+        std::vector<float> ScalingTime;
+
+        NodeAnim() {}
+    };
+    struct aiSceneInfo {
+        float TicksPerSecond;
+        float Duration;
+        NodeRoots RootNode;
+
+        std::vector<NodeAnim> AnimNodes;
+    
+        //glm::mat4 NodeTransformation;
+        
+        
+    };
   class AnimatorBase {
   
     public:
@@ -33,30 +68,41 @@ namespace Core
         bool HasAnimation(int id) {
     		return Animations.find(id) != Animations.end();
     	}
-
-    private:
-    	Assimp::Importer Importer[2];
-    	const aiScene* Scenes[10] = {NULL};
         
-        glm::mat4 GlobalInverse; 
-    	std::map<int, AnimationData> Animations;
-    	
-        glm::mat4 InterpolatePos(glm::vec3 out, float timeticks, const aiNodeAnim* animnode);
-    	u_int FindPos(float timeticks, const aiNodeAnim* animnode);
-    	glm::mat4 InterpolateRot(glm::quat out, float timeticks, const aiNodeAnim* animnode);
-    	u_int FindRot(float timeticks, const aiNodeAnim* animnode);
-    	glm::mat4 InterpolateScale(glm::vec3 out, float timeticks, const aiNodeAnim* animnode);
-    	u_int FindScale(float timeticks, const aiNodeAnim* animnode);
-    
-    	    
-    	void reload(int id) {
-    		/*animations[id].selectedpath = animations[id].animpaths[animations[id].pathindex];*/
-    		/*scene[animations[id].sceneind] = importer[animations[id].sceneind].ReadFile(animations[id].selectedpath, IMPORT_PROPS);*/
+    void Reload(int id, const std::string& name) {
+            Animations[id].CurrentPath = name;
+            auto it = std::find(AnimationMap.begin(), AnimationMap.end(), "./models/" + name);
+            std::size_t index = std::distance(AnimationMap.begin(), it);
+            Animations[id].SceneInd = index;
+            printf("INDEX %d\n", index);
     	}
      
-    	const aiNodeAnim* FindAnim(const aiAnimation* anim, const std::string nodename);
-    	void ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, const aiNode* node, float timetick, const glm::mat4 parenttransform);
+
+    private:
+    	Assimp::Importer Importer;
+    	//const aiScene* Scenes[10] = {NULL};
+        std::vector<aiSceneInfo> Scenes;            
+
+        glm::mat4 GlobalInverse; 
+    	std::map<int, AnimationData> Animations;
+        std::vector<std::string> AnimationMap;
+
+        aiSceneInfo ConvertAi(const aiScene* scene);
+    	
+        glm::mat4 InterpolatePos(glm::vec3 out, float timeticks, const NodeAnim& animnode);
+    	u_int FindPos(float timeticks, const NodeAnim& animnode);
+    	glm::mat4 InterpolateRot(glm::quat out, float timeticks, const NodeAnim& animnode);
+    	u_int FindRot(float timeticks, const NodeAnim& animnode);
+    	glm::mat4 InterpolateScale(glm::vec3 out, float timeticks, const NodeAnim& nodeanim );
+    	u_int FindScale(float timeticks, const NodeAnim& animnode);
+    
+    	    
+    	    	const Core::NodeAnim& FindAnim(const aiSceneInfo& scene, const std::string nodename);
+    	void ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, const Core::aiSceneInfo& scene, const NodeRoots& node, float timetick, const glm::mat4 parenttransform);
         std::vector<glm::mat4> GetBonesTransform(Gfx::ModelInfo* model, int animid, float time);
-  
+        
+        void GetNodeChildren(const aiNode* node, Core::NodeRoots& info);
+        
+        Core::NodeAnim EMPTY_ANIM_NODE;
   };
 }

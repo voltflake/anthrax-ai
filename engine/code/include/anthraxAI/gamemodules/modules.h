@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 
+#include "anthraxAI/core/animator.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
 #include "anthraxAI/gfx/renderhelpers.h"
@@ -69,7 +70,7 @@ namespace Modules
     {
         public:
             Base(Keeper::Base* objects);
-            
+            ~Base() { if (Animator) delete Animator; } 
             void Clear();
 
             void Update(uint32_t update_type);
@@ -80,8 +81,11 @@ namespace Modules
             Module& Get(const std::string& key) { return SceneModules[key]; }
         
             bool HasFrameOutline() const { return HasOutline; }
-
+            void ReloadAnimation(uint32_t id, const std::string& s) { if (Animator) { Animator->Reload(id, s); } } 
+            bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
             void SetRenderQueue(const std::string& key, RenderQueueVec& rq) { SceneModules[key].SetRenderQueue(rq); }
+
+            void RestartAnimator();
 
             ScenesMap& GetSceneModules() { return SceneModules; }
             void SetCurrentScene(const std::string& str) { CurrentScene = str; }
@@ -90,6 +94,7 @@ namespace Modules
             std::string CurrentScene;
             ScenesMap SceneModules;
             Keeper::Base* GameObjects = nullptr;
+            Core::AnimatorBase* Animator = nullptr;
 
             Gfx::RenderObject LoadResources(const Keeper::Objects* info);
             void UpdateResources();
@@ -97,6 +102,7 @@ namespace Modules
             void UpdateMaterials();
             void UpdateTextureUIManager();
             void UpdateRQ();
+            //void UpdateAnimation();
     };
   
 }

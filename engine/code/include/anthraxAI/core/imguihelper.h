@@ -27,6 +27,7 @@ namespace UI
         LISTBOX,
         TREE,
         IMAGE,
+        SLIDER,
     };
    
     class Element
@@ -37,17 +38,20 @@ namespace UI
             : Type(type), Label(label), IsDynamic(isdyn) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
           
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func) 
-            : Type(type), Label(label), IsDynamic(isdyn), Definition(func) { EvaluateArgs(t, args...); }
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func, bool addempty = false) 
+            : Type(type), Label(label), IsDynamic(isdyn), Definition(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func) 
-            : Type(type), Label(label), IsDynamic(isdyn), DefinitionWithElem(func) { EvaluateArgs(t, args...); }
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func, bool addempty = false) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionWithElem(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
             
             template<typename T, typename... Args>
             Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (bool)> func) 
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionBool(func) { EvaluateArgs(t, args...); }
+
+            Element(ElementType type, const std::string& label, bool isdyn, std::function<float (float)> func) 
+            : Type(type), Label(label), IsDynamic(isdyn), DefinitionFloatArg(func) {  }
 
             Element(ElementType type, const std::string& label, bool isdyn,std::function<float ()> func) 
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionFloat(func) { }
@@ -66,6 +70,7 @@ namespace UI
             std::function<void (std::string)> Definition;
             std::function<bool ()> DefinitionBoolRet;
             std::function<void (bool)> DefinitionBool;
+            std::function<float (float)> DefinitionFloatArg;
             std::function<float ()> DefinitionFloat;
             std::function<std::string ()> DefinitionString;
 
@@ -74,7 +79,8 @@ namespace UI
             void SetCheckbox(bool b) { Checkbox = b;}
 
             int ComboInd = 0;
-            
+            bool AddEmpty = false;
+
             void ClearComboList() { ComboList.clear(); }
 
         private:

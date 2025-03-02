@@ -16,7 +16,7 @@ name: monkeytextured.obj
 Object:
 ID: cube
 Position:
-x: -5.093374
+x: 9.181776
 y: 2.000000
 z: 5.000000
 Material:
@@ -38,9 +38,29 @@ name: models
 frag: model.frag
 vert: model.vert
 Texture:
-name: dummy.png
+name: zeroone.png
 Model:
 name: Defeated.dae
 Animation:
 name: Defeated.dae
+Animation:
+name: Excited.dae
+Animation:
+name: Catwalk.dae
+Object:
+ID: anim-dancing
+Position:
+x: 0.000000
+y: 2.000000
+z: 10.0
+Material:
+name: models
+frag: model.frag
+vert: model.vert
+Texture:
+name: MocapSuit02_diffuse.png
+Model:
+name: DancingTwerk.dae
+Animation:
+name: DancingTwerk.dae
 

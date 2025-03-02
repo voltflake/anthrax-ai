@@ -14,7 +14,9 @@ void main()
         GetResource(Storage, GetStorageInd()).data[depth_ind] = pushconstants.objectID;
     }
 
-    vec4 color = texture(textures[GetTextureInd()], incoord.xy).xyzw;
+vec2 uv = incoord.xy;
+uv.y *= -1;
+    vec4 color = texture(textures[GetTextureInd()], uv.xy).xyzw;
     if (pushconstants.selected == 1) {
         color.rgb += vec3(0.1);
         color.rgb = clamp(color.rgb, 0.0, 1.0);

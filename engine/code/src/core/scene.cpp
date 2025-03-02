@@ -106,21 +106,12 @@ void Core::Scene::Loop()
     
         GameObjects->Update();
         GameModules->Update(Modules::Update::RQ);
-        UpdateRQ();
+        //UpdateRQ();
 
         RenderScene(true);
 
         end = (double)Engine::GetInstance()->GetTime() ;
         //printf("TIME: %lf\n", (end - start));
-    }
-}
-
-void Core::Scene::UpdateRQ()
-{
-    for (Gfx::RenderObject& obj : GameModules->Get(CurrentScene).GetRenderQueue()) {
-        if (HasAnimation(obj.ID)) {
-            UpdateAnimation(obj);
-        }
     }
 }
 
@@ -145,6 +136,7 @@ void Core::Scene::InitModules()
     );
     GameModules->Update(Modules::Update::RESOURCES);
     Core::Audio::GetInstance()->Load("Anthrax_Mastered.wav");
+    Core::Audio::GetInstance()->SetVolume(0.0f);
 }
 
 void Core::Scene::ReloadResources()
@@ -169,8 +161,6 @@ void Core::Scene::ReloadResources()
      
     PopulateModules();
     
-    RestartAnimator();
-     
     GameObjects->UpdateObjectNames();
     Core::ImGuiHelper::GetInstance()->UpdateObjectInfo();
 }
@@ -185,17 +175,6 @@ void Core::Scene::ParseSceneNames()
         std::string basename = str.substr(str.find_last_of("/\\") + 1);
         SceneNames.push_back(basename.c_str());
     }
-}
-
-void Core::Scene::RestartAnimator()
-{
-    if (Animator) {
-        delete Animator;
-    }
-    Animator = new AnimatorBase();
-
-    Utils::Debug::GetInstance()->AnimStartMs = Engine::GetInstance()->GetTime();
-    Animator->Init();
 }
 
 void Core::Scene::PopulateModules()
@@ -241,6 +220,8 @@ void Core::Scene::PopulateModules()
         HasFrameGizmo = true;
     }
     GameModules->Update(Modules::Update::RESOURCES);
+
+    GameModules->RestartAnimator();
 }
 
 void Core::Scene::SetCurrentScene(const std::string& str) 

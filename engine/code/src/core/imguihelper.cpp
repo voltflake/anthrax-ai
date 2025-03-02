@@ -1,4 +1,5 @@
 #include "anthraxAI/core/imguihelper.h"
+#include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gfx/vkrenderer.h"
@@ -154,7 +155,9 @@ void UI::Element::GetArg(const std::vector<std::string>& vec)
         ComboList.clear();      
     }
     ComboList.reserve(vec.size() + 1);
-    ComboList.emplace_back("none");
+    if (AddEmpty) {
+        ComboList.emplace_back("none");
+    }
     for (const std::string& s : vec) { 
         ComboList.emplace_back(s); 
     }
@@ -170,7 +173,7 @@ void Core::ImGuiHelper::InitUIElements()
         
         std::string tablabel = "Editor";
         UI::Element tab(UI::TAB, tablabel);
-        Add(tab, UI::Element(UI::COMBO, "Scenes", false, Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }));
+        Add(tab, UI::Element(UI::COMBO, "Scenes", false, Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }, true));
         Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
         Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", false, []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
     }
@@ -183,11 +186,12 @@ void Core::ImGuiHelper::InitUIElements()
     
     {
         UI::Element audiotab(UI::TAB, "Audio");
-        Add(audiotab, UI::Element(UI::COMBO, "Sounds", false, Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }));
+        Add(audiotab, UI::Element(UI::COMBO, "Sounds", false, Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }, true));
         Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
         Add(audiotab, UI::Element(UI::TEXT, "Current Sound:", false, []() -> std::string { return Core::Audio::GetInstance()->GetCurrentSound(); } ));
         Add(audiotab, UI::Element(UI::SEPARATOR, "sep"));
         Add(audiotab, UI::Element(UI::CHECKBOX, "play", false, nullptr, [](bool visible) -> void {  Core::Audio::GetInstance()->SetState(visible); }));
+        Add(audiotab, UI::Element(UI::SLIDER, "volume", false, [](float volume) -> float { Core::Audio::GetInstance()->SetVolume(volume); return 0.0f; }));
     }
 
     {
@@ -247,11 +251,19 @@ void Core::ImGuiHelper::DisplayObjectInfo(const std::string& obj, const UI::Elem
     Add(elem, UI::Element(UI::TEXT, "Texture: " + game_obj->GetTextureName(), true));
     Add(elem, UI::Element(UI::TEXT, "Model: " + game_obj->GetModelName(), true));
     std::vector<std::string> s = { "Fragment: " + game_obj->GetFragmentName(), "Vertex: " + game_obj->GetVertexName() };
-    Add(elem, UI::Element(UI::TREE, "Material: " + game_obj->GetMaterialName(), true, s ,[](std::string tag) -> void { return; }));
+    Add(elem, UI::Element(UI::TREE, "Material: " + game_obj->GetMaterialName(), true, s ,[](std::string tag) -> void { return; }, false));
+
     Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+    if (game_obj->HasAnimations()) {
+        Add(elem, UI::Element(UI::TEXT, "Animations: ", true));
+        Add(elem, UI::Element(UI::COMBO, "list", true, game_obj->GetAnimations(), [game_obj](std::string tag) -> void { Core::Scene::GetInstance()->ReloadAnimation(game_obj->GetID(), tag); }, false));
+        Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+    }
+
     Add(elem, UI::Element(UI::IMAGE, "Textures", true));
-    Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
+       Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
     Add(elem, UI::Element(UI::BUTTON, "Update Object", true, [game_obj]() -> float { Core::Scene::GetInstance()->ExportObjectInfo(game_obj); return 0.0f; }));
+    Add(elem, UI::Element(UI::SEPARATOR, "sep", true));
     IsDisplayInReset = false;
 }
 
@@ -269,7 +281,7 @@ void Core::ImGuiHelper::UpdateObjectInfo()
 
             Add(it.first, UI::Element(UI::TEXT, "Name:", false, []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
             Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
-            Add(it.first, UI::Element(UI::LISTBOX, "Objects", false, Core::Scene::GetInstance()->GetGameObjects()->GetObjectNames(), [this](std::string tag, const UI::Element& elem) -> void { DisplayObjectInfo(tag, elem); }));
+            Add(it.first, UI::Element(UI::LISTBOX, "Objects", false, Core::Scene::GetInstance()->GetGameObjects()->GetObjectNames(), [this](std::string tag, const UI::Element& elem) -> void { DisplayObjectInfo(tag, elem); }, false));
             Add(it.first, UI::Element(UI::SEPARATOR, "sep"));
             break;
         }
@@ -284,7 +296,7 @@ void Core::ImGuiHelper::Combo(UI::Element& element)
             const bool is_selected = (element.ComboInd == n);
             if (ImGui::Selectable(element.GetComboList()[n].c_str(), is_selected)) {
                 element.ComboInd = n;
-                if (n != 0) {
+                if (element.GetComboList()[n] != "none") {
                     element.Definition(element.GetComboList()[element.ComboInd]);
                 }
             }
@@ -401,6 +413,15 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
             break;
         case UI::SEPARATOR:
             ImGui::Separator();
+            break;
+        case UI::SLIDER: {
+            static float vol = 0.0;
+            ImGui::SliderFloat(element.GetLabel().c_str(), &vol, 0.0f, 1.0f);
+            if (element.DefinitionFloatArg) {
+            element.DefinitionFloatArg(vol);
+            }
+            break;
+        }
         default:
             break;
     }

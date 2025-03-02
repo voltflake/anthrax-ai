@@ -36,6 +36,9 @@ void Keeper::Camera::UpdateMovement()
 
 void Keeper::Camera::UpdateDirection()
 {
+    if (GizmoHandle) {
+        return;
+    }
     float delta = Utils::Debug::GetInstance()->DeltaMs; 
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
     if (mousemove.x == 0 && mousemove.y == 0) return;

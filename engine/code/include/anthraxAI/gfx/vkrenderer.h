@@ -10,6 +10,7 @@
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkmesh.h"
+#include "glm/fwd.hpp"
 #include <vulkan/vulkan_core.h>
 
 namespace Gfx
@@ -74,6 +75,7 @@ namespace Gfx
             
             int GetInstanceSize() const { return 20; }
 
+            const glm::vec3 GetCameraPos() const { return glm::vec3(CamData.viewpos); }
             const glm::mat4& GetProjection() const { return CamData.proj; }
             const glm::mat4& GetView() const { return CamData.view; }
 

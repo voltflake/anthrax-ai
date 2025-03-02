@@ -143,16 +143,16 @@ void Keeper::Base::Update()
     std::vector<Objects*>::iterator selected_it = std::find_if(ObjectsList[Keeper::Type::NPC].begin(), ObjectsList[Keeper::Type::NPC].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
     std::vector<Objects*>::iterator gizmo_it = std::find_if(ObjectsList[Keeper::Type::GIZMO].begin(), ObjectsList[Keeper::Type::GIZMO].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id;});
     static bool gizmo = false;
-    if (gizmo) {
-        gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
-    }
+    //if (gizmo) {
+    //}
     for (Keeper::Objects* obj : ObjectsList[Keeper::Type::GIZMO]) {
         if (selected_it != ObjectsList[Keeper::Type::NPC].end()) {
             obj->SetVisible(true);
             obj->SetHandle(*selected_it);
             obj->SetPosition((*selected_it)->GetPosition());
+       // gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
         }
-        if (!gizmo && selected_it == ObjectsList[Keeper::Type::NPC].end() && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
+        if (selected_it == ObjectsList[Keeper::Type::NPC].end() && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
             obj->SetVisible(false);
             obj->SetHandle(0);
         }
@@ -161,24 +161,34 @@ void Keeper::Base::Update()
 
     for (auto& it : ObjectsList) {
         if (it.first == Keeper::Type::GIZMO) continue;
+        if ((gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() || gizmo )&& it.first == Keeper::Type::CAMERA) continue;
         for (Keeper::Objects* obj : it.second) {
+            Keeper::Objects* gizmo_handle = nullptr;
+
             obj->SetSelected(obj->GetID() == SelectedID);
-            if (gizmo_it != ObjectsList[Keeper::Type::GIZMO].end()) {
-                if ((*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {
-                    gizmo = true; 
-                    obj->SetGizmo(*gizmo_it);
+            if (gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() && (*gizmo_it)->GetHandle() && (*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {
+                    gizmo_handle = *gizmo_it;
                     obj->SetSelected(true);
-                }
-                else {
+            }           
+            else {
                     obj->SetSelected(false);
                 }
-            }
-            else if (!gizmo) {
-                obj->SetGizmo(nullptr);
-            }
-            if ((gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() || gizmo) && obj->GetType() == Keeper::Type::CAMERA) {
-              continue;
-            }
+            obj->SetGizmo(gizmo_handle);
+            /*    if ((*gizmo_it)->GetHandle() && (*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {*/
+            /*        gizmo = true; */
+            /*        obj->SetGizmo(*gizmo_it);*/
+            /*        obj->SetSelected(true);*/
+            /*    }*/
+            /*    else {*/
+            /*        obj->SetSelected(false);*/
+            /*    }*/
+            /*}*/
+            /*else if (!gizmo) {*/
+            /*    obj->SetGizmo(nullptr);*/
+            /*}*/
+            /*if ((gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() || gizmo) && obj->GetType() == Keeper::Type::CAMERA) {*/
+            /*  continue;*/
+            /*}*/
             obj->Update();
         }
     }

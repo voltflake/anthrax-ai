@@ -2,6 +2,7 @@
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/utils/mathdefines.h"
+#include "anthraxAI/gameobjects/objects/gizmo.h"
 
 namespace Keeper {
 class Camera : public Keeper::Objects 
@@ -30,6 +31,7 @@ class Camera : public Keeper::Objects
         void Update() override { UpdateMovement(); UpdateDirection(); };
 
         void SetSelected(bool id) override { }
+        void SetGizmo(Keeper::Objects* gizmo) override { GizmoHandle = reinterpret_cast<Keeper::Gizmo*>(gizmo); }
         
         Keeper::Type GetType() const override { return ObjectType; }
 
@@ -51,5 +53,7 @@ class Camera : public Keeper::Objects
 
         float Yaw = -90.0f;
         float Pitch = 0.0f;
+
+        Keeper::Gizmo* GizmoHandle = nullptr;
     };
 }

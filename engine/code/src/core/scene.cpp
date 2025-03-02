@@ -34,6 +34,10 @@ void Core::Scene::Render(Modules::Module& module)
 void Core::Scene::RenderScene(bool playmode)
 {
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
+        if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
+              Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
+        }
+
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
@@ -96,27 +100,18 @@ void Core::Scene::Loop()
         RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
-        if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
-              Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
-        }
-        
+                
         double start, end = 0.0;
         start = (double)Engine::GetInstance()->GetTime() ;
-        /*std::thread game(&Keeper::Base::Update, GameObjects);*/
-        /*std::thread updaterq(&Core::Scene::UpdateRQ, this);*/
-        //std::thread render(&Core::Scene::RenderScene, this, true);
+    
         GameObjects->Update();
-
         GameModules->Update(Modules::Update::RQ);
         UpdateRQ();
 
         RenderScene(true);
 
-        /*game.join();*/
-        /*updaterq.join();*/
-        /*render.join();*/
         end = (double)Engine::GetInstance()->GetTime() ;
-        printf("TIME: %lf\n", (end - start));
+        //printf("TIME: %lf\n", (end - start));
     }
 }
 

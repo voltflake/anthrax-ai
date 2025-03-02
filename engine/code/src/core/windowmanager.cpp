@@ -366,6 +366,7 @@ void Core::WindowManager::ProcessEvents()
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
         }
         if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {
+           // Mouse.Selected = false;
             Mouse.Position.x = Mouse.Event.x;
          //  printf("------MOUSE MOVE--------\n");
             Mouse.Position.y = Mouse.Event.y;

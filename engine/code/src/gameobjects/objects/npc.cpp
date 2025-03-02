@@ -1,5 +1,7 @@
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/core/windowmanager.h"
+#include "anthraxAI/gfx/vkrenderer.h"
+#include "glm/geometric.hpp"
 
 #include <cstdio>
 
@@ -27,20 +29,19 @@ void Keeper::Npc::PrintInfo()
     printf("-------------------------------\n");
 }
 
-glm::vec3 UnprojectMouse(glm::vec2 mouse, glm::vec2 dimensions, glm::vec3 pos) 
-{
-    float x = (2.0f * mouse.x) / dimensions.x - 1.0f;
-    float y = (2.0f * mouse.y) / dimensions.y - 1.0f;
+
+glm::vec3 ProjectMouse(float xpos, float ypos, int width, int height) {
+    float x = (2.0f * xpos) / width - 1.0f;
+    float y = (2.0f * ypos) / height - 1.0; 
     float z = 1.0f;
-    glm::vec4 viewport(0, 0, dimensions.x, dimensions.y);
-    glm::vec3 mouse_ndc = { x, y, z };
-    
-    glm::vec3 realpos = glm::unProject({mouse.x, mouse.y, 1.0}, glm::translate(glm::mat4(1.0f), pos), Gfx::Renderer::GetInstance()->GetProjection(), viewport);
-
-    float delta = Utils::Debug::GetInstance()->DeltaMs;
-    float speed = delta * 0.01f;
-
-    return  glm::vec3(realpos.x * speed, realpos.y * speed, 1.0) ;//* glm::vec3(speed);
+    glm::vec3 ray_nds = glm::vec3(x, y, z);
+    glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, 1.0f, 1.0f);
+    glm::vec4 ray_eye = glm::inverse(Gfx::Renderer::GetInstance()->GetProjection() ) * ray_clip;
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, ray_eye.z, 0.0f);
+    glm::vec4 inv_ray_wor = (glm::inverse(Gfx::Renderer::GetInstance()->GetView()) * ray_eye);
+    glm::vec3 ray_wor = glm::vec3(inv_ray_wor.x, inv_ray_wor.y, inv_ray_wor.z);
+    ray_wor = glm::normalize(ray_wor);
+    return ray_wor;
 }
 
 void Keeper::Npc::Update()
@@ -48,20 +49,23 @@ void Keeper::Npc::Update()
    if (GizmoHandle && Core::WindowManager::GetInstance()->IsMousePressed() && Selected) {
         Vector2<int> mouse = Core::WindowManager::GetInstance()->GetMousePos();
         Vector2<int> dimensions = Core::WindowManager::GetInstance()->GetScreenResolution();
-
-        glm::vec3 newpos = UnprojectMouse({ mouse.x, mouse.y }, { dimensions.x, dimensions.y }, {Position.x, Position.y, Position.z});
-       
+        
+        glm::vec3 newpos = ProjectMouse(mouse.x, mouse.y, dimensions.x, dimensions.y) ;
+        float t = 1.0;
+        glm::vec3 worldpos =glm::normalize(Gfx::Renderer::GetInstance()->GetCameraPos()) + t * newpos;
+        
+        float length = glm::length(glm::normalize(glm::vec3(Position.x, Position.y, Position.z) - Gfx::Renderer::GetInstance()->GetCameraPos()));
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Y) {
-            Position.y += newpos.y * 1.2;
+            Position.y += worldpos.y * length;
             GizmoHandle->SetSelected(true);
         }
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::X) {
-            Position.x += newpos.x * 1.2;
+            Position.x += worldpos.x * length;
             GizmoHandle->SetSelected(true);
         }
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Z) {
-            Position.z += newpos.y * 1.2;
+            Position.z += (worldpos.y / worldpos.x) * length;
             GizmoHandle->SetSelected(true);
         }
-    } 
+    }
 }

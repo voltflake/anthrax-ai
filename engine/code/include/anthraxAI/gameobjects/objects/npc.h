@@ -2,6 +2,7 @@
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
+#include "glm/fwd.hpp"
 
 namespace Keeper 
 {

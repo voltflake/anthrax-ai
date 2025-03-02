@@ -88,7 +88,7 @@ namespace Keeper {
         private:
             std::string ParsedID = "";
             std::vector<std::string> EmptyAnimations;
-            int UniqueID = 0;
+            int UniqueID = 1;
             inline static std::atomic_int IDCounter = 1;
     };
     

@@ -287,45 +287,48 @@ void Gfx::Renderer::PrepareStorageBuffer()
     
     //for (int i = 0; i < MAX_INSTANCES; i++) {
    
+    
+    int selectedID = -1;
+    // TODO: improve pressision
+   // printf("--------------------\n");
+	if (!Core::WindowManager::GetInstance()->IsMouseSelected()) {
     void* storage;
     VkDeviceSize storagesize = sizeof(uint32_t) * DEPTH_ARRAY_SCALE;
     vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), 0, storagesize, 0, (void**)&storage);
-    uint32_t* u = static_cast<uint32_t*>(storage);
 
-    int selectedID = -1;
-    // TODO: improve pressision
-    //printf("--------------------\n");
-	if (Core::WindowManager::GetInstance()->IsMouseSelected()) {
+    uint32_t* u = static_cast<uint32_t*>(storage);
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
         if (u[i] != 0) {
             selectedID = u[i];
 			Core::Scene::GetInstance()->SetSelectedID(selectedID);
-            // printf("[%d][%d] \n ",i, u[i]);
-    		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
-			memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
-			vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
-				Core::WindowManager::GetInstance()->ReleaseMouseSelected();
+           //printf("[%d][%d] \n ",i, u[i]);
+			/* 		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};*/
+			/*memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));*/
+			/*vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());*/
+				
 
-            return;
+            break;
         }
     }
 	
 
-    if (selectedID == -1) {
+		  if (selectedID == -1) {
 		Core::Scene::GetInstance()->SetSelectedID(0);
-   // printf("-----|%d|\n\n", selectedID);
+		  //printf("-----|%d|\n\n", selectedID);
 
-    }
+		  }
+    //Core::WindowManager::GetInstance()->ReleaseMouseSelected();
+
+    uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
+    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
+    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
 
 	}
     
 
    // printf("-----|%d|---\n", Core::Scene::GetInstance()->GetSelectedID());
 	//}
-		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
-    memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
-    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
-
+		
     //printf("\n\n");
    
     

@@ -32,13 +32,13 @@ ID: anim
 Position:
 x: 0.000000
 y: 2.000000
-z: 0.000000
+z: 11.851319
 Material:
 name: models
 frag: model.frag
 vert: model.vert
 Texture:
-name: placeholder.jpg
+name: dummy.png
 Model:
 name: Defeated.dae
 Animation:

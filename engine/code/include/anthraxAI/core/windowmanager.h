@@ -44,6 +44,7 @@ namespace Core
         Vector2<int> Position = { 0, 0};
         Vector2<int> Delta = { 0, 0};
         Vector2<int> Begin = { 0, 0};
+        Vector2<int> BeginPress = { 0, 0};
         Vector2<int> Event = { 0, 0};
         bool Pressed = false;
         bool Selected = false;
@@ -79,6 +80,7 @@ namespace Core
 
             Vector2<int> GetMousePos() const { return Mouse.Position; }
             Vector2<int> GetMouseBegin() const { return Mouse.Begin; }
+            Vector2<int> GetMouseBeginPress() const { return Mouse.BeginPress; }
             Vector2<int> GetMouseDelta() const { return Mouse.Delta; }
             bool IsMousePressed() const { return Mouse.Pressed; }
             bool IsMouseSelected() const { return Mouse.Selected; }
@@ -98,7 +100,7 @@ namespace Core
         private:
             int Event;
             MouseInfo Mouse;
-            Vector2<int> Extents = { 1000, 800 };
+            Vector2<int> Extents = { 800, 800 };
             Vector2<int> OnResizeExtents;
             
             void Events();

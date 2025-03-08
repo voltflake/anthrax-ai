@@ -120,7 +120,7 @@ void Core::Scene::Init()
     ParseSceneNames();  
 
     GameObjects = new Keeper::Base;
-    GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {0.0f, 0.0f, 3.0f}));
+    GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {1.0f, 1.0f, 3.0f}));
     EditorCamera = reinterpret_cast<Keeper::Camera*>(*(GameObjects->Get(Keeper::Type::CAMERA).begin()));
 
 }
@@ -151,7 +151,7 @@ void Core::Scene::ReloadResources()
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Z), Keeper::Gizmo::Type::Z));
-    EditorCamera->SetPosition({0.0f, 0.0f, 3.0f});
+    EditorCamera->SetPosition({0.0f, 0.0f, 0.0f});
 
     Gfx::Vulkan::GetInstance()->ReloadResources();
     Core::Audio::GetInstance()->ResetState();

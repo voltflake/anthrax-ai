@@ -50,6 +50,8 @@ void Keeper::Camera::UpdateDirection()
 
         Rotation = glm::rotate(glm::mat4(1.0), -yaw, glm::vec3(0.f, 1.f, 0.f));
         Rotation = glm::rotate(Rotation, -pitch, Right);
+        Yaw = yaw;
+        Pitch = pitch;
     }
     Direction = glm::normalize(glm::mat3(Rotation) * Direction);
     Up = glm::normalize(glm::mat3(Rotation) * Up);

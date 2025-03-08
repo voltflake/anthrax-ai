@@ -40,6 +40,8 @@ namespace Keeper
             Keeper::Type ObjectType = Type::NPC;
             
             Vector3<float> Position;
+
+    bool ResetMouse = false;
            
             std::string ParsedID = ""; 
             std::string Vertex; 
@@ -51,6 +53,7 @@ namespace Keeper
             bool Selected = false;
             bool IsAnimated = false;
 
+   bool reset = true;
             std::vector<std::string> Animations;
             
             Keeper::Gizmo* GizmoHandle = nullptr;

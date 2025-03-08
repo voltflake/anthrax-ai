@@ -46,7 +46,7 @@ void main()
     float lineardepth = clamp(LinearDepth(clippos, proj, view), 0, 1);
     float fading = smoothstep(1, 0, lineardepth);
 
-    outfragcolor.rgba = (grid(clippos, 1, 1, vec3(0.6, 0.6, 0.6))).rgba;
+    outfragcolor.rgba = (grid(clippos, 1, 1, vec3(0.4, 0.4, 0.4))).rgba;
     outfragcolor.rgba += (grid(clippos, 10, 0.2, vec3(0.005, 0.005, 0.005))).rgba;
     outfragcolor.a *= fading;
 }

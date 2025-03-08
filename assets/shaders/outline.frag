@@ -4,6 +4,7 @@
 #include "defines/defines.h"
 
 #define LINE_WEIGHT 2.5
+#
 void main()
 {
     if (inpos.x >= 0.996 || inpos.y <= -0.996) {
@@ -37,9 +38,9 @@ void main()
     delta = max(delta, dTR);
 
     vec4 outline = vec4(delta, delta, delta, 1.0);
-    
     if (delta <= 0.0) {
       discard;
     }
-    outfragcolor = outline;
+
+    outfragcolor = outline ;
 }

@@ -363,6 +363,7 @@ void Core::WindowManager::ProcessEvents()
             Mouse.Pressed = true;
             Mouse.Selected = true;
             Mouse.Begin = Mouse.Event;
+            Mouse.BeginPress = Mouse.Event;
             Utils::ClearBit(&Event, WINDOW_EVENT_MOUSE_PRESSED);
         }
         if (Utils::IsBitSet(Event,  WINDOW_EVENT_MOUSE_MOVE) && Mouse.Pressed) {

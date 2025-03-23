@@ -100,7 +100,7 @@ namespace Core
         private:
             int Event;
             MouseInfo Mouse;
-            Vector2<int> Extents = { 800, 800 };
+            Vector2<int> Extents = { 1000, 1000 };
             Vector2<int> OnResizeExtents;
             
             void Events();

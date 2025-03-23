@@ -28,6 +28,7 @@ namespace UI
         TREE,
         IMAGE,
         SLIDER,
+        DEBUG_IMAGE,
     };
    
     class Element
@@ -140,7 +141,8 @@ namespace Core
             void InitUIElements();
             void Render();
             void UpdateFrame();
-            
+            void SetDebugRT(const std::string& rt) { DebugRT = rt; }
+
             void Add(UI::Element tab, const UI::Element& element) { UITabs[tab].emplace_back(element); }
             void Add(const std::string& scene, const UI::Window& window) { UIWindows[scene].emplace_back(window); }
             void Add(const std::string& scene, const UI::Element& element) { UIElements[scene].emplace_back(element); }
@@ -160,6 +162,7 @@ namespace Core
         private:
             Keeper::Objects* ParseObjectID(const std::string& id);
             void Image(UI::Element& element);
+            void DebugImage(UI::Element& element);
             void Combo(UI::Element& element);
             void Tree(UI::Element& element); 
             void ListBox(UI::Element& element);
@@ -176,5 +179,7 @@ namespace Core
             bool TextureUpdate = false;
             bool IsDisplayInReset = false;
             bool Initialized = false;
+
+            std::string DebugRT;
     };
 }

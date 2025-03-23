@@ -9,6 +9,7 @@
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/vkpipeline.h"
+#include <vulkan/vulkan_core.h>
 
 namespace Gfx
 {
@@ -25,8 +26,11 @@ namespace Gfx
 
             VkInstance GetVkInstance() const { return Instance; }
             bool IsValidationLayersOn() const { return ValidationLayersOn; }
-
+            
+            void SetRTDebugName(const std::string& name, VkImage image) {Debug.SetRTName(name, image); };
             void SetDebugName(VkDebugUtilsObjectNameInfoEXT info) { Debug.SetName(info); }
+            void SetDebugRenderName(VkCommandBuffer cmd, VkDebugUtilsLabelEXT* info) { Debug.SetRenderName(cmd,info); }
+            void EndDebugRenderName(VkCommandBuffer cmd) { Debug.EndRenderName(cmd); }
 
         private:
             VkDebug Debug;

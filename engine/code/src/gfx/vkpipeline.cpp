@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkpipeline.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkmesh.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gfx/vkdevice.h"
@@ -6,6 +7,7 @@
 #include "anthraxAI/core/deletor.h"
 #include <cstdio>
 #include <string>
+#include <vulkan/vulkan_core.h>
 
 VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo() {
 
@@ -185,17 +187,40 @@ void Gfx::Pipeline::CompileShader(const std::string& name, shaderc_shader_kind k
 	data = std::string(std::string((const char*)module.cbegin(), (const char*)module.cend()));
 }
 
+void Gfx::Pipeline::BuildMaterial(const std::string& material, VkShaderModule* vertexshader, const std::string& vertname, VkShaderModule* fragshader,  const std::string& fragname, Gfx::RenderTargetsList id)
+{ 
+    if (!ShaderStages.empty()) {
+		ShaderStages.clear();
+		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), *vertexshader, nullptr);
+		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), *fragshader, nullptr);
+	}
+
+    std::string shaderbuf;
+    CompileShader(fragname, shaderc_glsl_fragment_shader, shaderbuf);
+	LoadShader(shaderbuf, fragshader);
+	shaderbuf.clear();
+	CompileShader(vertname, shaderc_glsl_vertex_shader, shaderbuf);
+	LoadShader(shaderbuf, vertexshader);
+	shaderbuf.clear();
+
+    ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, *vertexshader));
+    ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, *fragshader));
+    Setup(id);
+    CreateMaterial(Pipeline, PipelineLayout, material);
+
+}
+
 void Gfx::Pipeline::Build() 
 {
     if (!VertexDescription.Bindings.empty()) {
         VertexDescription.Bindings.clear();
         VertexDescription.Attributes.clear();
     }
-    Gfx::AttachmentFlags mainflag = Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR;
-    Gfx::AttachmentFlags maskflag = Gfx::AttachmentFlags::RENDER_ATTACHMENT_MASK;
+    Gfx::RenderTargetsList main_rt = Gfx::RT_MAIN_COLOR;
+    Gfx::RenderTargetsList albedo_rt = Gfx::RT_ALBEDO;
+    Gfx::RenderTargetsList mask_rt = Gfx::RT_MASK;
 
-	VkShaderModule fragshader;
-	VkShaderModule vertexshader;
+	
 
     std::map<std::string, VkShaderModule> fragmap;
     std::map<std::string, VkShaderModule> vertmap;
@@ -231,8 +256,10 @@ void Gfx::Pipeline::Build()
 	Multisampling = MultiSamplingCreateInfo();
 	ColorBlendAttachment = ColorBlendAttachmentCreateInfo();
 	DepthStencil = DepthStencilCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
-
-	std::string shaderbuf;
+    
+    VkShaderModule fragshader;
+	VkShaderModule vertexshader;
+    std::string shaderbuf;
 
     Core::Scene* scene = Core::Scene::GetInstance();
     for (auto& it : scene->GetGameObjects()->GetObjects()) {
@@ -245,139 +272,69 @@ void Gfx::Pipeline::Build()
             std::string vert = "./shaders/" + info->GetVertexName();
             
             if (fragmap.find(frag) != fragmap.end() && vertmap.find(vert) != vertmap.end()) {
-                Setup(mainflag);
+                Setup(main_rt);
                 CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
             }
             else {
-                if (!ShaderStages.empty()) {
-                    ShaderStages.clear();
-                    vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-                    vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-                }
-                CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
-			    LoadShader(shaderbuf, &fragshader);
-			    shaderbuf.clear();
-			    CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
-			    LoadShader(shaderbuf, &vertexshader);
-			    shaderbuf.clear();
-
-                ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-                ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-                Setup(mainflag);
-                CreateMaterial(Pipeline, PipelineLayout, info->GetMaterialName());
-            }
+                BuildMaterial(info->GetMaterialName(), &vertexshader, vert, &fragshader, frag, main_rt);
+	        }	
         }
     }
 
 // intro
-    if (!ShaderStages.empty()) {
-		ShaderStages.clear();
-		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-		vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	}
-
-	std::string buf;
-	CompileShader("./shaders/intro.frag", shaderc_glsl_fragment_shader, buf);
-	LoadShader(buf, &fragshader);
-	buf.clear();
-	CompileShader("./shaders/sprite.vert", shaderc_glsl_vertex_shader, buf);
-	LoadShader(buf, &vertexshader);
-
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
     
 	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-	
-	Setup(mainflag);
-	CreateMaterial(Pipeline, PipelineLayout, "intro");
+    BuildMaterial("intro", &vertexshader, "./shaders/sprite.vert", &fragshader, "./shaders/intro.frag", main_rt);
 
 //grid
-    ShaderStages.clear();
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	std::string frag = "./shaders/grid.frag";
-    std::string vert = "./shaders/grid.vert";
-	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
-	LoadShader(shaderbuf, &fragshader);
-	shaderbuf.clear();
-	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
-	LoadShader(shaderbuf, &vertexshader);
-	shaderbuf.clear();
-	
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-    
 	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-	
-	Setup(mainflag);
-	CreateMaterial(Pipeline, PipelineLayout, "grid");
+	std::string frag = "./shaders/grid.frag";
+	std::string vert = "./shaders/grid.vert";
+    BuildMaterial("grid", &vertexshader, vert, &fragshader, frag, main_rt);
 
 // mask
-    ShaderStages.clear();
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 	frag = "./shaders/mask.frag";
     vert = "./shaders/model.vert";
-	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
-	LoadShader(shaderbuf, &fragshader);
-	shaderbuf.clear();
-	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
-	LoadShader(shaderbuf, &vertexshader);
-	shaderbuf.clear();
+    BuildMaterial("mask", &vertexshader, vert, &fragshader, frag, mask_rt);
 	
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-    
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-	
-	Setup(maskflag);
-	CreateMaterial(Pipeline, PipelineLayout, "mask");
-
 // outline
-    ShaderStages.clear();
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
-	
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
 	frag = "./shaders/outline.frag";
     vert = "./shaders/outline.vert";
-	CompileShader(frag, shaderc_glsl_fragment_shader, shaderbuf);
-	LoadShader(shaderbuf, &fragshader);
-	shaderbuf.clear();
-	CompileShader(vert, shaderc_glsl_vertex_shader, shaderbuf);
-	LoadShader(shaderbuf, &vertexshader);
-	shaderbuf.clear();
-	
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_VERTEX_BIT, vertexshader));
-	ShaderStages.push_back(PipelineShaderCreateinfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragshader));
-    
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
-	
-	Setup(mainflag);
-	CreateMaterial(Pipeline, PipelineLayout, "outline");
+    BuildMaterial("outline", &vertexshader, vert, &fragshader, frag, main_rt);
 
-	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
+//gbuffer
+    VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+    frag = "./shaders/gbuffer.frag";
+    vert = "./shaders/model.vert";
+    BuildMaterial("gbuffer", &vertexshader, vert, &fragshader, frag, albedo_rt);
+	
+
+    vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), vertexshader, nullptr);
 	vkDestroyShaderModule(Gfx::Device::GetInstance()->GetDevice(), fragshader, nullptr);
     ShaderStages.clear();
-
 }
 
-void Gfx::Pipeline::Setup(Gfx::AttachmentFlags flags) {
+void Gfx::Pipeline::Setup(Gfx::RenderTargetsList id) {
 
-	VkFormat format = VK_FORMAT_R16G16B16A16_SFLOAT;
-    if ((flags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {
-        format = *(Gfx::Device::GetInstance()->GetSwapchainFormat());
-    }
-    else {
-        format = Gfx::Renderer::GetInstance()->GetRTFormat(flags);
-    }
-	VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
+	VkFormat format;
+    format = Gfx::Renderer::GetInstance()->GetRT(id)->GetFormat();
+	
+    VkFormat formats3[3] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM };
+    VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
     VkFormat formats[1] = { format };
 
 	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo{};
     pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    pipelineRenderingCreateInfo.colorAttachmentCount = 1;
-    pipelineRenderingCreateInfo.pColorAttachmentFormats = formats;
+    if (id == Gfx::RT_ALBEDO) {
+        pipelineRenderingCreateInfo.colorAttachmentCount = 3;
+        pipelineRenderingCreateInfo.pColorAttachmentFormats = formats3;
+    }
+    else {
+        pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+        pipelineRenderingCreateInfo.pColorAttachmentFormats = formats;
+    }
     pipelineRenderingCreateInfo.depthAttachmentFormat = depthformat;
 
 	VkPipelineViewportStateCreateInfo viewportstate = {};
@@ -389,17 +346,39 @@ void Gfx::Pipeline::Setup(Gfx::AttachmentFlags flags) {
 	viewportstate.scissorCount = 1;
 	viewportstate.pScissors = &Scissor;
 
+
+    std::vector<VkPipelineColorBlendAttachmentState> blendAttachmentStates;
+    VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachment.blendEnable = VK_FALSE;
+	colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+	colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;// VK_BLEND_FACTOR_SRC_ALPHA;
+	colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;//_MINUS_SRC_ALPHA;
+	colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
 	VkPipelineColorBlendStateCreateInfo colorblending = {};
 	colorblending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 	colorblending.pNext = nullptr;
 	colorblending.logicOpEnable = VK_FALSE;
 	colorblending.logicOp = VK_LOGIC_OP_COPY;
-	colorblending.attachmentCount = 1;
-	colorblending.pAttachments = &ColorBlendAttachment;
-	colorblending.blendConstants[0] = 1.f;
-	colorblending.blendConstants[1] = 1.f;
-	colorblending.blendConstants[2] = 1.f;
-	colorblending.blendConstants[3] = 1.f;
+	colorblending.attachmentCount = id == Gfx::RT_ALBEDO ? 3 : 1;
+    if (id == Gfx::RT_ALBEDO) {
+        blendAttachmentStates.reserve(colorblending.attachmentCount);
+        for (int i = 0; i < colorblending.attachmentCount; i++) {
+            blendAttachmentStates.push_back(colorBlendAttachment);
+        }
+        colorblending.pAttachments = blendAttachmentStates.data();
+    }
+    else {
+    	colorblending.pAttachments = &ColorBlendAttachment;
+    	colorblending.blendConstants[0] = 1.f;
+    	colorblending.blendConstants[1] = 1.f;
+    	colorblending.blendConstants[2] = 1.f;
+    	colorblending.blendConstants[3] = 1.f;
+    }
 
 	VkGraphicsPipelineCreateInfo pipelineinfo = {};
 	pipelineinfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

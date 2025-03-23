@@ -143,7 +143,36 @@ void Gfx::CommandBuffer::MemoryBarrier(VkImage image, VkImageLayout oldlayout, V
 	vkCmdPipelineBarrier(cmd, srcstagemask, dststagemask, 0, 0, nullptr, 0, nullptr, 1, &membarrier);
 }
 
-const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<RenderingAttachmentInfo>& attachmentinfo, Vector2<int> extents)
+VkRenderingAttachmentInfoKHR Gfx::CommandBuffer::GetAttachmentInfo(VkImageView imageview, bool iscolor, AttachmentRules loadop)
+{
+    VkRenderingAttachmentInfoKHR info = {};
+	VkClearValue clearvalue;
+    if (iscolor) {
+		clearvalue.color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+        info.pNext = nullptr;        
+        info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+        info.imageView = imageview;
+        info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        info.resolveMode = VK_RESOLVE_MODE_NONE;
+        info.loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+        info.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        info.clearValue = clearvalue;
+	}
+    else {
+		clearvalue.depthStencil = {1.0f, 0};
+
+		info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+		info.imageView = imageview;
+		info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		info.resolveMode = VK_RESOLVE_MODE_NONE;
+		info.loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+		info.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		info.clearValue = clearvalue;
+	}
+	return info;
+}
+
+const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<RenderingAttachmentInfo>& attachmentinfo, std::vector<VkRenderingAttachmentInfoKHR>& colors, VkRenderingAttachmentInfoKHR& depthinfo, Vector2<int> extents)
 {
 	range.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
 	range.baseMipLevel   = 0;
@@ -160,21 +189,22 @@ const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<Render
 		.renderArea = renderarea,
 		.layerCount = 1,
 	};
-
-	int colorattachmantcount = 0;
-	for (RenderingAttachmentInfo& info : attachmentinfo) {
+    
+    colors.reserve(attachmentinfo.size());
+    for (RenderingAttachmentInfo& info : attachmentinfo) {
 		if (info.IsDepth) {
 			MemoryBarrier(info.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, depthrange);
-			renderinfo.pDepthAttachment = info.Info;
+			depthinfo = GetAttachmentInfo(info.ImageView, false, info.Rules);
+            depthinfo.imageView = info.ImageView;
+            renderinfo.pDepthAttachment = &depthinfo;
 		}
 		else {
 			MemoryBarrier(info.Image, info.Layout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, range);
-            //info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			colorattachmantcount++;
-			renderinfo.colorAttachmentCount = colorattachmantcount;
-			renderinfo.pColorAttachments = info.Info;
+            colors.emplace_back(GetAttachmentInfo(info.ImageView, true, info.Rules));
 		}
 	}
+    renderinfo.colorAttachmentCount = colors.size();
+	renderinfo.pColorAttachments = (colors.data());
 	return renderinfo;
 }
 

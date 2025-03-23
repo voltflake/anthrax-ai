@@ -3,12 +3,14 @@
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
 #include "anthraxAI/gfx/vkdefines.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 
 namespace Gfx
 {
     struct RenderingAttachmentInfo {
-        VkRenderingAttachmentInfoKHR* Info;
+        Gfx::AttachmentRules Rules;
         VkImage Image;
+        VkImageView ImageView;
         VkImageLayout Layout = VK_IMAGE_LAYOUT_UNDEFINED;
         bool IsDepth;
     };
@@ -31,11 +33,13 @@ namespace Gfx
             VkPresentInfoKHR PresentInfo(VkSwapchainKHR* swapchain, VkSemaphore* rendersem, uint32_t* swapchind);
             VkResult Present(VkQueue queue, VkPresentInfoKHR prinfo);
 
-            // const VkRenderingInfoKHR GetRenderingInfo(VkImage mainimage, VkImage depthimage, VkRenderingAttachmentInfo* color, VkRenderingAttachmentInfo* depth, Vector2<int> extents);
-            const VkRenderingInfoKHR GetRenderingInfo(std::vector<RenderingAttachmentInfo>& attachmentinfo, Vector2<int> extents);
+            VkRenderingAttachmentInfoKHR GetAttachmentInfo(VkImageView imageview, bool iscolor, Gfx::AttachmentRules loadop);
+            const VkRenderingInfoKHR GetRenderingInfo(std::vector<RenderingAttachmentInfo>& attachmentinfo, std::vector<VkRenderingAttachmentInfoKHR>& colors, VkRenderingAttachmentInfoKHR& depthinfo, Vector2<int> extents);
 
             void MemoryBarrier(VkImage image, VkImageLayout oldlayout, VkImageLayout newlayout, VkImageSubresourceRange range);
             void CopyImage(VkImage src, Vector2<int> srcsize, VkImageLayout srcoldlayout, VkImageLayout srcnewlayout, VkImage dst, Vector2<int> dstsize, VkImageLayout dstoldlayout, VkImageLayout dstnewlayout);
+
+            void SetRange(VkImageSubresourceRange r) { range = r;} 
         private:
         	VkImageSubresourceRange range{};
 

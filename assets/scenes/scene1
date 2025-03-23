@@ -2,29 +2,29 @@ Scene: models
 Object:
 ID: monkey
 Position:
-x: 1.681950
-y: 1.000000
-z: 3.000000
-Material:
-name: models
-frag: model.frag
-vert: model.vert
-Texture:
-name: engine.png
-Model:
-name: monkeytextured.obj
-Object:
-ID: cube
-Position:
-x: 9.181776
-y: 2.000000
-z: 5.000000
+x: -0.054349
+y: 0.000000
+z: 0.000000
 Material:
 name: models
 frag: model.frag
 vert: model.vert
 Texture:
 name: zeroone.png
+Model:
+name: monkeytextured.obj
+Object:
+ID: cube
+Position:
+x: 9.595952
+y: -0.160969
+z: 3.724495
+Material:
+name: models
+frag: model.frag
+vert: model.vert
+Texture:
+name: kote-v-bote.jpg
 Model:
 name: cube.obj
 Object:
@@ -38,7 +38,7 @@ name: models
 frag: model.frag
 vert: model.vert
 Texture:
-name: zeroone.png
+name: engine.png
 Model:
 name: Defeated.dae
 Animation:

@@ -33,7 +33,7 @@ namespace Gfx
     {
         public:
             Material* GetMaterial(const std::string& name);
-            void Build();
+            void Build();        
 
             void CompileShader(const std::string& name, shaderc_shader_kind kind, std::string& data);
 
@@ -52,11 +52,12 @@ namespace Gfx
             VkPipelineMultisampleStateCreateInfo 	Multisampling;
             VkPipelineDepthStencilStateCreateInfo 	DepthStencil;
 
+            void BuildMaterial(const std::string& material, VkShaderModule* vertexshader, const std::string& vertname, VkShaderModule* fragshader, const std::string& fragname, Gfx::RenderTargetsList id);
             bool LoadShader(const std::string& buffer, VkShaderModule* outshadermodule);
 
             bool LoadShader(const char* filepath, VkShaderModule* outshadermodule);
             Material* CreateMaterial(VkPipeline pipelinew, VkPipelineLayout layout, const std::string& name);
-            void Setup(Gfx::AttachmentFlags flags);
+            void Setup(Gfx::RenderTargetsList id);
             void GetVertexDescription();
             VkPipelineVertexInputStateCreateInfo VertexInputStageCreateInfo();
 

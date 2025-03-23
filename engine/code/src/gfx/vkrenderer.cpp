@@ -16,6 +16,8 @@
 #include <cstdio>
 #include <cstring>
 #include <sys/types.h>
+#include <vector>
+#include <vulkan/vulkan_core.h>
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -105,49 +107,48 @@ void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 	}
 }
 
-VkFormat Gfx::Renderer::GetRTFormat(Gfx::AttachmentFlags flag)
+void Gfx::Renderer::EndRenderName() 
+{ 
+    Gfx::Vulkan::GetInstance()->EndDebugRenderName(Cmd.GetCmd()); 
+}
+
+void Gfx::Renderer::DebugRenderName(const std::string& str)
 {
-    if ((flag & Gfx::RENDER_ATTACHMENT_MASK) == Gfx::RENDER_ATTACHMENT_MASK) {
-        return MaskRT->GetFormat();
+    static float r, g, b = 0.0f;
+    static bool r_passed, g_passed, b_passed = false;
+
+    if (!r_passed) {
+        r += 0.5f;
+        g += 0.2f;
+        b += 0.2f;
+        r_passed = true;
+        b_passed = false;
+        g_passed = false;
     }
-    return MainRT->GetFormat();
-}
+    else if (!b_passed) {
+        b += 0.5f;
+        r += 0.2f;
+        g += 0.2f;
+        b_passed = true;
+    }
+    else if (!g_passed) {
+        g += 0.5f;
+        r += 0.2f;
+        b += 0.2f;
+        g_passed = true;
+        r_passed = false;
+    }
+    r = r >= 1.0f ? 0.0 : r;
+    b = b >= 1.0f ? 0.0 : b;
+    g = g >= 1.0f ? 0.0 : g;
 
-VkImageView Gfx::Renderer::GetRTImageView(AttachmentFlags flag)
-{
-	if (flag == Gfx::RENDER_ATTACHMENT_COLOR) {
-        return MainRT->GetImageView();
-    } 
-    return MaskRT->GetImageView();
-}
+    VkDebugUtilsLabelEXT label = {};
+    label.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
+    float color[4] = { r, g, b, 1.0f };
+    memcpy(label.color, &color[0], sizeof(float) * 4);
+    label.pLabelName = str.c_str();
+    Gfx::Vulkan::GetInstance()->SetDebugRenderName(Cmd.GetCmd(), &label); 
 
-VkRenderingAttachmentInfoKHR* Gfx::Renderer::GetAttachmentInfo(AttachmentFlags flag, AttachmentRules loadop)
-{
-	VkClearValue clearvalue;
-	if (flag == Gfx::RENDER_ATTACHMENT_COLOR || flag == Gfx::RENDER_ATTACHMENT_MASK) {
-		clearvalue.color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
-
-        AttachmentInfos[flag].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-        AttachmentInfos[flag].imageView = GetRTImageView(flag);
-        AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
-        AttachmentInfos[flag].loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
-        AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        AttachmentInfos[flag].clearValue = clearvalue;
-
-	}
-	if (flag == Gfx::RENDER_ATTACHMENT_DEPTH) {
-		clearvalue.depthStencil = {1.0f, 0};
-
-		AttachmentInfos[flag].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-		AttachmentInfos[flag].imageView = DepthRT->GetImageView();
-		AttachmentInfos[flag].imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-		AttachmentInfos[flag].resolveMode = VK_RESOLVE_MODE_NONE;
-		AttachmentInfos[flag].loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
-		AttachmentInfos[flag].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		AttachmentInfos[flag].clearValue = clearvalue;
-	}
-	return &AttachmentInfos[flag];
 }
 
 void Gfx::Renderer::CheckTmpBindings(Gfx::MeshInfo* mesh, Gfx::Material* material, bool* bindpipe, bool* bindindex)
@@ -182,37 +183,49 @@ void Gfx::Renderer::EndRender()
 {
     EndRendering(Cmd.GetCmd());
 }
-void Gfx::Renderer::StartRender(AttachmentFlags attachmentflags, AttachmentRules rules)
+
+void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rules)
 {
+    Gfx::RenderingAttachmentInfo info;
    	std::vector<RenderingAttachmentInfo> attachmentinfo;
-	attachmentinfo.reserve(Gfx::RENDER_ATTACHMENT_SIZE);
-	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_COLOR) == Gfx::RENDER_ATTACHMENT_COLOR) {
-		Gfx::RenderingAttachmentInfo info;
+	attachmentinfo.reserve(Gfx::RT_SIZE);
+
+	if (inputs.HasColor()) {
+        Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = false;
-		info.Image = MainRT->GetImage();
+		info.Image = GetRT(inputs.GetColor())->GetImage(); 
         if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
             info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         }
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_COLOR, rules);
+        info.ImageView = GetRT(inputs.GetColor())->GetImageView();
+        info.Rules = rules;
 		attachmentinfo.push_back(info);
-	}
-    if ((attachmentflags & Gfx::RENDER_ATTACHMENT_MASK) == Gfx::RENDER_ATTACHMENT_MASK) {
-		Gfx::RenderingAttachmentInfo info;
+    }
+    if (inputs.HasAlbedo()) {
 		info.IsDepth = false;
-		info.Image = MaskRT->GetImage();
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_MASK, rules);
-		attachmentinfo.push_back(info);
-	}
-	if ((attachmentflags & Gfx::RENDER_ATTACHMENT_DEPTH) == Gfx::RENDER_ATTACHMENT_DEPTH) {
-		Gfx::RenderingAttachmentInfo info;
+        if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
+            info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
+	    
+        for (int i = 0; i < GBUFFER_RT_SIZE; i++) {
+            Gfx::RenderTargetsList id = static_cast<Gfx::RenderTargetsList>(Gfx::RT_ALBEDO + i);
+            info.Image = GetRT(id)->GetImage();
+            info.ImageView = GetRT(id)->GetImageView();
+            attachmentinfo.push_back(info);
+        }
+    }
+	if (inputs.HasDepth()) {
+        Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = true;
-		info.Image = DepthRT->GetImage();
-		info.Info = GetAttachmentInfo(Gfx::RENDER_ATTACHMENT_DEPTH, rules);
-		attachmentinfo.push_back(info);
+		info.Image = GetRT(Gfx::RT_DEPTH)->GetImage();
+        info.ImageView = GetRT(Gfx::RT_DEPTH)->GetImageView();
+        attachmentinfo.push_back(info);
 	}
-	
-	const VkRenderingInfo renderinfo = Cmd.GetRenderingInfo(attachmentinfo, {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});// Core::WindowManager::GetInstance()->GetScreenResolution());    
-	BeginRendering(Cmd.GetCmd(), &renderinfo);
+    
+    VkRenderingAttachmentInfoKHR depthinfo = {};
+    std::vector<VkRenderingAttachmentInfoKHR> infos;
+	const VkRenderingInfo& renderinfo = Cmd.GetRenderingInfo(attachmentinfo, infos, depthinfo,  {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});
+    BeginRendering(Cmd.GetCmd(), &renderinfo);
 }
 
 void Gfx::Renderer::RenderUI()
@@ -220,10 +233,30 @@ void Gfx::Renderer::RenderUI()
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), Cmd.GetCmd());
 }
 
+void Gfx::Renderer::CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsList dst_id)
+{
+    Cmd.CopyImage(	GetRT(src_id)->GetImage(),
+					GetRT(src_id)->GetSize(),
+					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					GetRT(dst_id)->GetImage(),
+					GetRT(dst_id)->GetSize(),
+                    VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+	Cmd.MemoryBarrier(GetRT(dst_id)->GetImage(),
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
+					Cmd.GetSubresourceMainRange());
+    
+    Cmd.MemoryBarrier(GetRT(src_id)->GetImage(),
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+					Cmd.GetSubresourceMainRange());
+
+
+}
+
 void Gfx::Renderer::EndFrame()
 {
-	Cmd.CopyImage(	GetMainRT()->GetImage(),
-					GetMainRT()->GetSize(),
+	Cmd.CopyImage(	GetRT(Gfx::RT_MAIN_COLOR)->GetImage(),
+					GetRT(Gfx::RT_MAIN_COLOR)->GetSize(),
 					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 					Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
 					{(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height},
@@ -533,64 +566,119 @@ void Gfx::Renderer::CleanResources()
 	    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), list.second.GetDeviceMemory(), nullptr);
     }
     Textures.clear();
+    
+    for (int i = 0; i < Gfx::RT_SIZE; i++) {
+        if (RTs[i]) {
+            if (RTs[i]->IsSamplerSet()) {
+                vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(RTs[i]->GetSampler()), nullptr);
+            }
+            vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), RTs[i]->GetImageView(), nullptr);
+		    vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), RTs[i]->GetImage(), nullptr);
+		    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), RTs[i]->GetDeviceMemory(), nullptr);
+		    delete RTs[i];
+        }
+    }
+}
 
-	if (DepthRT) {
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetDeviceMemory(), nullptr);
-		delete DepthRT;
-	}
-	if (MainRT) {
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetDeviceMemory(), nullptr);
-		delete MainRT;
-	}
-    if (MaskRT) {
-        vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(MaskRT->GetSampler()), nullptr);
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetDeviceMemory(), nullptr);
-		delete MaskRT;
-	}
+void Gfx::Renderer::DestroyRenderTarget(Gfx::RenderTarget* rt)
+{
+    if (rt->IsSamplerSet()) {
+	    vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(rt->GetSampler()), nullptr);
+    }
+    rt->SetSampler(false);
+    vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), rt->GetImageView(), nullptr);
+	vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), rt->GetImage(), nullptr);
+	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), rt->GetDeviceMemory(), nullptr);
+	delete rt;
 }
 
 void Gfx::Renderer::CreateRenderTargets()
 {
-	if (DepthRT) {
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), DepthRT->GetDeviceMemory(), nullptr);
-		delete DepthRT;
-	}
-	DepthRT = new RenderTarget();
-	DepthRT->SetFormat(VK_FORMAT_D32_SFLOAT);
-	DepthRT->SetDepth(true);
-	DepthRT->SetDimensions({(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});//  Core::WindowManager::GetInstance()->GetScreenResolution());
-	DepthRT->CreateRenderTarget();
-	
-	if (MainRT) {
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MainRT->GetDeviceMemory(), nullptr);
-		delete MainRT;
-	}
-	MainRT = new RenderTarget(*DepthRT);
-	MainRT->SetFormat(VK_FORMAT_B8G8R8A8_SRGB);
-	MainRT->SetDepth(false);
-	MainRT->CreateRenderTarget();
+    if (RTs[Gfx::RT_DEPTH]) {
+        DestroyRenderTarget(RTs[Gfx::RT_DEPTH]);
+    }
+    RTs[Gfx::RT_DEPTH] = new RenderTarget(Gfx::RT_DEPTH);
+	RTs[Gfx::RT_DEPTH]->SetFormat(VK_FORMAT_D32_SFLOAT);
+	RTs[Gfx::RT_DEPTH]->SetDepth(true);
+	RTs[Gfx::RT_DEPTH]->SetDimensions({(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});
+    RTs[Gfx::RT_DEPTH]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_DEPTH]); 
 
-    if (MaskRT) {
-        vkDestroySampler(Gfx::Device::GetInstance()->GetDevice(), *(MaskRT->GetSampler()), nullptr);
-		vkDestroyImageView(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImageView(), nullptr);
-		vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetImage(), nullptr);
-		vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), MaskRT->GetDeviceMemory(), nullptr);
-		delete MaskRT;
-	}
-	MaskRT = new RenderTarget(*MainRT);
-    MaskRT->SetFormat(VK_FORMAT_R8_UNORM);
-    MaskRT->CreateRenderTarget();
-    CreateSampler(MaskRT);
+    if (RTs[Gfx::RT_MAIN_DEBUG]) {
+        DestroyRenderTarget(RTs[Gfx::RT_MAIN_DEBUG]);
+    }
+    RTs[Gfx::RT_MAIN_DEBUG] = new RenderTarget(*RTs[Gfx::RT_DEPTH], Gfx::RT_MAIN_DEBUG);
+	RTs[Gfx::RT_MAIN_DEBUG]->SetFormat(VK_FORMAT_B8G8R8A8_SRGB);
+	RTs[Gfx::RT_MAIN_DEBUG]->SetDepth(false);
+	RTs[Gfx::RT_MAIN_DEBUG]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_MAIN_DEBUG]);
+
+    if (RTs[Gfx::RT_MAIN_COLOR]) {
+        DestroyRenderTarget(RTs[Gfx::RT_MAIN_COLOR]);
+    }
+    RTs[Gfx::RT_MAIN_COLOR] = new RenderTarget(*RTs[Gfx::RT_DEPTH], Gfx::RT_MAIN_COLOR);
+	RTs[Gfx::RT_MAIN_COLOR]->SetFormat(VK_FORMAT_B8G8R8A8_SRGB);
+	RTs[Gfx::RT_MAIN_COLOR]->SetDepth(false);
+	RTs[Gfx::RT_MAIN_COLOR]->CreateRenderTarget();
+
+    
+    if (RTs[Gfx::RT_MASK]) {
+        DestroyRenderTarget(RTs[Gfx::RT_MASK]);
+    }
+	RTs[Gfx::RT_MASK] = new RenderTarget(*RTs[Gfx::RT_MAIN_COLOR], Gfx::RT_MASK);
+    RTs[Gfx::RT_MASK]->SetFormat(VK_FORMAT_R8_UNORM);
+    RTs[Gfx::RT_MASK]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_MASK]); 
+	
+    if (RTs[Gfx::RT_NORMAL]) {
+        DestroyRenderTarget(RTs[Gfx::RT_NORMAL]);
+    }
+    RTs[Gfx::RT_NORMAL] = new RenderTarget(*RTs[Gfx::RT_MAIN_COLOR], Gfx::RT_NORMAL);
+    RTs[Gfx::RT_NORMAL]->SetFormat(VK_FORMAT_B8G8R8A8_UNORM);
+    RTs[Gfx::RT_NORMAL]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_NORMAL]);
+    
+    if (RTs[Gfx::RT_POSITION]) {
+        DestroyRenderTarget(RTs[Gfx::RT_POSITION]);
+    }
+    RTs[Gfx::RT_POSITION] = new RenderTarget(*RTs[Gfx::RT_MAIN_COLOR], Gfx::RT_POSITION);
+    RTs[Gfx::RT_POSITION]->SetFormat(VK_FORMAT_B8G8R8A8_UNORM);
+    RTs[Gfx::RT_POSITION]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_POSITION]);
+    
+    if (RTs[Gfx::RT_ALBEDO]) {
+        DestroyRenderTarget(RTs[Gfx::RT_ALBEDO]);
+    }
+    RTs[Gfx::RT_ALBEDO] = new RenderTarget(*RTs[Gfx::RT_MAIN_COLOR], Gfx::RT_ALBEDO);
+    RTs[Gfx::RT_ALBEDO]->SetFormat(VK_FORMAT_B8G8R8A8_UNORM);
+    RTs[Gfx::RT_ALBEDO]->CreateRenderTarget();
+    CreateSampler(RTs[Gfx::RT_ALBEDO]);
+
+    CreateImGuiDescSet();
+}
+
+void Gfx::Renderer::CreateImGuiDescSet()
+{
+    if (Core::ImGuiHelper::GetInstance()->IsInit()) {
+        RTs[Gfx::RT_MAIN_DEBUG]->SetImGuiDescriptor();
+        RTs[Gfx::RT_MASK]->SetImGuiDescriptor();
+        RTs[Gfx::RT_POSITION]->SetImGuiDescriptor();
+        RTs[Gfx::RT_NORMAL]->SetImGuiDescriptor();
+        RTs[Gfx::RT_ALBEDO]->SetImGuiDescriptor();
+        RTs[Gfx::RT_DEPTH]->SetImGuiDescriptor(VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL);
+    }
+}
+
+std::vector<std::string> Gfx::Renderer::GetRTList()
+{
+    std::vector<std::string> names;
+    names.reserve(Gfx::RT_SIZE);
+    for (int i = 0; i < Gfx::RT_SIZE; i++) {
+        if (i != Gfx::RT_MAIN_COLOR) {
+            names.emplace_back(Gfx::GetValue(static_cast<Gfx::RenderTargetsList>(i)));
+        }
+    }
+    return names;
 }
 
 VkCommandPoolCreateInfo CommandPoolCreateInfo(uint32_t graphicsfamily, VkCommandPoolCreateFlags flags) {

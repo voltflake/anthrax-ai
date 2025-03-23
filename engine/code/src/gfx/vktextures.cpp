@@ -137,6 +137,7 @@ void Gfx::Renderer::CreateSampler(RenderTarget* rt)
 	samplerinfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerinfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerinfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-
+    
+    rt->SetSampler(true);
 	VK_ASSERT(vkCreateSampler(Gfx::Device::GetInstance()->GetDevice(), &samplerinfo, nullptr, rt->GetSampler()), "failed to create sampler!");
 }

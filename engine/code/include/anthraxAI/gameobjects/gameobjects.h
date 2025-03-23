@@ -43,6 +43,8 @@ namespace Keeper {
         INFO_GRID,
         INFO_MASK,
         INFO_OUTLINE,
+        INFO_GBUFFER,
+        INFO_LIGHTING,
         INFO_SIZE
     };
 

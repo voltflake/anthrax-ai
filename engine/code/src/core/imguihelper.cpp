@@ -2,6 +2,7 @@
 #include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkbase.h"
@@ -147,6 +148,8 @@ void Core::ImGuiHelper::Init()
     InitUIElements();
 
     Initialized = true;
+
+    Gfx::Renderer::GetInstance()->CreateImGuiDescSet();
 }
 
 void UI::Element::GetArg(const std::vector<std::string>& vec) 
@@ -184,6 +187,13 @@ void Core::ImGuiHelper::InitUIElements()
         Add(scenetab, UI::Element(UI::SEPARATOR, "sep"));
     }
     
+    {
+        UI::Element rendertab(UI::TAB, "Rendering");
+        Add(rendertab, UI::Element(UI::COMBO, "Render Targets", false, Gfx::Renderer::GetInstance()->GetRTList(), [](std::string tag) -> void { ImGuiHelper::GetInstance()->SetDebugRT(tag); }, true));
+        Add(rendertab, UI::Element(UI::DEBUG_IMAGE, "image", false));
+        Add(rendertab, UI::Element(UI::SEPARATOR, "sep"));
+    }
+
     {
         UI::Element audiotab(UI::TAB, "Audio");
         Add(audiotab, UI::Element(UI::COMBO, "Sounds", false, Core::Audio::GetInstance()->GetAudioNames(), [](std::string tag) -> void { Core::Audio::GetInstance()->Load(tag); }, true));
@@ -346,6 +356,39 @@ void Core::ImGuiHelper::Tree(UI::Element& element)
    
 }
 
+void Core::ImGuiHelper::DebugImage(UI::Element& element)
+{
+    ImGui::Text(element.GetLabel().c_str());
+    
+    static bool active = true;
+    if (DebugRT.empty() || DebugRT == "none") {
+        return;
+    } 
+    Gfx::RenderTargetsList id = Gfx::GetKey(DebugRT);
+    Gfx::RenderTarget* rt = Gfx::Renderer::GetInstance()->GetRT(id);
+    if (rt) {
+        active = true; 
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        const ImVec2 pos = viewport->Pos;
+        ImGui::SetNextWindowPos(ImVec2(0, viewport->GetCenter().y), 0);
+        ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_FirstUseEver);
+        ImGui::Begin(DebugRT.c_str(), &active, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings );
+        
+        if (!rt->IsDepthSet()) {
+            Gfx::Renderer::GetInstance()->Submit([&](VkCommandBuffer cmd) {
+                rt->MemoryBarrier(cmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            });
+        }
+        
+        ImGui::Image((ImTextureID)rt->GetImGuiDescriptor(), ImVec2(500, 400));
+        ImGui::End();
+
+        if (!active) {
+            DebugRT = "none";
+        }
+    }
+}
+
 void Core::ImGuiHelper::Image(UI::Element& element)
 {
     ImGui::Text(element.GetLabel().c_str());
@@ -374,6 +417,10 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
         }
         case UI::IMAGE: {
             Image(element);
+            break;
+        }
+        case UI::DEBUG_IMAGE: {
+            DebugImage(element);
             break;
         }
         case UI::COMBO: {

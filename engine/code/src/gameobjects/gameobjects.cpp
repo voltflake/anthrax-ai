@@ -5,6 +5,7 @@
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/mathdefines.h"
+#include "glm/common.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <string>
@@ -135,6 +136,17 @@ Keeper::Base::Base()
     modules.Mesh = "dummy.png";
     DefaultObjects[Infos::INFO_OUTLINE] = modules;
     DefaultObjects[Infos::INFO_MASK] = modules;
+    modules.VertexBase = false;
+    modules.Material = "gbuffer";
+    modules.Texture = "albedo";
+    modules.Mesh = "dummy.png";
+    DefaultObjects[Infos::INFO_GBUFFER] = modules;
+
+    modules.Material = "lighting";
+    modules.Texture = "main_color";
+    modules.Mesh = "dummy.png";
+    DefaultObjects[Infos::INFO_LIGHTING] = modules;
+
 }
 
 void Keeper::Base::Update()

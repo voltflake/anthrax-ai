@@ -1,9 +1,11 @@
 #include "anthraxAI/gfx/vkrendertarget.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include <cstdint>
 
-Gfx::RenderTarget::RenderTarget(const RenderTarget& rt) :
+Gfx::RenderTarget::RenderTarget(const RenderTarget& rt, uint32_t id) :
     Format(rt.Format), Dimensions(rt.Dimensions),
-    IsDepth(rt.IsDepth), IsStorage(rt.IsStorage)
+    IsDepth(rt.IsDepth), IsStorage(rt.IsStorage), ID(id)
 {
 }
 
@@ -71,7 +73,7 @@ void Gfx::RenderTarget::CreateRenderTarget()
     VkImageUsageFlags usageflags{};
     VkImageAspectFlags aspectflags{};
     if (IsDepth) {
-        usageflags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+        usageflags = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         aspectflags = VK_IMAGE_ASPECT_DEPTH_BIT;
     }
     else {
@@ -89,6 +91,8 @@ void Gfx::RenderTarget::CreateRenderTarget()
 
     VkImageViewCreateInfo imgviewinfo = ImageViewCreateInfo(Format, Image, aspectflags);
 	VK_ASSERT(vkCreateImageView(Gfx::Device::GetInstance()->GetDevice(), &imgviewinfo, nullptr, &ImageView), "failed to create RT image view!");
+
+    Gfx::Vulkan::GetInstance()->SetRTDebugName(Gfx::GetValue(static_cast<Gfx::RenderTargetsList>(ID)), Image);
 }
 
 void Gfx::RenderTarget::MemoryBarrier(VkCommandBuffer cmd, VkImageLayout oldlayout, VkImageLayout newlayout)
@@ -100,7 +104,7 @@ void Gfx::RenderTarget::MemoryBarrier(VkCommandBuffer cmd, VkImageLayout oldlayo
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.image = Image;
-    barrier.subresourceRange.aspectMask =  (newlayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;;
+    barrier.subresourceRange.aspectMask =  (oldlayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL || newlayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;;
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = 1;
     barrier.subresourceRange.baseArrayLayer = 0;

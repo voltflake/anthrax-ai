@@ -2,8 +2,10 @@
 #include "anthraxAI/core/audio.h"
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/engine.h"
+#include "anthraxAI/gamemodules/modules.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
+#include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/model.h"
@@ -16,6 +18,7 @@
 #include <thread>
 void Core::Scene::Render(Modules::Module& module)
 {
+    Gfx::Renderer::GetInstance()->DebugRenderName(module.GetTag());
     for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
         if (!obj.IsVisible) continue;
         if (module.GetTag() == "mask" && !obj.IsSelected) {
@@ -29,6 +32,7 @@ void Core::Scene::Render(Modules::Module& module)
             Gfx::Renderer::GetInstance()->Draw(obj);
         }
     }
+    Gfx::Renderer::GetInstance()->EndRenderName();
 }
 
 void Core::Scene::RenderScene(bool playmode)
@@ -41,34 +45,47 @@ void Core::Scene::RenderScene(bool playmode)
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
+            
             // objects from map
-            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
             Render(GameModules->Get(CurrentScene));
             if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
                 Render(GameModules->Get("grid"));
             }
             Gfx::Renderer::GetInstance()->EndRender();
+            Gfx::Renderer::GetInstance()->CopyImage(Gfx::RT_MAIN_COLOR, Gfx::RT_MAIN_DEBUG);
 
             // gizmo, outline
             if (playmode && HasFrameGizmo) {
                 Gfx::Renderer::GetInstance()->ResetInstanceInd();
-                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("mask").GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("mask").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
                 Render(GameModules->Get("mask"));
                 Gfx::Renderer::GetInstance()->EndRender();
+
                 
+                Gfx::Renderer::GetInstance()->ResetInstanceInd();
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+                Render(GameModules->Get("gbuffer"));
+                Gfx::Renderer::GetInstance()->EndRender();
+
+                /*Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);*/
+                /*Render(GameModules->Get("lighting"));*/
+                /*Gfx::Renderer::GetInstance()->EndRender();*/
+
+
                 if (GameModules->HasFrameOutline()) {
-                    Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
+                    Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
                     Render(GameModules->Get("outline"));
                     Gfx::Renderer::GetInstance()->EndRender();
                 }
 
-                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gizmo").GetAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gizmo").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
                 Render(GameModules->Get("gizmo"));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
 
             // ui
-            Gfx::Renderer::GetInstance()->StartRender(static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH ), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
+            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
             Gfx::Renderer::GetInstance()->RenderUI();
             Gfx::Renderer::GetInstance()->EndRender();
         }
@@ -128,11 +145,13 @@ void Core::Scene::Init()
 void Core::Scene::InitModules()
 {
     GameModules = new Modules::Base(GameObjects);
+        
+    Modules::Info info;
+    info.BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER ;
+    info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
 
-    GameModules->Populate("intro", {
-      .Attachments = Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR,
-      .BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER }, 
-      GameObjects->GetInfo(Keeper::Infos::INFO_INTRO)
+    GameModules->Populate("intro", info,
+        GameObjects->GetInfo(Keeper::Infos::INFO_INTRO)
     );
     GameModules->Update(Modules::Update::RESOURCES);
     Core::Audio::GetInstance()->Load("Anthrax_Mastered.wav");
@@ -181,41 +200,79 @@ void Core::Scene::PopulateModules()
 {
     GameModules->Clear();
     GameModules->SetCurrentScene(CurrentScene);
-
-    GameModules->Populate(CurrentScene, {
-        .Attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH),
-        .BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER },
-        [](Keeper::Type t) { return t == Keeper::CAMERA || t == Keeper::GIZMO; }  
-    );
+   
+    {
+        Modules::Info info;
+        info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+        info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
+        info.IAttachments.Add(Gfx::RT_DEPTH, true);
+        GameModules->Populate(CurrentScene, info,
+            [](Keeper::Type t) { return t == Keeper::CAMERA || t == Keeper::GIZMO; }  
+        );
+    }
     
     bool npc = GameObjects->Find(Keeper::NPC);
     HasFrameGizmo = false;
     HasFrameGrid = false;
     if (npc) {
-        GameModules->Populate("gizmo", {
-            .Attachments = Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR,
-            .BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER },
-            [](Keeper::Type t) { return t != Keeper::GIZMO; }  
-        );
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+            info.IAttachments.AddA(Gfx::RT_ALBEDO);
+            info.IAttachments.AddP(Gfx::RT_POSITION);
+            info.IAttachments.AddN(Gfx::RT_NORMAL);
+
+            GameModules->Populate("gbuffer", info,
+                GameObjects->GetInfo(Keeper::Infos::INFO_GBUFFER)
+            );
+        }
+        /*{*/
+        /*    Modules::Info info;*/
+        /*    info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;*/
+        /*    info.IAttachments.Add(Gfx::RT_MAIN_COLOR);*/
+        /**/
+        /*    GameModules->Populate("lighting", info,*/
+        /*        GameObjects->GetInfo(Keeper::Infos::INFO_LIGHTING)*/
+        /*    );*/
+        /*}*/
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+            info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
+
+            GameModules->Populate("gizmo", info,
+                [](Keeper::Type t) { return t != Keeper::GIZMO; }  
+            );
+        }
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER ;
+            info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
+            info.IAttachments.Add(Gfx::RT_DEPTH, true);
+
+            GameModules->Populate("grid", info, 
+                GameObjects->GetInfo(Keeper::Infos::INFO_GRID)
+            );
+        }
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+            info.IAttachments.Add(Gfx::RT_MASK);
+
+            GameModules->Populate("mask", info, 
+                GameObjects->GetInfo(Keeper::Infos::INFO_MASK)
+            );
+        }
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+            info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
+            info.IAttachments.Add(Gfx::RT_DEPTH, true);
+            GameModules->Populate("outline", info, 
+                GameObjects->GetInfo(Keeper::Infos::INFO_OUTLINE)
+            ); 
+        } 
         
-        GameModules->Populate("grid", {
-            .Attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH),
-            .BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER }, 
-            GameObjects->GetInfo(Keeper::Infos::INFO_GRID)
-        );
-
-        GameModules->Populate("mask", {
-            .Attachments = Gfx::AttachmentFlags::RENDER_ATTACHMENT_MASK,
-            .BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER }, 
-            GameObjects->GetInfo(Keeper::Infos::INFO_MASK)
-        );
-
-        GameModules->Populate("outline", {
-            .Attachments = static_cast<Gfx::AttachmentFlags>(Gfx::AttachmentFlags::RENDER_ATTACHMENT_COLOR | Gfx::AttachmentFlags::RENDER_ATTACHMENT_DEPTH),
-            .BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER }, 
-            GameObjects->GetInfo(Keeper::Infos::INFO_OUTLINE)
-        ); 
-
         HasFrameGrid = true;
         HasFrameGizmo = true;
     }

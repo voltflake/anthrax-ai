@@ -1,5 +1,6 @@
 #pragma once
 
+#include "anthraxAI/gfx/vkbase.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/gfx/vkdefines.h"
@@ -22,9 +23,13 @@ namespace Gfx
 
             void CreateCommands();
             void CreateRenderTargets();
+            void DestroyRenderTarget(RenderTarget* rt);
+            void CreateImGuiDescSet();
 
             void CleanResources();
             
+            void CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsList dst_id);
+
             void CreateTextures();
             bool CreateTextureFromInfo(const std::string& texturename);
             RenderTarget CreateTexture(const std::string& path);
@@ -33,10 +38,10 @@ namespace Gfx
 
             TexturesMap GetTextureMap() const { return Textures; }
             RenderTarget* GetTexture(const std::string& path);
-            RenderTarget* GetMainRT() { return MainRT; }
-            RenderTarget* GetMaskRT() { return MaskRT; }
-            RenderTarget* GetDepthRT() { return DepthRT; }
-
+            
+            RenderTarget* GetRT(Gfx::RenderTargetsList id) const { return RTs[id]; }        
+            std::vector<std::string> GetRTList();        
+            
             void PrepareCameraBuffer(Keeper::Camera& camera);
             void PrepareInstanceBuffer();
             void GetTransforms(InstanceData* datas, Gfx::RenderObject obj, int i);
@@ -44,8 +49,6 @@ namespace Gfx
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
             
-            VkRenderingAttachmentInfoKHR* GetAttachmentInfo(AttachmentFlags flag, AttachmentRules loadop = Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
-
             void RenderUI();
 
             int GetFrameInd() { return FrameIndex; }
@@ -57,7 +60,7 @@ namespace Gfx
             bool BeginFrame();
             void EndFrame();
             void EndRender();
-            void StartRender(AttachmentFlags attachmentflags, AttachmentRules rules);
+            void StartRender(Gfx::InputAttachmens inputs, AttachmentRules rules);
 
             void Draw(Gfx::RenderObject& object);
             void DrawMeshes(Gfx::RenderObject& object);
@@ -79,19 +82,18 @@ namespace Gfx
             const glm::mat4& GetProjection() const { return CamData.proj; }
             const glm::mat4& GetView() const { return CamData.view; }
 
-            VkImageView GetRTImageView(AttachmentFlags flag);
-            VkFormat GetRTFormat(AttachmentFlags flag);
-
             void ResetInstanceInd() { InstanceIndex = 0; }
             void IncInstanceInd(int size) { InstanceIndex += size; }
 
             void SetUpdateSamplers(bool upd) { UpdateSamples = upd; }
             bool GetUpdateSamplers() const { return UpdateSamples; }
-        private:
-            RenderTarget* DepthRT;
-            RenderTarget* MainRT;
-            RenderTarget* MaskRT;
 
+            void DebugRenderName(const std::string& str);
+            void EndRenderName();
+
+            VkCommandBuffer GetCmd() { return Cmd.GetCmd(); }
+        private:
+            RenderTarget* RTs[RT_SIZE];
             TexturesMap Textures;
 	        
             StorageData StorageBuffer;
@@ -107,7 +109,7 @@ namespace Gfx
 	        int FrameIndex = 0;
             uint32_t SwapchainIndex = 0;
             
-            VkRenderingAttachmentInfoKHR AttachmentInfos[RENDER_ATTACHMENT_SIZE];
+            VkRenderingAttachmentInfoKHR AttachmentInfos[Gfx::RT_SIZE];
             PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR{VK_NULL_HANDLE};
         	PFN_vkCmdEndRenderingKHR   vkCmdEndRenderingKHR{VK_NULL_HANDLE};
 

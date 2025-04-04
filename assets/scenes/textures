@@ -6,7 +6,7 @@ name: sprites
 frag: sprite.frag
 vert: sprite.vert
 Texture:
-name: engine.png
+name: placeholder.jpg
 Object:
 ID: test1
 Material:

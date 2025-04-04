@@ -45,33 +45,35 @@ void Core::Scene::RenderScene(bool playmode)
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
-            
-            // objects from map
-            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
-            Render(GameModules->Get(CurrentScene));
-            if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
-                Render(GameModules->Get("grid"));
+            // used for intro
+            if (!HasGBuffer) {
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+                Render(GameModules->Get(CurrentScene));
+                Gfx::Renderer::GetInstance()->EndRender();
             }
+            // objects from map
+            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+            Render(GameModules->Get("gbuffer"));
             Gfx::Renderer::GetInstance()->EndRender();
-            Gfx::Renderer::GetInstance()->CopyImage(Gfx::RT_MAIN_COLOR, Gfx::RT_MAIN_DEBUG);
+            
+            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+            Render(GameModules->Get("lighting"));
+            Gfx::Renderer::GetInstance()->EndRender();
 
+            if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
+
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("grid").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
+                Render(GameModules->Get("grid"));
+                Gfx::Renderer::GetInstance()->EndRender();
+            }
+
+            Gfx::Renderer::GetInstance()->CopyImage(Gfx::RT_MAIN_COLOR, Gfx::RT_MAIN_DEBUG);
             // gizmo, outline
             if (playmode && HasFrameGizmo) {
                 Gfx::Renderer::GetInstance()->ResetInstanceInd();
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("mask").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
                 Render(GameModules->Get("mask"));
                 Gfx::Renderer::GetInstance()->EndRender();
-
-                
-                Gfx::Renderer::GetInstance()->ResetInstanceInd();
-                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
-                Render(GameModules->Get("gbuffer"));
-                Gfx::Renderer::GetInstance()->EndRender();
-
-                /*Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);*/
-                /*Render(GameModules->Get("lighting"));*/
-                /*Gfx::Renderer::GetInstance()->EndRender();*/
-
 
                 if (GameModules->HasFrameOutline()) {
                     Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD);
@@ -85,6 +87,9 @@ void Core::Scene::RenderScene(bool playmode)
             }
 
             // ui
+            if (HasGBuffer) {
+                Gfx::Renderer::GetInstance()->TransferLayoutsDebug();
+            }
             Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), static_cast<Gfx::AttachmentRules>(Gfx::AttachmentRules::ATTACHMENT_RULE_LOAD));
             Gfx::Renderer::GetInstance()->RenderUI();
             Gfx::Renderer::GetInstance()->EndRender();
@@ -214,6 +219,7 @@ void Core::Scene::PopulateModules()
     bool npc = GameObjects->Find(Keeper::NPC);
     HasFrameGizmo = false;
     HasFrameGrid = false;
+    HasGBuffer = false;
     if (npc) {
         {
             Modules::Info info;
@@ -221,20 +227,21 @@ void Core::Scene::PopulateModules()
             info.IAttachments.AddA(Gfx::RT_ALBEDO);
             info.IAttachments.AddP(Gfx::RT_POSITION);
             info.IAttachments.AddN(Gfx::RT_NORMAL);
-
+            info.IAttachments.Add(Gfx::RT_DEPTH, true);
             GameModules->Populate("gbuffer", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_GBUFFER)
             );
+            HasGBuffer = true;
         }
-        /*{*/
-        /*    Modules::Info info;*/
-        /*    info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;*/
-        /*    info.IAttachments.Add(Gfx::RT_MAIN_COLOR);*/
-        /**/
-        /*    GameModules->Populate("lighting", info,*/
-        /*        GameObjects->GetInfo(Keeper::Infos::INFO_LIGHTING)*/
-        /*    );*/
-        /*}*/
+        {
+            Modules::Info info;
+            info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
+            info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
+           // info.IAttachments.Add(Gfx::RT_DEPTH, true);
+            GameModules->Populate("lighting", info,
+                GameObjects->GetInfo(Keeper::Infos::INFO_LIGHTING)
+            );
+        }
         {
             Modules::Info info;
             info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
@@ -367,6 +374,13 @@ void Core::Scene::LoadScene(const std::string& filename)
             info.Model = Parse.GetElement<std::string>(model, Utils::LEVEL_ELEMENT_NAME, "");
             info.IsModel = true;
         }
+
+        Utils::NodeIt light = Parse.GetChild(node, Utils::LEVEL_ELEMENT_LIGHT);
+        if (Parse.IsNodeValid(light)) {
+            info.Model = Parse.GetElement<std::string>(light, Utils::LEVEL_ELEMENT_NAME, "");
+            info.IsLight = true;
+        }
+
       
         Utils::NodeIt anim = Parse.GetChild(model, Utils::LEVEL_ELEMENT_ANIMATION);
         info.Animations.reserve(10);

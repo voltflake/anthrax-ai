@@ -58,7 +58,8 @@ namespace Core
             Keeper::Camera* EditorCamera;
 
             Utils::Parser Parse;
-
+            
+            bool HasGBuffer = false;
             bool HasFrameGizmo = false;
             bool HasFrameOutline = false;
             bool HasFrameGrid = false;

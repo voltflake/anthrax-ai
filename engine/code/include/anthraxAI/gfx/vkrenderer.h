@@ -50,6 +50,7 @@ namespace Gfx
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
             
             void RenderUI();
+            void TransferLayoutsDebug();        
 
             int GetFrameInd() { return FrameIndex; }
             FrameData& GetFrame() { return Frames[FrameIndex]; }

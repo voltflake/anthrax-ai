@@ -217,6 +217,9 @@ void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rul
 	if (inputs.HasDepth()) {
         Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = true;
+        if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
+            info.Layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        }
 		info.Image = GetRT(Gfx::RT_DEPTH)->GetImage();
         info.ImageView = GetRT(Gfx::RT_DEPTH)->GetImageView();
         attachmentinfo.push_back(info);
@@ -226,6 +229,13 @@ void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rul
     std::vector<VkRenderingAttachmentInfoKHR> infos;
 	const VkRenderingInfo& renderinfo = Cmd.GetRenderingInfo(attachmentinfo, infos, depthinfo,  {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});
     BeginRendering(Cmd.GetCmd(), &renderinfo);
+}
+
+void Gfx::Renderer::TransferLayoutsDebug()
+{
+    GetRT(Gfx::RT_ALBEDO)->MemoryBarrier(Cmd.GetCmd(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    GetRT(Gfx::RT_POSITION)->MemoryBarrier(Cmd.GetCmd(),VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    GetRT(Gfx::RT_NORMAL)->MemoryBarrier(Cmd.GetCmd(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void Gfx::Renderer::RenderUI()
@@ -465,7 +475,7 @@ void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
 	CamData.viewproj = projection * view;
 	CamData.viewpos = glm::vec4(camera.GetPos(), 1.0);
 	CamData.mousepos = { Core::WindowManager::GetInstance()->GetMousePos().x, Core::WindowManager::GetInstance()->GetMousePos().y, 0, 0};
-	CamData.viewport = { Gfx::Device::GetInstance()->GetSwapchainSize().x, Gfx::Device::GetInstance()->GetSwapchainSize().y , 0, 0 };//{ Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
+	CamData.viewport = /*{ Gfx::Device::GetInstance()->GetSwapchainSize().x, Gfx::Device::GetInstance()->GetSwapchainSize().y , 0, 0 };*/{ Core::WindowManager::GetInstance()->GetScreenResolution().x ,Core::WindowManager::GetInstance()->GetScreenResolution().y, 0, 0};
     CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;
 
     const size_t buffersize = (sizeof(CameraData));

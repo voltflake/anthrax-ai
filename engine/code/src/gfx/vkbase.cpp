@@ -62,6 +62,7 @@ bool Gfx::Vulkan::OnResize()
         Gfx::Renderer::GetInstance()->Sync();
         vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
         
+	    Gfx::Mesh::GetInstance()->UpdateDummy();
         Gfx::Pipeline::GetInstance()->Build();
         return true;
     }

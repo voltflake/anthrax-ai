@@ -1,4 +1,5 @@
 #include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/gameobjects/objects/light.h"
 #include "anthraxAI/gameobjects/objects/sprite.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
@@ -89,6 +90,10 @@ void Keeper::Base::UpdateObjectNames()
             if (obj->GetType() == Keeper::Type::SPRITE) {
                 objtype = "Sprite";
             }
+            if (obj->GetType() == Keeper::Type::SPRITE) {
+                objtype = "Light";
+            }
+
             std::string def = obj->GetParsedID();
             if (def.empty()) {
                 def = std::to_string(obj->GetID());
@@ -143,8 +148,12 @@ Keeper::Base::Base()
     DefaultObjects[Infos::INFO_GBUFFER] = modules;
 
     modules.Material = "lighting";
-    modules.Texture = "main_color";
-    modules.Mesh = "dummy.png";
+    modules.Texture.clear();
+    modules.Textures.reserve(3);
+    modules.Textures.push_back("normal");
+    modules.Textures.push_back("position");
+    modules.Textures.push_back("albedo");
+    modules.Mesh = "dummy";
     DefaultObjects[Infos::INFO_LIGHTING] = modules;
 
 }
@@ -152,19 +161,26 @@ Keeper::Base::Base()
 void Keeper::Base::Update()
 {
     int id = SelectedID;
+    std::vector<Objects*>::iterator light_it = ObjectsList[Keeper::Type::LIGHT].end(); 
     std::vector<Objects*>::iterator selected_it = std::find_if(ObjectsList[Keeper::Type::NPC].begin(), ObjectsList[Keeper::Type::NPC].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
+    if (selected_it == ObjectsList[Keeper::Type::NPC].end()) {
+        light_it = std::find_if(ObjectsList[Keeper::Type::LIGHT].begin(), ObjectsList[Keeper::Type::LIGHT].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
+    }
     std::vector<Objects*>::iterator gizmo_it = std::find_if(ObjectsList[Keeper::Type::GIZMO].begin(), ObjectsList[Keeper::Type::GIZMO].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id;});
     static bool gizmo = false;
-    //if (gizmo) {
-    //}
+
     for (Keeper::Objects* obj : ObjectsList[Keeper::Type::GIZMO]) {
         if (selected_it != ObjectsList[Keeper::Type::NPC].end()) {
             obj->SetVisible(true);
             obj->SetHandle(*selected_it);
             obj->SetPosition((*selected_it)->GetPosition());
-       // gizmo = Core::WindowManager::GetInstance()->IsMousePressed();
         }
-        if (selected_it == ObjectsList[Keeper::Type::NPC].end() && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
+        if ( light_it != ObjectsList[Keeper::Type::LIGHT].end()) {
+            obj->SetVisible(true);
+            obj->SetHandle(*light_it);
+            obj->SetPosition((*light_it)->GetPosition());
+        }
+        if ((selected_it == ObjectsList[Keeper::Type::NPC].end() && light_it == ObjectsList[Keeper::Type::LIGHT].end()) && gizmo_it == ObjectsList[Keeper::Type::GIZMO].end()) {
             obj->SetVisible(false);
             obj->SetHandle(0);
         }
@@ -186,21 +202,6 @@ void Keeper::Base::Update()
                     obj->SetSelected(false);
                 }
             obj->SetGizmo(gizmo_handle);
-            /*    if ((*gizmo_it)->GetHandle() && (*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {*/
-            /*        gizmo = true; */
-            /*        obj->SetGizmo(*gizmo_it);*/
-            /*        obj->SetSelected(true);*/
-            /*    }*/
-            /*    else {*/
-            /*        obj->SetSelected(false);*/
-            /*    }*/
-            /*}*/
-            /*else if (!gizmo) {*/
-            /*    obj->SetGizmo(nullptr);*/
-            /*}*/
-            /*if ((gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() || gizmo) && obj->GetType() == Keeper::Type::CAMERA) {*/
-            /*  continue;*/
-            /*}*/
             obj->Update();
         }
     }
@@ -230,6 +231,9 @@ void Keeper::Base::SpawnObjects(const Keeper::Info& info)
 void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
 {
     for (const Keeper::Info& obj : info) {
+        if (obj.IsLight) {
+            Create<Keeper::Light>(new Keeper::Light(obj));
+        }
         if (obj.IsModel) {
             if (obj.Spawn) {
                 SpawnObjects(obj);

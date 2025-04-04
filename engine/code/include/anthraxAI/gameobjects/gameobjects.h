@@ -19,6 +19,7 @@ namespace Keeper {
         std::string Material;
         std::string Vertex;
         std::string Fragment;
+        std::vector<std::string> Textures;
         std::string Texture;
         std::string Model;
         std::string Mesh;
@@ -26,6 +27,7 @@ namespace Keeper {
         std::string ParsedID = "";
         bool Spawn = false;
         bool IsModel = false;
+        bool IsLight = false;
         bool VertexBase = false;
     };
 
@@ -35,6 +37,7 @@ namespace Keeper {
         NPC,
         GIZMO,
         TEST,
+        LIGHT,
         SIZE
     };
     

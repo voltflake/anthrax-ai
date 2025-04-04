@@ -1,5 +1,19 @@
 Scene: models
 Object:
+ID: light
+Light:
+name: sphere.obj
+Position:
+x: 0.2
+y: 0
+z: 0
+Material:
+name: models
+frag: model.frag
+vert: model.vert
+Texture:
+name: dummy.png
+Object:
 ID: monkey
 Position:
 x: -0.054349
@@ -16,15 +30,15 @@ name: monkeytextured.obj
 Object:
 ID: cube
 Position:
-x: 9.595952
-y: -0.160969
-z: 3.724495
+x: -4.301231
+y: 1.754810
+z: -7.738931
 Material:
 name: models
 frag: model.frag
 vert: model.vert
 Texture:
-name: kote-v-bote.jpg
+name: dummy.png
 Model:
 name: cube.obj
 Object:

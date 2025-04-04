@@ -166,7 +166,7 @@ VkRenderingAttachmentInfoKHR Gfx::CommandBuffer::GetAttachmentInfo(VkImageView i
 		info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		info.resolveMode = VK_RESOLVE_MODE_NONE;
 		info.loadOp = ((loadop & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
-		info.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		info.storeOp = VK_ATTACHMENT_STORE_OP_STORE ;
 		info.clearValue = clearvalue;
 	}
 	return info;
@@ -193,7 +193,7 @@ const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<Render
     colors.reserve(attachmentinfo.size());
     for (RenderingAttachmentInfo& info : attachmentinfo) {
 		if (info.IsDepth) {
-			MemoryBarrier(info.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, depthrange);
+			MemoryBarrier(info.Image, info.Layout, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL, depthrange);
 			depthinfo = GetAttachmentInfo(info.ImageView, false, info.Rules);
             depthinfo.imageView = info.ImageView;
             renderinfo.pDepthAttachment = &depthinfo;

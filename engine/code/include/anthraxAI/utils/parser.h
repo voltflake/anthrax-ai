@@ -21,6 +21,7 @@ namespace Utils
     X(LEVEL_ELEMENT_TEXTURE, "Texture") \
     X(LEVEL_ELEMENT_ANIMATION, "Animation") \
     X(LEVEL_ELEMENT_MODEL, "Model") \
+    X(LEVEL_ELEMENT_LIGHT, "Light") \
     X(LEVEL_ELEMENT_NAME, "name") \
     X(LEVEL_ELEMENT_FRAG, "frag") \
     X(LEVEL_ELEMENT_VERT, "vert") \

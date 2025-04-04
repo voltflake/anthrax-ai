@@ -1,4 +1,5 @@
 #include "anthraxAI/gfx/vkmesh.h"
+#include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 
@@ -119,6 +120,35 @@ void Gfx::Mesh::CleanAll()
     Meshes.clear();
 }
 
+void Gfx::Mesh::UpdateDummy()
+{
+    MeshInfo* tmp = GetMesh("dummy");
+    tmp->Clean();
+
+    Gfx::MeshInfo mesh;
+    mesh.Vertices.resize(4);
+    Vector2<int> res = Core::WindowManager::GetInstance()->GetScreenResolution();
+    mesh.Path = "dummy";
+    mesh.Vertices[0].position = {0, 0, 0.0f, 1.0f};
+    mesh.Vertices[1].position = {0, 0 + res.y, 0.0f, 1.0f};
+    mesh.Vertices[2].position = {0 + res.x, 0 + res.y, 0.0f, 1.0f};
+    mesh.Vertices[3].position ={0 + res.x, 0, 0.0f, 1.0f};
+
+    mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[2].color = { 0.f, 1.f, 0.0f };
+    mesh.Vertices[3].color = { 1.f, 0.f, 0.0f };
+
+    mesh.Vertices[1].uv = {0.0f, 0.0f};
+    mesh.Vertices[0].uv = {0.0f, 1.0f};
+    mesh.Vertices[3].uv = {1.0f, 1.0f};
+    mesh.Vertices[2].uv = {1.0f, 0.0f};
+
+    Update(mesh);
+    Meshes["dummy"] = mesh;
+
+}
+
 void Gfx::Mesh::CreateMeshes()
 {
     Gfx::TexturesMap texturemap = Gfx::Renderer::GetInstance()->GetTextureMap();
@@ -147,7 +177,7 @@ void Gfx::Mesh::CreateMeshes()
         Meshes[it.first] = mesh;
     }
     
-    Vector2<int> res = { 1920, 1080 };
+    Vector2<int> res = Core::WindowManager::GetInstance()->GetScreenResolution();//, 1080 };
     mesh.Path = "dummy";
     mesh.Vertices[0].position = {0, 0, 0.0f, 1.0f};
     mesh.Vertices[1].position = {0, 0 + res.y, 0.0f, 1.0f};

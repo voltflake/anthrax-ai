@@ -21,6 +21,7 @@ namespace Gfx
 	    Gfx::ModelInfo* Model = nullptr;
 	    Gfx::Material* Material = nullptr;
         Gfx::RenderTarget* Texture = nullptr;
+    std::vector<Gfx::RenderTarget*> Textures;
 
         std::string MaterialName;
         std::string TextureName;

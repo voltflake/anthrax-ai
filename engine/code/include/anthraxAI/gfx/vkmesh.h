@@ -57,7 +57,8 @@ namespace Gfx
 
             void CreateMeshes();
             void CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo);
-
+            
+            void UpdateDummy();
             void Update(MeshInfo& mesh);
             void UpdateMesh(Gfx::MeshInfo* meshinfo);
             MeshInfo* GetMesh(const std::string& name);   

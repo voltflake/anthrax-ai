@@ -14,6 +14,7 @@
 #include "anthraxAI/utils/mathdefines.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
+#include "anthraxAI/core/imguihelper.h"
 
 namespace Modules 
 {
@@ -105,6 +106,7 @@ namespace Modules
             void UpdateResources();
             void UpdateResource(Modules::Module& module, Gfx::RenderObject& obj);
             void UpdateMaterials();
+            void UpdateTexture(const std::string& str, Core::ImGuiHelper::TextureForUpdate upd);
             void UpdateTextureUIManager();
             void UpdateRQ();
             //void UpdateAnimation();

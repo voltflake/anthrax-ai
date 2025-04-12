@@ -163,6 +163,7 @@ void Core::WindowManager::RunLinux()
         while (delta < CLOCKS_PER_SEC / MAX_FPS) {
 			start = clock();
 			delta = (float(start - end));
+			Utils::Debug::GetInstance()->DeltaMs = delta;
 		}
         Utils::Debug::GetInstance()->FPS = CLOCKS_PER_SEC / delta;
 
@@ -175,7 +176,8 @@ void Core::WindowManager::RunLinux()
         
         end = clock();
         delta = (float(end - start));
-        Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
+      //  Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) ;// / float(CLOCKS_PER_SEC) * 1000.0;
+	//	printf("%f DELTA\n", Utils::Debug::GetInstance()->DeltaMs);
 	}
 }
 

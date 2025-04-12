@@ -15,7 +15,6 @@
 #include <string>
 #include <vulkan/vulkan_core.h>
 
-#include <thread>
 void Core::Scene::Render(Modules::Module& module)
 {
     Gfx::Renderer::GetInstance()->DebugRenderName(module.GetTag());
@@ -109,32 +108,39 @@ void Core::Scene::Loop()
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
         
-        GameModules->Update(Modules::Update::TEXTURE_UI_MANAGER);
-        
-        if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_SHADER_RELOAD)) {
-            GameModules->Update(Modules::Update::MATERIALS);
-            Engine::GetInstance()->ClearState(ENGINE_STATE_SHADER_RELOAD);
-        }
-        if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
-            ReloadResources();
-        }
+        Thread::Pool::GetInstance()->Pause(true);
         
         RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
-                
-        double start, end = 0.0;
-        start = (double)Engine::GetInstance()->GetTime() ;
-    
+        if (HasEditor) {
+            Core::ImGuiHelper::GetInstance()->Render();
+        }
+        Thread::Pool::GetInstance()->Pause(false);
+        Thread::BeginTime(Thread::Task::Name::UPDATE, (double)Engine::GetInstance()->GetTime());
+
         GameObjects->Update();
         GameModules->Update(Modules::Update::RQ);
-        //UpdateRQ();
 
+        Thread::EndTime(Thread::Task::Name::UPDATE, (double)Engine::GetInstance()->GetTime());
+        Thread::PrintTime(Thread::Task::Name::UPDATE);
+
+        Thread::BeginTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
         RenderScene(true);
+        Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
+        Thread::PrintTime(Thread::Task::Name::RENDER);
 
-        end = (double)Engine::GetInstance()->GetTime() ;
-        //printf("TIME: %lf\n", (end - start));
     }
+
+    GameModules->Update(Modules::Update::TEXTURE_UI_MANAGER);
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_SHADER_RELOAD)) {
+        GameModules->Update(Modules::Update::MATERIALS);
+        Engine::GetInstance()->ClearState(ENGINE_STATE_SHADER_RELOAD);
+    }
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
+        ReloadResources();
+    }
+        
 }
 
 void Core::Scene::Init()
@@ -149,6 +155,8 @@ void Core::Scene::Init()
 
 void Core::Scene::InitModules()
 {
+    Thread::Pool::GetInstance()->Init(8);
+    
     GameModules = new Modules::Base(GameObjects);
         
     Modules::Info info;
@@ -165,6 +173,8 @@ void Core::Scene::InitModules()
 
 void Core::Scene::ReloadResources()
 {
+    Thread::Pool::GetInstance()->Reload();
+
     ParsedSceneInfo.clear();
     ParsedSceneInfo.reserve(10);
     LoadScene(CurrentScene);
@@ -175,7 +185,7 @@ void Core::Scene::ReloadResources()
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Y), Keeper::Gizmo::Type::Y));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::X), Keeper::Gizmo::Type::X));
     GameObjects->Create<Keeper::Gizmo>(new Keeper::Gizmo(GameObjects->GetGizmoInfo(Keeper::Gizmo::Type::Z), Keeper::Gizmo::Type::Z));
-    EditorCamera->SetPosition({0.0f, 0.0f, 0.0f});
+    EditorCamera->SetPosition({1.0f, 1.0f, 3.0f});
 
     Gfx::Vulkan::GetInstance()->ReloadResources();
     Core::Audio::GetInstance()->ResetState();

@@ -16,7 +16,7 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 {
 	VkDescriptorSetLayoutBinding setbind = {};
 	setbind.binding = binding;
-	setbind.descriptorCount = 1000;
+	setbind.descriptorCount = 5000;
 	setbind.descriptorType = type;
 	setbind.pImmutableSamplers = nullptr;
 	setbind.stageFlags = stageFlags;
@@ -158,13 +158,13 @@ void Gfx::DescriptorsBase::Init()
 // descriptor pool
 
 	VkDescriptorPoolSize sizes[MAX_BINDING] = {
-		{ types[0], 1000 }, { types[1], 1000 }, { types[2], 1000 }
+		{ types[0], 5000 }, { types[1], 5000 }, { types[2], 5000 }
 	};
 
 	VkDescriptorPoolCreateInfo poolinfo{};
 	poolinfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 	poolinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolinfo.maxSets = 1000;
+	poolinfo.maxSets = 5000;
 	poolinfo.poolSizeCount = MAX_BINDING;
 	poolinfo.pPoolSizes = sizes;
 	vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Pool);

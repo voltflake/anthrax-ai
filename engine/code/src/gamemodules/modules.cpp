@@ -146,28 +146,40 @@ void Modules::Base::UpdateMaterials()
     }
 }
 
+void Modules::Base::ThreadedRQ(int i, Keeper::Objects* info)
+{
+    SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;  
+    SceneModules["mask"].GetRenderQueue()[i].IsSelected = SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected;//info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
+    if (SceneModules["mask"].GetRenderQueue()[i].IsSelected) {
+        HasOutline = true;
+    }
+    SceneModules[CurrentScene].GetRenderQueue()[i].IsVisible = info->IsVisible();
+    SceneModules[CurrentScene].GetRenderQueue()[i].Position = info->GetPosition();
+    if (HasAnimation(SceneModules[CurrentScene].GetRenderQueue()[i].ID)) {
+        Animator->Update(SceneModules[CurrentScene].GetRenderQueue()[i]);
+    }
+}
+
 void Modules::Base::UpdateRQ()
 {
     if (GameObjects->IsValid(Keeper::Type::NPC)) {
         int i = 0;
+
         auto npc = GameObjects->Get(Keeper::Type::NPC);
         for (Keeper::Objects* info : npc) {
-            
-            SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;  
-            SceneModules["mask"].GetRenderQueue()[i].IsSelected = SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected;//info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
-            if (SceneModules["mask"].GetRenderQueue()[i].IsSelected) {
-                HasOutline = true;
+            if (Thread::Pool::GetInstance()->IsInit()) {
+            Thread::Pool::GetInstance()->Push({
+            Thread::Task::Name::UPDATE, Thread::Task::Type::EXECUTE, [this](int i, Keeper::Objects* info) {
+                ThreadedRQ(i, info); }, {}, i, info, {} });
             }
-            SceneModules[CurrentScene].GetRenderQueue()[i].IsVisible = info->IsVisible();
-            SceneModules[CurrentScene].GetRenderQueue()[i].Position = info->GetPosition();
-            if (HasAnimation(SceneModules[CurrentScene].GetRenderQueue()[i].ID)) {
-                Animator->Update(SceneModules[CurrentScene].GetRenderQueue()[i]);
+            else {
+                ThreadedRQ(i, info);
             }
             i++;
         }
+
         auto light = GameObjects->Get(Keeper::Type::LIGHT);
         for (Keeper::Objects* info : light) {
-            
             SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;  
             SceneModules["mask"].GetRenderQueue()[i].IsSelected = SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected;//info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
             if (SceneModules["mask"].GetRenderQueue()[i].IsSelected) {

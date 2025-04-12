@@ -4,6 +4,7 @@
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/utils/parser.h"
+#include "anthraxAI/utils/thread.h"
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/camera.h"
@@ -37,6 +38,7 @@ namespace Core
             void ParseSceneNames();
             const std::vector<std::string>& GetSceneNames() const { return SceneNames; }
                 
+            void KeepEditor(bool keep) { HasEditor = keep; }
             const std::string& GetCurrentScene() const { return CurrentScene; }
             void SetSelectedID(uint32_t id) { GameObjects->SetSelectedID(id); }
             uint32_t GetSelectedID() { return GameObjects->GetSelectedID(); }
@@ -59,10 +61,12 @@ namespace Core
 
             Utils::Parser Parse;
             
+            bool HasEditor = false;
             bool HasGBuffer = false;
             bool HasFrameGizmo = false;
             bool HasFrameOutline = false;
             bool HasFrameGrid = false;
 
     };
+
 }

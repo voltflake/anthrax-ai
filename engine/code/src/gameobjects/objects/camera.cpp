@@ -16,7 +16,7 @@ void Keeper::Camera::UpdateMovement()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs;
 #ifdef AAI_LINUX
-    const float camspeed = 0.5f * delta;
+    const float camspeed = delta / 1000 * 0.03;//0.5f * delta;
 #else
     const float camspeed = 0.05f * delta;
 #endif
@@ -42,7 +42,7 @@ void Keeper::Camera::UpdateDirection()
     float delta = Utils::Debug::GetInstance()->DeltaMs; 
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
     if (mousemove.x == 0 && mousemove.y == 0) return;
-    float rotspeed = delta * 0.001f;
+    float rotspeed = delta / 1000 * 0.0001;//0.001f;
 
     if (mousemove.x || mousemove.y) {
         float yaw = rotspeed * mousemove.x;

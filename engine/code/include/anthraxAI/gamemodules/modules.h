@@ -95,6 +95,7 @@ namespace Modules
 
             ScenesMap& GetSceneModules() { return SceneModules; }
             void SetCurrentScene(const std::string& str) { CurrentScene = str; }
+
         private:
             bool HasOutline = false;
             std::string CurrentScene;
@@ -109,7 +110,7 @@ namespace Modules
             void UpdateTexture(const std::string& str, Core::ImGuiHelper::TextureForUpdate upd);
             void UpdateTextureUIManager();
             void UpdateRQ();
-            //void UpdateAnimation();
+            void ThreadedRQ(int i, Keeper::Objects* info);
     };
   
 }

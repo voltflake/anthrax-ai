@@ -7,7 +7,7 @@ void main()
 {
 
     vec3 light_pos[3] = { vec3(0.5, -3, -6), vec3(1, 1, 1), vec3(11, 0 , 3) };
-    vec3 light_color[3] = { vec3(1), vec3(1,0, 0), vec3(0,1,0) }; 
+    vec3 light_color[3] = { vec3(1), vec3(1,0, 0), vec3(0,1,0) };
 
     vec2 uv = incoord.xy;
     uv.y *= -1.0;
@@ -15,7 +15,7 @@ void main()
     vec4 position = texture(textures[GetTextureInd() + 1], uv.xy).xyzw;
 
     vec4 albedo = texture(textures[GetTextureInd() + 2], uv.xy).xyzw;
-    
+
     float ambient = 1.0;
     vec4 color = albedo * ambient;
 
@@ -27,7 +27,5 @@ void main()
     }
 
 
-    
     outfragcolor = vec4(color.xyz, 1);
 }
-

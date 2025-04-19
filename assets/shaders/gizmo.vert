@@ -7,11 +7,11 @@
 void main()
 {
     mat4 rendermatrix = GetResource(Camera, GetUniformInd()).proj * GetResource(Camera, GetUniformInd()).view * (GetResource(Instance, GetInstanceInd()).instances[gl_BaseInstance].rendermatrix );
-    
+
     vec4 position = vec4(vposition.xyz, 1.0f) ;//* vec4(0.08,0.08,0.08,1.0);
 
     gl_Position = rendermatrix * position ;
-    
+
 
     //debugPrintfEXT("instanceIndex=%d\n", gl_BaseInstance);
     outnormal = vnormal;

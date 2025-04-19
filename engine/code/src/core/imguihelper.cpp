@@ -73,7 +73,7 @@ void Core::ImGuiHelper::Init()
 #endif
 
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; 
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
 	ImGui::StyleColorsDark();
     io.Fonts->AddFontDefault();
@@ -152,17 +152,17 @@ void Core::ImGuiHelper::Init()
     Gfx::Renderer::GetInstance()->CreateImGuiDescSet();
 }
 
-void UI::Element::GetArg(const std::vector<std::string>& vec) 
+void UI::Element::GetArg(const std::vector<std::string>& vec)
 {
     if (!ComboList.empty()) {
-        ComboList.clear();      
+        ComboList.clear();
     }
     ComboList.reserve(vec.size() + 1);
     if (AddEmpty) {
         ComboList.emplace_back("none");
     }
-    for (const std::string& s : vec) { 
-        ComboList.emplace_back(s); 
+    for (const std::string& s : vec) {
+        ComboList.emplace_back(s);
     }
 }
 
@@ -173,21 +173,21 @@ void Core::ImGuiHelper::InitUIElements()
     {
         EditorWindow = "Engine ;p";
         Add(EditorWindow, UI::Window(EditorWindow, { 400.0f, Core::WindowManager::GetInstance()->GetScreenResolution().y - 40.0f }, { pos.x, pos.y + 40.0f }, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings ));
-        
+
         std::string tablabel = "Editor";
         UI::Element tab(UI::TAB, tablabel);
         Add(tab, UI::Element(UI::COMBO, "Scenes", false, Core::Scene::GetInstance()->GetSceneNames(), [](std::string tag) -> void { Core::Scene::GetInstance()->SetCurrentScene(tag); }, true));
         Add(tab, UI::Element(UI::SEPARATOR, "tabseparator"));
-        Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", false, []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; })); 
-        Add(EditorWindow, UI::Element(UI::CHECKBOX, "Keep Editor", false, nullptr,[](bool show) -> void {  Core::Scene::GetInstance()->KeepEditor(show); })); 
+        Add(EditorWindow, UI::Element(UI::BUTTON, "Update Shaders", false, []() -> float { Gfx::Vulkan::GetInstance()->ReloadShaders(); return 0.0f; }));
+        Add(EditorWindow, UI::Element(UI::CHECKBOX, "Keep Editor", false, nullptr,[](bool show) -> void {  Core::Scene::GetInstance()->KeepEditor(show); }));
     }
-    
+
     {
         UI::Element scenetab(UI::TAB, "Scene");
         Add(scenetab, UI::Element(UI::TEXT, "Name:", false, []() -> std::string { return Core::Scene::GetInstance()->GetCurrentScene(); } ));
         Add(scenetab, UI::Element(UI::SEPARATOR, "sep"));
     }
-    
+
     {
         UI::Element rendertab(UI::TAB, "Rendering");
         Add(rendertab, UI::Element(UI::COMBO, "Render Targets", false, Gfx::Renderer::GetInstance()->GetRTList(), [](std::string tag) -> void { ImGuiHelper::GetInstance()->SetDebugRT(tag); }, true));
@@ -221,10 +221,10 @@ Keeper::Objects* Core::ImGuiHelper::ParseObjectID(const std::string& id)
 {
     Keeper::Type type;
     if (id.find("Camera:") != std::string::npos) {
-        type = Keeper::Type::CAMERA; 
+        type = Keeper::Type::CAMERA;
     }
     else if (id.find("NPC:") != std::string::npos) {
-        type = Keeper::Type::NPC; 
+        type = Keeper::Type::NPC;
     }
     else {
         type = Keeper::Type::SPRITE;
@@ -232,12 +232,12 @@ Keeper::Objects* Core::ImGuiHelper::ParseObjectID(const std::string& id)
 
     std::string trimstr = id;
     auto it = std::find_if(trimstr.begin(), trimstr.end(), [](char c) { return c == ':'; });
-    
+
     std::string type_str(trimstr.begin(), it);
 
     trimstr.erase(trimstr.begin(), it + 1);
     Keeper::Objects* game_obj = nullptr;
- 
+
     it = std::find_if(trimstr.begin(), trimstr.end(), [](char c) { return !(c >= '0' && c <= '9') && c != ' '; });
     if (it == trimstr.end()) {
         game_obj = const_cast<Keeper::Base*>(Core::Scene::GetInstance()->GetGameObjects())->GetNotConstObject(type, std::stoi(trimstr));
@@ -255,7 +255,7 @@ void Core::ImGuiHelper::DisplayObjectInfo(const std::string& obj, const UI::Elem
 
     auto ui_it = std::remove_if(UITabs[elem].begin(), UITabs[elem].end(), [](const UI::Element& el) { return el.IsUIDynamic(); });
     const Keeper::Objects* game_obj = ParseObjectID(obj);
-  
+
     UITabs[elem].erase(ui_it, UITabs[elem].end());
     Add(elem, UI::Element(UI::TEXT, "Type: ", true));
     Add(elem, UI::Element(UI::TEXT, "Position: ", true, [game_obj]() -> std::string { return game_obj->GetPosition().ToString(); } ));
@@ -344,43 +344,43 @@ void Core::ImGuiHelper::ListBox(UI::Element& element)
 
 }
 
-void Core::ImGuiHelper::Tree(UI::Element& element) 
+void Core::ImGuiHelper::Tree(UI::Element& element)
 {
     if (ImGui::TreeNode(element.GetLabel().c_str()))
     {
         for (const std::string& s : element.GetComboList()) {
             ImGui::Text(s.c_str());
         }
-        
+
         ImGui::TreePop();
     }
-   
+
 }
 
 void Core::ImGuiHelper::DebugImage(UI::Element& element)
 {
     ImGui::Text(element.GetLabel().c_str());
-    
+
     static bool active = true;
     if (DebugRT.empty() || DebugRT == "none") {
         return;
-    } 
+    }
     Gfx::RenderTargetsList id = Gfx::GetKey(DebugRT);
     Gfx::RenderTarget* rt = Gfx::Renderer::GetInstance()->GetRT(id);
     if (rt) {
-        active = true; 
+        active = true;
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         const ImVec2 pos = viewport->Pos;
         ImGui::SetNextWindowPos(ImVec2(0, viewport->GetCenter().y), 0);
         ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_FirstUseEver);
         ImGui::Begin(DebugRT.c_str(), &active, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings );
-        
+
         if (!rt->IsDepthSet()) {
             Gfx::Renderer::GetInstance()->Submit([&](VkCommandBuffer cmd) {
                 rt->MemoryBarrier(cmd, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
             });
         }
-        
+
         ImGui::Image((ImTextureID)rt->GetImGuiDescriptor(), ImVec2(500, 400));
         ImGui::End();
 
@@ -436,7 +436,7 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
             ImGui::Text((element.GetLabel() + ": %f").c_str(), element.DefinitionFloat());
             break;
         }
-        case UI::BUTTON: {    
+        case UI::BUTTON: {
             if (ImGui::Button(element.GetLabel().c_str())) {
                 if (element.DefinitionFloat) {
                     element.DefinitionFloat();
@@ -445,7 +445,7 @@ void Core::ImGuiHelper::ProcessUI(UI::Element& element)
             break;
         }
         case UI::CHECKBOX: {
-            bool check = element.GetCheckbox(); 
+            bool check = element.GetCheckbox();
             ImGui::Checkbox(element.GetLabel().c_str(), &check);
             element.DefinitionBool(check);
             element.SetCheckbox(check);
@@ -504,7 +504,7 @@ void Core::ImGuiHelper::Render()
                 ImGui::EndTabBar();
             }
         }
-         
+
         for (UI::Element& element : windowelements) {
             ProcessUI(element);
         }
@@ -516,5 +516,3 @@ void Core::ImGuiHelper::Render()
         DisplayObjectInfo(SelectedElement, it->first);
     }
 }
-
-

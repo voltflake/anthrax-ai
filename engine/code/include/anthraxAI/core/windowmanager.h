@@ -102,7 +102,7 @@ namespace Core
             MouseInfo Mouse;
             Vector2<int> Extents = { 1000, 1000 };
             Vector2<int> OnResizeExtents;
-            
+
             void Events();
             void ProcessEvents();
 #ifdef AAI_LINUX

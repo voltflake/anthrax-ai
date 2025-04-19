@@ -27,7 +27,7 @@ void Core::Scene::Render(Modules::Module& module)
         if (obj.VertexBase) {
             Gfx::Renderer::GetInstance()->DrawSimple(obj);
         }
-        else { 
+        else {
             Gfx::Renderer::GetInstance()->Draw(obj);
         }
     }
@@ -54,7 +54,7 @@ void Core::Scene::RenderScene(bool playmode)
             Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
             Render(GameModules->Get("gbuffer"));
             Gfx::Renderer::GetInstance()->EndRender();
-            
+
             Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
             Render(GameModules->Get("lighting"));
             Gfx::Renderer::GetInstance()->EndRender();
@@ -101,15 +101,15 @@ void Core::Scene::RenderScene(bool playmode)
 void Core::Scene::Loop()
 {
     Core::Audio::GetInstance()->Play();
-  
+
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
         RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EDITOR)) {
         Core::ImGuiHelper::GetInstance()->Render();
-        
+
         Thread::Pool::GetInstance()->Pause(true);
-        
+
         RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
@@ -140,12 +140,12 @@ void Core::Scene::Loop()
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
         ReloadResources();
     }
-        
+
 }
 
 void Core::Scene::Init()
 {
-    ParseSceneNames();  
+    ParseSceneNames();
 
     GameObjects = new Keeper::Base;
     GameObjects->Create<Keeper::Camera>(new Keeper::Camera(Keeper::Camera::Type::EDITOR, {1.0f, 1.0f, 3.0f}));
@@ -156,9 +156,9 @@ void Core::Scene::Init()
 void Core::Scene::InitModules()
 {
     Thread::Pool::GetInstance()->Init(8);
-    
+
     GameModules = new Modules::Base(GameObjects);
-        
+
     Modules::Info info;
     info.BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER ;
     info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
@@ -178,7 +178,7 @@ void Core::Scene::ReloadResources()
     ParsedSceneInfo.clear();
     ParsedSceneInfo.reserve(10);
     LoadScene(CurrentScene);
-    
+
     GameObjects->CleanIfNot(Keeper::Type::CAMERA, true);
 
     GameObjects->Create(ParsedSceneInfo);
@@ -192,9 +192,9 @@ void Core::Scene::ReloadResources()
 
     Engine::GetInstance()->ClearState(ENGINE_STATE_RESOURCE_RELOAD);
     Engine::GetInstance()->SetState(ENGINE_STATE_EDITOR);
-     
+
     PopulateModules();
-    
+
     GameObjects->UpdateObjectNames();
     Core::ImGuiHelper::GetInstance()->UpdateObjectInfo();
 }
@@ -202,7 +202,7 @@ void Core::Scene::ReloadResources()
 void Core::Scene::ParseSceneNames()
 {
     std::string path = "scenes/";
-    
+
     SceneNames.reserve(20);
     for (const auto& name : std::filesystem::directory_iterator(path)) {
         std::string str = name.path().string();
@@ -215,17 +215,17 @@ void Core::Scene::PopulateModules()
 {
     GameModules->Clear();
     GameModules->SetCurrentScene(CurrentScene);
-   
+
     {
         Modules::Info info;
         info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
         info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
         info.IAttachments.Add(Gfx::RT_DEPTH, true);
         GameModules->Populate(CurrentScene, info,
-            [](Keeper::Type t) { return t == Keeper::CAMERA || t == Keeper::GIZMO; }  
+            [](Keeper::Type t) { return t == Keeper::CAMERA || t == Keeper::GIZMO; }
         );
     }
-    
+
     bool npc = GameObjects->Find(Keeper::NPC);
     HasFrameGizmo = false;
     HasFrameGrid = false;
@@ -258,7 +258,7 @@ void Core::Scene::PopulateModules()
             info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
 
             GameModules->Populate("gizmo", info,
-                [](Keeper::Type t) { return t != Keeper::GIZMO; }  
+                [](Keeper::Type t) { return t != Keeper::GIZMO; }
             );
         }
         {
@@ -267,7 +267,7 @@ void Core::Scene::PopulateModules()
             info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
             info.IAttachments.Add(Gfx::RT_DEPTH, true);
 
-            GameModules->Populate("grid", info, 
+            GameModules->Populate("grid", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_GRID)
             );
         }
@@ -276,7 +276,7 @@ void Core::Scene::PopulateModules()
             info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
             info.IAttachments.Add(Gfx::RT_MASK);
 
-            GameModules->Populate("mask", info, 
+            GameModules->Populate("mask", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_MASK)
             );
         }
@@ -285,11 +285,11 @@ void Core::Scene::PopulateModules()
             info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
             info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
             info.IAttachments.Add(Gfx::RT_DEPTH, true);
-            GameModules->Populate("outline", info, 
+            GameModules->Populate("outline", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_OUTLINE)
-            ); 
-        } 
-        
+            );
+        }
+
         HasFrameGrid = true;
         HasFrameGizmo = true;
     }
@@ -298,25 +298,25 @@ void Core::Scene::PopulateModules()
     GameModules->RestartAnimator();
 }
 
-void Core::Scene::SetCurrentScene(const std::string& str) 
-{ 
+void Core::Scene::SetCurrentScene(const std::string& str)
+{
     CurrentScene = str;
     Engine::GetInstance()->ClearState(ENGINE_STATE_PLAY);
     Engine::GetInstance()->ClearState(ENGINE_STATE_EDITOR);
-    Engine::GetInstance()->SetState(ENGINE_STATE_RESOURCE_RELOAD); 
+    Engine::GetInstance()->SetState(ENGINE_STATE_RESOURCE_RELOAD);
 }
 
 void Core::Scene::ExportObjectInfo(const Keeper::Objects* obj)
 {
     std::string rootname = Parse.GetRootElement();
-    
+
     Utils::NodeIt obj_node = Parse.GetChildByID(Parse.GetRootNode(), obj->GetParsedID());
 
     if (!Parse.IsNodeValid(obj_node)) {
         printf("Can't save file without ID Node!!!! ;p \n");
         return;
     }
-    
+
     Utils::NodeIt obj_texture = Parse.GetChild(obj_node, Utils::LEVEL_ELEMENT_TEXTURE);
     Utils::NodeIt obj_textname = Parse.GetChild(obj_texture, Utils::LEVEL_ELEMENT_NAME);
     if (Parse.IsNodeValid(obj_textname)) {
@@ -339,14 +339,14 @@ void Core::Scene::LoadScene(const std::string& filename)
 {
     Parse.Clear();
     Parse.Load(filename);
-     
-    std::string scenename = Parse.GetRootElement(); 
+
+    std::string scenename = Parse.GetRootElement();
 
     float xpos, ypos, zpos = 0.0f;
     std::string matname, textname, modname, frag, vert, id;
-    
+
     Utils::NodeIt node = Parse.GetChild(Parse.GetRootNode(), Utils::LEVEL_ELEMENT_OBJECT);
-    while (Parse.IsNodeValid(node)) { 
+    while (Parse.IsNodeValid(node)) {
         Keeper::Info info;
         id = Parse.GetElement<std::string>(node, Utils::LEVEL_ELEMENT_ID, "");
         info.ParsedID = id;
@@ -391,7 +391,7 @@ void Core::Scene::LoadScene(const std::string& filename)
             info.IsLight = true;
         }
 
-      
+
         Utils::NodeIt anim = Parse.GetChild(model, Utils::LEVEL_ELEMENT_ANIMATION);
         info.Animations.reserve(10);
         while (Parse.IsNodeValidInRange(anim)) {
@@ -399,12 +399,12 @@ void Core::Scene::LoadScene(const std::string& filename)
             info.Animations.push_back(animstr);
             anim = Parse.GetChild(++anim, Utils::LEVEL_ELEMENT_ANIMATION);
         }
-    
+
         ParsedSceneInfo.emplace_back(info);
 
         node = Parse.GetChild(texture, Utils::LEVEL_ELEMENT_OBJECT);
     printf("\n-----------------PARSED--------------------------");
-    printf("\n[scene]: |%s|\n[id]: %s\n[position]: [x]: %f [y]: %f [z]: %f\n[material][name]: %s [frag]: %s [vert]: %s\n[texture][name]: %s\n[model][name]: %s\n", 
+    printf("\n[scene]: |%s|\n[id]: %s\n[position]: [x]: %f [y]: %f [z]: %f\n[material][name]: %s [frag]: %s [vert]: %s\n[texture][name]: %s\n[model][name]: %s\n",
         scenename.c_str(), id.c_str(), xpos, ypos, zpos, info.Material.c_str(), info.Fragment.c_str(), info.Vertex.c_str(), info.Texture.c_str(), info.Model.c_str());
     printf("Parsed animations:\n");
     for (std::string s : info.Animations) {
@@ -414,5 +414,3 @@ void Core::Scene::LoadScene(const std::string& filename)
     }
 
 }
-
-

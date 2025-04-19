@@ -14,7 +14,7 @@ layout (location = 3) out vec3 outcolor;
 layout (location = 4) out vec2 outcoord;
 layout (location = 5) out vec4 outweight;
 layout (location = 6) out ivec4 outboneid;
-//
+
 out gl_PerVertex {
     vec4 gl_Position;
 };

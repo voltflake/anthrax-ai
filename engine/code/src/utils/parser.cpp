@@ -31,7 +31,7 @@ void Utils::Parser::Write(const std::string& filename)
     write.open(LEVEL_PATH + filename);
 
     ASSERT(!write.is_open(), ("Failed to open a file " + filename).c_str());
-    
+
     for (auto& it : Tokens) {
         if (it.second.empty()) {
             write << it.first + ":" << std::endl;
@@ -64,21 +64,21 @@ void Utils::Parser::Load(const std::string& filename)
     Tokenize(File.begin());
     RootNode = Tokens.begin();
     ChildRange = Tokens.end();
-    
+
     PrintTokenized();
 }
 
 void Utils::Parser::Tokenize(std::vector<std::string>::const_iterator it)
 {
     Tokens.reserve(File.size());
-    
+
     char delimeter = ':';
     std::string key;
-    std::string value; 
+    std::string value;
     bool delimfound = false;
 
     ASSERT(it == File.end(), "Utils::Parser::Tokenize() file is empty!");
-    
+
     for (; it != File.end(); ++it) {
         if (*it == "\n" || (*it).empty()) continue;
         for (std::string::const_iterator ch = it->begin(); ch != it->end(); ++ch) {
@@ -104,13 +104,13 @@ void Utils::Parser::Tokenize(std::vector<std::string>::const_iterator it)
     ASSERT(Tokens.empty(), "Utils::Parser::Tokenize() file was empty");
 }
 
-Utils::NodeIt Utils::Parser::GetChildByID(const NodeIt& node, const std::string& id)  const 
+Utils::NodeIt Utils::Parser::GetChildByID(const NodeIt& node, const std::string& id)  const
 {
     std::string key =  Utils::GetValue(Utils::LEVEL_ELEMENT_ID);
 
     NodeIt it = std::find_if(node, Tokens.end(), [key, id](const auto& iter) { return iter.first == key && iter.second == id; });
     if (it == Tokens.end()) {
-        
+
         std::cout << ("Parser::GetChildByID(): Child not found |" + key + "| id:" + id) << std::endl;
     }
     return it;
@@ -139,5 +139,5 @@ std::string Utils::Parser::GetRootElement() const
 {
     ASSERT((RootNode->first) != Utils::GetValue(Utils::LEVEL_ELEMENT_SCENE), "Parser::GetRootElement(): Root Node != 'Scene'");
     std::string root = RootNode->second;
-    return root;  
+    return root;
 }

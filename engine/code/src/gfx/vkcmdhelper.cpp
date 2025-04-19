@@ -128,7 +128,7 @@ void Gfx::CommandBuffer::MemoryBarrier(VkImage image, VkImageLayout oldlayout, V
 	VkPipelineStageFlags dststagemask  = GetPipelineStageFlags(newlayout);
 	VkAccessFlags srcaccessmask = GetAccessFlags(oldlayout);
 	VkAccessFlags dstaccessmask = GetAccessFlags(newlayout);
-    
+
     VkImageMemoryBarrier membarrier{};
 	membarrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	membarrier.srcAccessMask       = srcaccessmask;
@@ -149,7 +149,7 @@ VkRenderingAttachmentInfoKHR Gfx::CommandBuffer::GetAttachmentInfo(VkImageView i
 	VkClearValue clearvalue;
     if (iscolor) {
 		clearvalue.color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
-        info.pNext = nullptr;        
+        info.pNext = nullptr;
         info.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
         info.imageView = imageview;
         info.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -189,7 +189,7 @@ const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<Render
 		.renderArea = renderarea,
 		.layerCount = 1,
 	};
-    
+
     colors.reserve(attachmentinfo.size());
     for (RenderingAttachmentInfo& info : attachmentinfo) {
 		if (info.IsDepth) {

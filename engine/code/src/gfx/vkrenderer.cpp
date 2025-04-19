@@ -23,7 +23,7 @@ void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
     bool bindpipe, bindindex = false;
 	CheckTmpBindings(object.Mesh, object.Material, &bindpipe, &bindindex);
-	
+
     if (bindpipe) {
         vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
 
@@ -52,7 +52,7 @@ void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 	for (int i = 0; i < meshsize; i++) {
 
 		DrawMesh(object, object.Model->Meshes[i], true);
-	} 
+	}
 }
 
 void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel)
@@ -92,7 +92,7 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
         InstanceIndex++;
 	}
 	else {
-		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);		
+		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);
 	}
 }
 
@@ -107,9 +107,9 @@ void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 	}
 }
 
-void Gfx::Renderer::EndRenderName() 
-{ 
-    Gfx::Vulkan::GetInstance()->EndDebugRenderName(Cmd.GetCmd()); 
+void Gfx::Renderer::EndRenderName()
+{
+    Gfx::Vulkan::GetInstance()->EndDebugRenderName(Cmd.GetCmd());
 }
 
 void Gfx::Renderer::DebugRenderName(const std::string& str)
@@ -147,7 +147,7 @@ void Gfx::Renderer::DebugRenderName(const std::string& str)
     float color[4] = { r, g, b, 1.0f };
     memcpy(label.color, &color[0], sizeof(float) * 4);
     label.pLabelName = str.c_str();
-    Gfx::Vulkan::GetInstance()->SetDebugRenderName(Cmd.GetCmd(), &label); 
+    Gfx::Vulkan::GetInstance()->SetDebugRenderName(Cmd.GetCmd(), &label);
 
 }
 
@@ -193,7 +193,7 @@ void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rul
 	if (inputs.HasColor()) {
         Gfx::RenderingAttachmentInfo info;
 		info.IsDepth = false;
-		info.Image = GetRT(inputs.GetColor())->GetImage(); 
+		info.Image = GetRT(inputs.GetColor())->GetImage();
         if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
             info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         }
@@ -206,7 +206,7 @@ void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rul
         if ((rules & Gfx::ATTACHMENT_RULE_LOAD) == Gfx::ATTACHMENT_RULE_LOAD) {
             info.Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         }
-	    
+
         for (int i = 0; i < GBUFFER_RT_SIZE; i++) {
             Gfx::RenderTargetsList id = static_cast<Gfx::RenderTargetsList>(Gfx::RT_ALBEDO + i);
             info.Image = GetRT(id)->GetImage();
@@ -224,7 +224,7 @@ void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rul
         info.ImageView = GetRT(Gfx::RT_DEPTH)->GetImageView();
         attachmentinfo.push_back(info);
 	}
-    
+
     VkRenderingAttachmentInfoKHR depthinfo = {};
     std::vector<VkRenderingAttachmentInfoKHR> infos;
 	const VkRenderingInfo& renderinfo = Cmd.GetRenderingInfo(attachmentinfo, infos, depthinfo,  {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});
@@ -253,11 +253,11 @@ void Gfx::Renderer::CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsL
                     VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 	Cmd.MemoryBarrier(GetRT(dst_id)->GetImage(),
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 					Cmd.GetSubresourceMainRange());
-    
+
     Cmd.MemoryBarrier(GetRT(src_id)->GetImage(),
-					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, 
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 					Cmd.GetSubresourceMainRange());
 
 
@@ -273,7 +273,7 @@ void Gfx::Renderer::EndFrame()
 					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 					Cmd.GetSubresourceMainRange());
 
     Cmd.EndCmd();
@@ -302,7 +302,7 @@ void Gfx::Renderer::EndFrame()
 	);
 
 	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
-       OnResize = true; 
+       OnResize = true;
 	}
 
    SetFrameInd();
@@ -327,10 +327,10 @@ void Gfx::Renderer::PrepareStorageBuffer()
     /*    //SelectedID = 0;*/
     /*    return;*/
     /*}*/
-    
+
     //for (int i = 0; i < MAX_INSTANCES; i++) {
-   
-    
+
+
     int selectedID = -1;
     // TODO: improve pressision
    // printf("--------------------\n");
@@ -348,12 +348,12 @@ void Gfx::Renderer::PrepareStorageBuffer()
 			/* 		 uint32_t dst[DEPTH_ARRAY_SCALE] = {0};*/
 			/*memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));*/
 			/*vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());*/
-				
+
 
             break;
         }
     }
-	
+
 
 		  if (selectedID == -1) {
 		Core::Scene::GetInstance()->SetSelectedID(0);
@@ -367,14 +367,14 @@ void Gfx::Renderer::PrepareStorageBuffer()
     vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
 
 	}
-    
+
 
    // printf("-----|%d|---\n", Core::Scene::GetInstance()->GetSelectedID());
 	//}
-		
+
     //printf("\n\n");
-   
-    
+
+
 }
 
 /*void Gfx::Renderer::GetTransforms(InstanceData* datas, Gfx::RenderObject obj, int i)*/
@@ -393,7 +393,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     const size_t buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
     void* instancedata;
     vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(), 0, buffersize, 0, (void**)&instancedata);
-    
+
     InstanceData* datas = (InstanceData*)instancedata;
     /*for (int i = 0; i < InstanceCount; i++) {*/
     /*    datas[i].rendermatrix = glm::mat4(1.0f); */
@@ -407,7 +407,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
         if (!obj.Model || !obj.IsVisible) continue;
         hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
-        
+
             if (hasanim) {
                // printf("IIIIII ======================================== %d\n", i);
                 for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {
@@ -430,13 +430,13 @@ void Gfx::Renderer::PrepareInstanceBuffer()
             if (dist <= 0.5) {
                 dist = 0.5;
             }
-            
+
 
             glm::vec3 distfin = glm::vec3(dist);
 
 
             datas[i].rendermatrix = glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));
-            datas[i].rendermatrix = glm::scale(datas[i].rendermatrix, distfin); 
+            datas[i].rendermatrix = glm::scale(datas[i].rendermatrix, distfin);
             i++;
         }
 
@@ -547,7 +547,7 @@ void Gfx::Renderer::Sync()
 {
    	VkFenceCreateInfo fencecreateinfo = FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
 	VkSemaphoreCreateInfo semcreateinfo = SemaphoreCreateInfo(0);
-	
+
 	VkFenceCreateInfo uploadfencecreateinfo = FenceCreateInfo(0);
 	VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &uploadfencecreateinfo, nullptr, &Upload.UploadFence), "failder to create upload fence ! ");
 	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::SYNC, [=, this]() {
@@ -555,7 +555,7 @@ void Gfx::Renderer::Sync()
 	});
 	for (int i = 0; i < MAX_FRAMES; i++) {
 		VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &fencecreateinfo, nullptr, &Frames[i].RenderFence), "failder to create fence ! ");
-	
+
 		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].PresentSemaphore), "failder to create present semaphore!");
 		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].RenderSemaphore), "failder to create render semaphore!");
 
@@ -576,7 +576,7 @@ void Gfx::Renderer::CleanResources()
 	    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), list.second.GetDeviceMemory(), nullptr);
     }
     Textures.clear();
-    
+
     for (int i = 0; i < Gfx::RT_SIZE; i++) {
         if (RTs[i]) {
             if (RTs[i]->IsSamplerSet()) {
@@ -612,7 +612,7 @@ void Gfx::Renderer::CreateRenderTargets()
 	RTs[Gfx::RT_DEPTH]->SetDepth(true);
 	RTs[Gfx::RT_DEPTH]->SetDimensions({(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height});
     RTs[Gfx::RT_DEPTH]->CreateRenderTarget();
-    CreateSampler(RTs[Gfx::RT_DEPTH]); 
+    CreateSampler(RTs[Gfx::RT_DEPTH]);
 
     if (RTs[Gfx::RT_MAIN_DEBUG]) {
         DestroyRenderTarget(RTs[Gfx::RT_MAIN_DEBUG]);
@@ -631,15 +631,15 @@ void Gfx::Renderer::CreateRenderTargets()
 	RTs[Gfx::RT_MAIN_COLOR]->SetDepth(false);
 	RTs[Gfx::RT_MAIN_COLOR]->CreateRenderTarget();
 
-    
+
     if (RTs[Gfx::RT_MASK]) {
         DestroyRenderTarget(RTs[Gfx::RT_MASK]);
     }
 	RTs[Gfx::RT_MASK] = new RenderTarget(*RTs[Gfx::RT_MAIN_COLOR], Gfx::RT_MASK);
     RTs[Gfx::RT_MASK]->SetFormat(VK_FORMAT_R8_UNORM);
     RTs[Gfx::RT_MASK]->CreateRenderTarget();
-    CreateSampler(RTs[Gfx::RT_MASK]); 
-	
+    CreateSampler(RTs[Gfx::RT_MASK]);
+
     if (RTs[Gfx::RT_NORMAL]) {
         DestroyRenderTarget(RTs[Gfx::RT_NORMAL]);
     }
@@ -647,7 +647,7 @@ void Gfx::Renderer::CreateRenderTargets()
     RTs[Gfx::RT_NORMAL]->SetFormat(VK_FORMAT_B8G8R8A8_UNORM);
     RTs[Gfx::RT_NORMAL]->CreateRenderTarget();
     CreateSampler(RTs[Gfx::RT_NORMAL]);
-    
+
     if (RTs[Gfx::RT_POSITION]) {
         DestroyRenderTarget(RTs[Gfx::RT_POSITION]);
     }
@@ -655,7 +655,7 @@ void Gfx::Renderer::CreateRenderTargets()
     RTs[Gfx::RT_POSITION]->SetFormat(VK_FORMAT_B8G8R8A8_UNORM);
     RTs[Gfx::RT_POSITION]->CreateRenderTarget();
     CreateSampler(RTs[Gfx::RT_POSITION]);
-    
+
     if (RTs[Gfx::RT_ALBEDO]) {
         DestroyRenderTarget(RTs[Gfx::RT_ALBEDO]);
     }
@@ -692,7 +692,7 @@ std::vector<std::string> Gfx::Renderer::GetRTList()
 }
 
 VkCommandPoolCreateInfo CommandPoolCreateInfo(uint32_t graphicsfamily, VkCommandPoolCreateFlags flags) {
-	
+
 	VkCommandPoolCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	info.pNext = nullptr;
@@ -703,7 +703,7 @@ VkCommandPoolCreateInfo CommandPoolCreateInfo(uint32_t graphicsfamily, VkCommand
 }
 
 VkCommandBufferAllocateInfo CommandBufferCreateInfo(VkCommandPool pool, uint32_t count, VkCommandBufferLevel level) {
-	
+
 	VkCommandBufferAllocateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	info.pNext = nullptr;
@@ -723,7 +723,7 @@ void Gfx::Renderer::CreateCommands()
     VkCommandPoolCreateInfo poolinfo = CommandPoolCreateInfo(indices.Graphics.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     for (int i = 0; i < MAX_FRAMES; i++) {
        	VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Frames[i].CommandPool), "failed to create command pool!");
-		
+
 		VkCommandBufferAllocateInfo cmdinfo = CommandBufferCreateInfo(Frames[i].CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 
 		VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdinfo, &Frames[i].MainCommandBuffer), "failed to allocate command buffers!");

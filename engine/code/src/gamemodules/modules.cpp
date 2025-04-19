@@ -18,14 +18,14 @@ void Modules::Base::Clear()
 void Modules::Base::Populate(const std::string& key, Modules::Info scene, std::function<bool(Keeper::Type)> skip_type)
 {
     ASSERT(!GameObjects, "GameObjects is nullptr!");
-    
+
     Module module(scene);
     module.SetTag(key);
     for (auto& it : GameObjects->GetObjects()) {
         for (Keeper::Objects* info : it.second) {
             if (skip_type(info->GetType())) continue;
             if (info->GetType() == Keeper::NPC) {
-                module.SetGizmo(true); 
+                module.SetGizmo(true);
             }
             module.AddRQ(LoadResources(info));
         }
@@ -36,7 +36,7 @@ void Modules::Base::Populate(const std::string& key, Modules::Info scene, std::f
 void Modules::Base::Populate(const std::string& key, Modules::Info scene, Keeper::Info info)
 {
     Module module(scene);
-    
+
     module.SetTag(key);
 
     Gfx::RenderObject rqobj;
@@ -63,9 +63,9 @@ void Modules::Base::Populate(const std::string& key, Modules::Info scene, Keeper
     rqobj.Mesh = Gfx::Mesh::GetInstance()->GetMesh(info.Mesh);
     rqobj.VertexBase = info.VertexBase;
     rqobj.IsVisible = true;
-   
+
     module.AddRQ(rqobj);
-    
+
     SceneModules[key] = module;
 
     if (key == "mask" || key == "gbuffer") {
@@ -114,7 +114,7 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
             module.SetCameraBuffer(true);
             module.SetStorageBuffer(true);
             module.SetTexture(true);
-            
+
             break;
         }
         case Gfx::BINDLESS_DATA_CAM_BUFFER: {
@@ -134,7 +134,7 @@ void Modules::Base::UpdateResources()
         for (Gfx::RenderObject& obj : it.second.GetRenderQueue()) {
             UpdateResource(it.second, obj);
         }
-    }    
+    }
 }
 
 void Modules::Base::UpdateMaterials()
@@ -148,7 +148,7 @@ void Modules::Base::UpdateMaterials()
 
 void Modules::Base::ThreadedRQ(int i, Keeper::Objects* info)
 {
-    SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;  
+    SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
     SceneModules["mask"].GetRenderQueue()[i].IsSelected = SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected;//info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
     if (SceneModules["mask"].GetRenderQueue()[i].IsSelected) {
         HasOutline = true;
@@ -180,7 +180,7 @@ void Modules::Base::UpdateRQ()
 
         auto light = GameObjects->Get(Keeper::Type::LIGHT);
         for (Keeper::Objects* info : light) {
-            SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;  
+            SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected = info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
             SceneModules["mask"].GetRenderQueue()[i].IsSelected = SceneModules[CurrentScene].GetRenderQueue()[i].IsSelected;//info->GetGizmo() || SceneModules[CurrentScene].GetRenderQueue()[i].ID == GameObjects->GetSelectedID() ? 1 : 0;
             if (SceneModules["mask"].GetRenderQueue()[i].IsSelected) {
                 HasOutline = true;
@@ -203,9 +203,9 @@ void Modules::Base::UpdateRQ()
                 info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
                 info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
                 info.IAttachments.Add(Gfx::RT_DEPTH, true);
-                Populate("outline", info, 
+                Populate("outline", info,
                     GameObjects->GetInfo(Keeper::Infos::INFO_OUTLINE)
-                ); 
+                );
 
                 for (Gfx::RenderObject& obj : SceneModules["outline"].GetRenderQueue()) {
                     UpdateResource(SceneModules["outline"], obj);
@@ -215,9 +215,9 @@ void Modules::Base::UpdateRQ()
                 Modules::Info info;
                 info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
                 info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
-                Populate("lighting", info, 
+                Populate("lighting", info,
                     GameObjects->GetInfo(Keeper::Infos::INFO_LIGHTING)
-                ); 
+                );
 
                 for (Gfx::RenderObject& obj : SceneModules["lighting"].GetRenderQueue()) {
                     UpdateResource(SceneModules["lighting"], obj);
@@ -231,7 +231,7 @@ void Modules::Base::UpdateRQ()
 
 void Modules::Base::UpdateTexture(const std::string& str, Core::ImGuiHelper::TextureForUpdate upd)
 {
-    int id = upd.ID; 
+    int id = upd.ID;
     auto it = std::find_if(SceneModules[str].GetRenderQueue().begin(), SceneModules[str].GetRenderQueue().end(), [id](Gfx::RenderObject& obj) { return obj.ID == id; });
     if (it != SceneModules[str].GetRenderQueue().end()) {
         it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
@@ -252,7 +252,7 @@ void Modules::Base::UpdateTextureUIManager()
 
 void Modules::Base::Update(uint32_t update_type)
 {
-    switch (update_type) 
+    switch (update_type)
     {
         case Modules::Update::RESOURCES:
             UpdateResources();
@@ -275,7 +275,7 @@ Gfx::RenderObject Modules::Base::LoadResources(const Keeper::Objects* info)
 {
     Gfx::RenderObject rqobj;
     if (info->GetAxis() != -1) {
-       rqobj.GizmoType = info->GetAxis(); 
+       rqobj.GizmoType = info->GetAxis();
     }
     rqobj.ID = info->GetID();
     rqobj.IsVisible = info->IsVisible();
@@ -294,8 +294,8 @@ Gfx::RenderObject Modules::Base::LoadResources(const Keeper::Objects* info)
 }
 
 Modules::Base::Base(Keeper::Base* objects)
-: GameObjects(objects) 
-{ 
+: GameObjects(objects)
+{
 
 }
 

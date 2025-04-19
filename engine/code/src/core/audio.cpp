@@ -47,17 +47,17 @@ bool Core::Audio::LoadWAV(const std::string& name, std::uint8_t& channels, std::
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read RIFF");
     ASSERT(strncmp(buffer, "RIFF", 4) != 0, "Core::Audio::LoadWAV(): file is not a valid WAVE file (RIFF)");
 
-    // size of file 
+    // size of file
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read size of file");
 
-    // WAVE 
+    // WAVE
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read WAVE");
     ASSERT(strncmp(buffer, "WAVE", 4) != 0, "Core::Audio::LoadWAV(): file is not a valid WAVE file (WAVE)");
 
     // fmt/0
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read fmt/0");
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read subchunk size (16 for PCM)");
-    
+
     ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read audio format (1 for PCM -> liniar quantization)");
 
     ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read nums of channels");
@@ -91,7 +91,7 @@ bool Core::Audio::LoadWAV(const std::string& name, std::uint8_t& channels, std::
         sound_data[i] = c[i];
     }
 
-    return true;    
+    return true;
 }
 
 void Core::Audio::Load(const std::string& name)
@@ -109,7 +109,7 @@ void Core::Audio::Load(const std::string& name)
 
     bool res = LoadWAV(name, channels, sample_rate, bits_per_sample, sound_data);
     ASSERT(!res, "Core::Audio::Load(): Failed to load WAV!");
-   
+
     alGetError();
     alGenBuffers(1, &Buffer);
     ALenum err = alGetError();
@@ -147,18 +147,18 @@ void Core::Audio::Load(const std::string& name)
 
     State = AL_PLAYING;
 }
-void Core::Audio::SetState(bool state) 
-{ 
+void Core::Audio::SetState(bool state)
+{
     if (state) {
         if (State != AL_PLAYING) {
            alSourcePlay(Source);
         }
         State = AL_PLAYING;
-    } 
-    else { 
+    }
+    else {
         State = AL_PAUSED;
         alSourcePause(Source);
-    } 
+    }
 }
 
 void Core::Audio::Release()

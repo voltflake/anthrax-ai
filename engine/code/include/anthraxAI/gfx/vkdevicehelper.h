@@ -22,7 +22,7 @@ namespace Gfx
         return requiredextensions.empty();
     }
 
-    SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) 
+    SwapChainSupportDetails QuerySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface)
     {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.Capabilities);
@@ -41,10 +41,10 @@ namespace Gfx
         return details;
     }
 
-    VkSurfaceFormatKHR ChooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) 
+    VkSurfaceFormatKHR ChooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         for (const auto& availableFormat : availableFormats) {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB 
+            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB
             && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                 return availableFormat;
         }
@@ -60,7 +60,7 @@ namespace Gfx
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, const Vector2<int>& extents) 
+    VkExtent2D ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, const Vector2<int>& extents)
     {
         if (capabilities.currentExtent.width != UINT32_MAX)
             return capabilities.currentExtent;

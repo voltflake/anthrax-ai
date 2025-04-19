@@ -3,7 +3,7 @@
 #include "defines/vertdef.h"
 
 vec3 plane[6] = vec3[](
-    vec3(-1, 1, 0), vec3(-1, -1, 0),vec3(1, -1, 0), 
+    vec3(-1, 1, 0), vec3(-1, -1, 0),vec3(1, -1, 0),
     vec3(1, 1, 0),  vec3(-1, 1, 0),vec3(1, 1, 0)
 );
 

@@ -7,8 +7,8 @@
 #include <cstdio>
 #include <unordered_map>
 
-Keeper::Npc::Npc(const Info& info) 
-    : Objects(info) 
+Keeper::Npc::Npc(const Info& info)
+    : Objects(info)
 {
     Position = info.Position;
     ModelName = info.Model;
@@ -26,14 +26,14 @@ Keeper::Npc::Npc(const Info& info)
 void Keeper::Npc::PrintInfo()
 {
     printf("-------------------------------\n");
-    printf("NPC [%s]\nPosition [%f, %f, %f]\nMaterial: [%s]\nTexture: [%s]\nModel: [%s]\n", ParsedID.c_str(), 
+    printf("NPC [%s]\nPosition [%f, %f, %f]\nMaterial: [%s]\nTexture: [%s]\nModel: [%s]\n", ParsedID.c_str(),
            Position.x, Position.y, Position.z, MaterialName.c_str(), TextureName.c_str(), ModelName.c_str());
     printf("-------------------------------\n");
 }
 
 glm::vec3 ProjectMouse(float xpos, float ypos, glm::vec3 objpos, int width, int height) {
     float x = 1 -  (2.0f * xpos) / width ;//- 1.0f;
-    float y = 1.0f - (2.0f * ypos) / height; 
+    float y = 1.0f - (2.0f * ypos) / height;
     float z = 1.0f;
     glm::vec3 ray_nds = glm::vec3(x, y, z);
     //printf("---------------\n");
@@ -43,7 +43,7 @@ glm::vec3 ProjectMouse(float xpos, float ypos, glm::vec3 objpos, int width, int 
     glm::vec4 ray_eye = glm::inverse(Gfx::Renderer::GetInstance()->GetProjection() ) * ray_clip;
 
     //printf("MOUSE EYE: %f %f %f\n", ray_eye.x, ray_eye.y, ray_eye.z);
-  
+
     glm::vec4 objview = Gfx::Renderer::GetInstance()->GetView() * glm::vec4(objpos, 1.0);
     ray_eye = glm::vec4(ray_eye.x * objview.z, ray_eye.y * objview.z, ray_eye.z * objview.z, ray_eye.w * objpos.z);
     //printf("MOUSE EYE - OBJ VIEW: %f %f %f\n", ray_eye.x, ray_eye.y, ray_eye.z);
@@ -66,14 +66,14 @@ void Keeper::Npc::Update()
         Vector2<int> mouse = Core::WindowManager::GetInstance()->GetMousePos();
         Vector2<int> mousebeg = Core::WindowManager::GetInstance()->GetMouseBeginPress();
         Vector2<int> dimensions = Core::WindowManager::GetInstance()->GetScreenResolution();
-        
+
         glm::vec3 newpos = ProjectMouse(mouse.x, mouse.y,glm::vec3(Position.x, Position.y, Position.z), dimensions.x, dimensions.y) ;
         static glm::vec3 pos_on_press = glm::vec3(0);
         if (!ResetMouse) {
             ResetMouse = true;
             pos_on_press = ProjectMouse(mousebeg.x, mousebeg.y,glm::vec3(Position.x, Position.y, Position.z), dimensions.x, dimensions.y) ;
         }
-        
+
         if (GizmoHandle->GetAxis() == Keeper::Gizmo::Type::Y) {
             Position.y += (newpos.y - pos_on_press.y);
             GizmoHandle->SetSelected(true);

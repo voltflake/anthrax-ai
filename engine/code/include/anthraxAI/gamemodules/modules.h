@@ -16,7 +16,7 @@
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/core/imguihelper.h"
 
-namespace Modules 
+namespace Modules
 {
     struct Info {
         int ColorID;
@@ -37,7 +37,7 @@ namespace Modules
         public:
             Module() {}
             Module(Info info);
-                
+
             std::vector<Gfx::RenderObject>& GetRenderQueue() { return RenderQueue; }
             Gfx::BindlessDataType GetBindlessType() const { return BindlessType; }
             Gfx::InputAttachmens GetIAttachments() const { return IAttachments; }
@@ -60,7 +60,7 @@ namespace Modules
             Gfx::InputAttachmens IAttachments;
             std::vector<Gfx::RenderObject> RenderQueue;
             Gfx::BindlessDataType BindlessType;
-            
+
             int ColorID;
             int DepthID;
 
@@ -71,23 +71,23 @@ namespace Modules
 
     };
     typedef std::unordered_map<std::string, Module> ScenesMap;
-    typedef std::vector<Gfx::RenderObject> RenderQueueVec; 
-    class Base 
+    typedef std::vector<Gfx::RenderObject> RenderQueueVec;
+    class Base
     {
         public:
             Base(Keeper::Base* objects);
-            ~Base() { if (Animator) delete Animator; } 
+            ~Base() { if (Animator) delete Animator; }
             void Clear();
 
             void Update(uint32_t update_type);
-            
+
             void Populate(const std::string& key, Info scene, std::function<bool(Keeper::Type)> skip_type);
             void Populate(const std::string& key, Info scene, Keeper::Info info);
 
             Module& Get(const std::string& key) { return SceneModules[key]; }
-        
+
             bool HasFrameOutline() const { return HasOutline; }
-            void ReloadAnimation(uint32_t id, const std::string& s) { if (Animator) { Animator->Reload(id, s); } } 
+            void ReloadAnimation(uint32_t id, const std::string& s) { if (Animator) { Animator->Reload(id, s); } }
             bool HasAnimation(uint32_t id) { if (Animator) { return Animator->HasAnimation(id); } return false; }
             void SetRenderQueue(const std::string& key, RenderQueueVec& rq) { SceneModules[key].SetRenderQueue(rq); }
 
@@ -112,5 +112,5 @@ namespace Modules
             void UpdateRQ();
             void ThreadedRQ(int i, Keeper::Objects* info);
     };
-  
+
 }

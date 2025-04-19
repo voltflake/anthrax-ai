@@ -41,13 +41,13 @@ void Engine::Init()
 
     Core::Scene::GetInstance()->Init();
     Core::Audio::GetInstance()->Init();
-    
+
     Gfx::Vulkan::GetInstance()->Init();
 
     Core::Scene::GetInstance()->InitModules();
-    
+
     Core::ImGuiHelper::GetInstance()->Init();
-    
+
     SetState(ENGINE_STATE_INTRO);
 }
 

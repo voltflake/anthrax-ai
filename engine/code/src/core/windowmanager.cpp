@@ -110,7 +110,7 @@ int Core::WindowManager::CatchEvent(xcb_generic_event_t *event)
 			Mouse.Event = { motion->event_x, motion->event_y };
         	return WINDOW_EVENT_MOUSE_MOVE;
 		}
-	  	case XCB_BUTTON_PRESS: {		
+	  	case XCB_BUTTON_PRESS: {
             xcb_motion_notify_event_t* motion = (xcb_motion_notify_event_t*)event;
 			Mouse.Event = { motion->event_x, motion->event_y };
             return WINDOW_EVENT_MOUSE_PRESSED;
@@ -173,7 +173,7 @@ void Core::WindowManager::RunLinux()
 		if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EXIT)) {
 			xcb_key_symbols_free(KeySymbols);
 		}
-        
+
         end = clock();
         delta = (float(end - start));
       //  Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) ;// / float(CLOCKS_PER_SEC) * 1000.0;
@@ -197,7 +197,7 @@ void Core::WindowManager::InitWindowsWindow()
 	wcex.lpszClassName = TEXT("35");
 
 	ASSERT(!RegisterClassEx(&wcex), "Can't register winClass!");
-	
+
 	Hwnd = CreateWindow(wcex.lpszClassName, TEXT("35"), WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
             CW_USEDEFAULT, CW_USEDEFAULT,
             Extents.x, Extents.y,
@@ -217,7 +217,7 @@ int Core::WindowManager::CatchEvent()
 	if (Gfx::Renderer::GetInstance()->IsOnResize() && (OnResizeExtents.x != Extents.x || OnResizeExtents.y != Extents.y)) {
 		Event |= WINDOW_EVENT_RESIZE;
 	}
-		
+
 	PressedKey = -1;
 	Event |= WINDOW_EVENT_KEY_RELEASED;
 	if (GetAsyncKeyState(VK_LBUTTON) & 0x8000 != 0) {
@@ -260,11 +260,11 @@ int Core::WindowManager::CatchEvent()
 	if (PressedKey != -1) {
 		Event |= WINDOW_EVENT_KEY_PRESSED;
         Utils::ClearBit(&Event, WINDOW_EVENT_KEY_RELEASED);
-	}	
+	}
 	return 0;
 }
 
-void Core::WindowManager::RunWindows() 
+void Core::WindowManager::RunWindows()
 {
 	MSG msg = {};
 
@@ -295,7 +295,7 @@ void Core::WindowManager::RunWindows()
 
 		Core::ImGuiHelper::GetInstance()->UpdateFrame();
         Core::Scene::GetInstance()->Loop();
-        
+
         end = clock();
         delta = (float(end - start));
         Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) * 1000.0;
@@ -385,7 +385,7 @@ void Core::WindowManager::ProcessEvents()
     if (Gfx::Renderer::GetInstance()->IsOnResize() && Utils::IsBitSet(Event, WINDOW_EVENT_RESIZE) && (OnResizeExtents.x != Extents.x || OnResizeExtents.y != Extents.y)) {
         Vector2<int> tmp = Extents;
         Extents.x = OnResizeExtents.x;
-        Extents.y = OnResizeExtents.y; 
+        Extents.y = OnResizeExtents.y;
         if (!Engine::GetInstance()->OnResize()) {
             Extents = tmp;
         }

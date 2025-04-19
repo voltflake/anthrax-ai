@@ -23,11 +23,11 @@ namespace Core
             void InitModules();
 
             void Loop();
-            
+
             void ExportObjectInfo(const Keeper::Objects* obj);
             void RenderScene(bool playmode);
             bool HasAnimation(uint32_t id) { if (GameModules) { return GameModules->HasAnimation(id); } return false; }
-            void ReloadAnimation(uint32_t id, const std::string& s) { if (GameModules) { return GameModules->ReloadAnimation(id, s); }}        
+            void ReloadAnimation(uint32_t id, const std::string& s) { if (GameModules) { return GameModules->ReloadAnimation(id, s); }}
 
             void SetCurrentScene(const std::string& str);
             Modules::ScenesMap& GetScenes() { return GameModules->GetSceneModules(); }
@@ -37,7 +37,7 @@ namespace Core
             void ReloadResources();
             void ParseSceneNames();
             const std::vector<std::string>& GetSceneNames() const { return SceneNames; }
-                
+
             void KeepEditor(bool keep) { HasEditor = keep; }
             const std::string& GetCurrentScene() const { return CurrentScene; }
             void SetSelectedID(uint32_t id) { GameObjects->SetSelectedID(id); }
@@ -56,11 +56,11 @@ namespace Core
             std::vector<Keeper::Info> ParsedSceneInfo;
 
             std::vector<std::string> SceneNames;
-            
+
             Keeper::Camera* EditorCamera;
 
             Utils::Parser Parse;
-            
+
             bool HasEditor = false;
             bool HasGBuffer = false;
             bool HasFrameGizmo = false;

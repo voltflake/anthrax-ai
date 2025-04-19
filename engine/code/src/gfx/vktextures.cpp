@@ -23,7 +23,7 @@ bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
     }
     Textures[texture] = CreateTexture(path + texture);
     CreateSampler(Textures[texture]);
-    
+
     if (Core::ImGuiHelper::GetInstance()->IsInit()) {
         Textures[texture].SetImGuiDescriptor();
     }
@@ -51,7 +51,7 @@ void Gfx::Renderer::CreateTextures()
             }
         }
     }
-    
+
     // load others from texture folder
     //
     std::string path = "textures/";
@@ -66,7 +66,7 @@ void Gfx::Renderer::CreateTextures()
            // printf("BASENAME: %s\n", basename.c_str());
         }
     }
-    
+
     for (const std::string& s : names) {
         if (!CreateTextureFromInfo(s)) {
             continue;
@@ -88,7 +88,7 @@ Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
     BufferHelper::Buffer stagingbuffer;
     BufferHelper::AllocateBuffer(stagingbuffer, imagesize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     BufferHelper::MapMemory(stagingbuffer, imagesize, 0, pixels);
-   
+
     stbi_image_free(pixels);
 
     texture.SetFormat(VK_FORMAT_R8G8B8A8_SRGB);
@@ -137,7 +137,7 @@ void Gfx::Renderer::CreateSampler(RenderTarget* rt)
 	samplerinfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerinfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	samplerinfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    
+
     rt->SetSampler(true);
 	VK_ASSERT(vkCreateSampler(Gfx::Device::GetInstance()->GetDevice(), &samplerinfo, nullptr, rt->GetSampler()), "failed to create sampler!");
 }

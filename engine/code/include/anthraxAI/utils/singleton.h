@@ -3,7 +3,7 @@
 namespace Utils
 {
     template <typename T>
-    class Singleton 
+    class Singleton
     {
         private:
         protected:
@@ -11,7 +11,7 @@ namespace Utils
 
         public:
             Singleton(const Singleton* obj) = delete;
-            Singleton* operator=(const Singleton*) = delete; 
+            Singleton* operator=(const Singleton*) = delete;
 
             static T* GetInstance() {  static T Instance; return &Instance; }
     };

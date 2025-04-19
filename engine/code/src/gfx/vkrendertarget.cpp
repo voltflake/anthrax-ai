@@ -149,7 +149,7 @@ void Gfx::RenderTarget::Copy(VkCommandBuffer cmd, VkBuffer buffer, uint32_t widt
     vkCmdCopyBufferToImage(cmd, buffer, Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-void Gfx::RenderTarget::Clean() 
+void Gfx::RenderTarget::Clean()
 {
     vkDestroyImage(Gfx::Device::GetInstance()->GetDevice(), Image, nullptr);
     vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), Memory, nullptr);

@@ -16,7 +16,7 @@
 
 namespace Gfx
 {
-    class Renderer : public Utils::Singleton<Renderer> 
+    class Renderer : public Utils::Singleton<Renderer>
     {
         public:
             void CleanTextures();
@@ -27,7 +27,7 @@ namespace Gfx
             void CreateImGuiDescSet();
 
             void CleanResources();
-            
+
             void CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsList dst_id);
 
             void CreateTextures();
@@ -38,19 +38,19 @@ namespace Gfx
 
             TexturesMap GetTextureMap() const { return Textures; }
             RenderTarget* GetTexture(const std::string& path);
-            
-            RenderTarget* GetRT(Gfx::RenderTargetsList id) const { return RTs[id]; }        
-            std::vector<std::string> GetRTList();        
-            
+
+            RenderTarget* GetRT(Gfx::RenderTargetsList id) const { return RTs[id]; }
+            std::vector<std::string> GetRTList();
+
             void PrepareCameraBuffer(Keeper::Camera& camera);
             void PrepareInstanceBuffer();
             void GetTransforms(InstanceData* datas, Gfx::RenderObject obj, int i);
             void PrepareStorageBuffer();
 
             void Submit(std::function<void(VkCommandBuffer cmd)>&& function);
-            
+
             void RenderUI();
-            void TransferLayoutsDebug();        
+            void TransferLayoutsDebug();
 
             int GetFrameInd() { return FrameIndex; }
             FrameData& GetFrame() { return Frames[FrameIndex]; }
@@ -76,7 +76,7 @@ namespace Gfx
             void EndRendering(VkCommandBuffer cmd) { vkCmdEndRenderingKHR(cmd); }
             bool IsOnResize() const { return OnResize; }
             void SetOnResize(bool ison) { OnResize = ison; }
-            
+
             int GetInstanceSize() const { return 20; }
 
             const glm::vec3 GetCameraPos() const { return glm::vec3(CamData.viewpos); }
@@ -96,20 +96,20 @@ namespace Gfx
         private:
             RenderTarget* RTs[RT_SIZE];
             TexturesMap Textures;
-	        
+
             StorageData StorageBuffer;
             InstanceData InstanceBuffer;
             CameraData 	CamData;
             UploadContext Upload;
-            
+
             uint32_t InstanceCount = 0;
             uint32_t InstanceIndex = 0;
-            
+
             bool UpdateSamples = false;
             bool OnResize = false;
 	        int FrameIndex = 0;
             uint32_t SwapchainIndex = 0;
-            
+
             VkRenderingAttachmentInfoKHR AttachmentInfos[Gfx::RT_SIZE];
             PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR{VK_NULL_HANDLE};
         	PFN_vkCmdEndRenderingKHR   vkCmdEndRenderingKHR{VK_NULL_HANDLE};

@@ -19,7 +19,7 @@ namespace Gfx
         };
 	    public:
 		    shaderc_include_result* GetInclude(const char* requested_src, shaderc_include_type type, const char* requesting_src, size_t include_depth) override;
-        
+
 		    void ReleaseInclude(shaderc_include_result* data) override;
 	};
 
@@ -33,7 +33,7 @@ namespace Gfx
     {
         public:
             Material* GetMaterial(const std::string& name);
-            void Build();        
+            void Build();
 
             void CompileShader(const std::string& name, shaderc_shader_kind kind, std::string& data);
 

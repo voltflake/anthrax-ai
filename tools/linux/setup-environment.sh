@@ -3,7 +3,7 @@
 # Function to install dependencies using apt
 install_dependencies_apt() {
     echo "Detected apt package manager. Installing dependencies using apt..."
-    
+
     # Install pkg-config
     sudo apt install pkg-config -y
 

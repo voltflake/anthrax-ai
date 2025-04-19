@@ -35,7 +35,7 @@ void Gfx::Model::ProcessBones(std::vector<Vertex>& vert, const std::string& path
         ASSERT(boneID == -1, "bone loading error\n");
         aiVertexWeight* weights = aimesh->mBones[j]->mWeights;
         int numweights = aimesh->mBones[j]->mNumWeights;
-        int vertexID = 0; 
+        int vertexID = 0;
         for (int weightind = 0; weightind < numweights; ++weightind) {
             vertexID = weights[weightind].mVertexId;
             float weight = weights[weightind].mWeight;
@@ -61,11 +61,11 @@ void Gfx::Model::ProcessNode(const std::string& path, aiNode *node, const aiScen
         Models[path].MeshBase[i] = TotalVertex;
         TotalVertex += aimesh->mNumVertices;
         Models[path].Bones.Vertext2Bone.resize(TotalVertex);
-      
+
         if (aimesh->HasBones()) {
             ProcessBones(meshinfo->Vertices, path, aimesh);
         }
-        Gfx::Mesh::GetInstance()->UpdateMesh(meshinfo); 
+        Gfx::Mesh::GetInstance()->UpdateMesh(meshinfo);
         Models[path].Meshes.push_back(meshinfo);
     }
 }
@@ -103,8 +103,8 @@ void Gfx::Model::LoadModel(const std::string& path)
     const aiScene* scene = nullptr;
 
     scene = importer.ReadFile(path, IMPORT_PROPS);
-    ASSERT(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode, (importer.GetErrorString())); 
-    
+    ASSERT(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode, (importer.GetErrorString()));
+
     TotalVertex = 0;
     BoneCounter = 0;
     ProcessNode(path, scene->mRootNode, scene);
@@ -122,5 +122,3 @@ Gfx::ModelInfo* Gfx::Model::GetModel(const std::string& path)
 		return &(*it).second;
 	}
 }
-
-

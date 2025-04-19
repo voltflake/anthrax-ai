@@ -6,7 +6,7 @@ void Gfx::Vulkan::Init()
     CreateVkInstance();
 
     Gfx::Device::GetInstance()->Init();
-	
+
 	Gfx::Renderer::GetInstance()->CreateRenderTargets();
 	Gfx::Renderer::GetInstance()->CreateCommands();
 	Gfx::Renderer::GetInstance()->Sync();
@@ -51,17 +51,17 @@ bool Gfx::Vulkan::OnResize()
 {
     if (Gfx::Renderer::GetInstance()->IsOnResize() && Core::WindowManager::GetInstance()->GetScreenResolution().x > 0 && Core::WindowManager::GetInstance()->GetScreenResolution().y > 0) {
 	    Gfx::Device::GetInstance()->RecreateSwapchain();
-	    
+
         Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::CMD);
         Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::SYNC);
-        
+
         Gfx::Renderer::GetInstance()->CreateCommands();
         Gfx::Renderer::GetInstance()->CreateRenderTargets();
         Gfx::Renderer::GetInstance()->SetUpdateSamplers(true);
-	    
+
         Gfx::Renderer::GetInstance()->Sync();
         vkDeviceWaitIdle(Gfx::Device::GetInstance()->GetDevice());
-        
+
 	    Gfx::Mesh::GetInstance()->UpdateDummy();
         Gfx::Pipeline::GetInstance()->Build();
         return true;
@@ -84,7 +84,7 @@ void Gfx::Vulkan::CleanUp()
 	Gfx::DescriptorsBase::GetInstance()->CleanBindless();
 
 	Gfx::Device::GetInstance()->CleanUpSwapchain();
-	
+
 	Core::Deletor::GetInstance()->CleanAll();
 
 	vkDestroySurfaceKHR(Instance, Gfx::Device::GetInstance()->GetSurface(), nullptr);
@@ -139,7 +139,7 @@ bool Gfx::Vulkan::EnumerateInstanceExtSupport()
 {
 	unsigned int instextcount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &instextcount, nullptr);
-	
+
 	std::vector<VkExtensionProperties> availableextensions(instextcount);
 	vkEnumerateInstanceExtensionProperties(nullptr, &instextcount, availableextensions.data());
 

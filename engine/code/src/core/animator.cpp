@@ -12,7 +12,7 @@ std::vector<glm::mat4> Core::AnimatorBase::Update(Gfx::RenderObject& object)
     }
 
     float timesec = (float)((double)Engine::GetInstance()->GetTime() - (double)Utils::Debug::GetInstance()->AnimStartMs) / 1000.0f;
-	
+
     std::vector<glm::mat4> vec =  GetBonesTransform(object.Model, object.ID, timesec);
     return vec;
 }
@@ -39,7 +39,7 @@ void Core::AnimatorBase::GetNodeChildren(const aiNode* node, Core::NodeRoots& in
         NodeRoots nodetmp;
         GetNodeChildren(node->mChildren[i], nodetmp);
         info.Children.emplace_back(nodetmp);
-    }    
+    }
 }
 
 Core::aiSceneInfo Core::AnimatorBase::ConvertAi(const aiScene* scene)
@@ -49,13 +49,13 @@ Core::aiSceneInfo Core::AnimatorBase::ConvertAi(const aiScene* scene)
     info.TicksPerSecond = scene->mAnimations[0]->mTicksPerSecond;
     info.Duration = scene->mAnimations[0]->mDuration;
 
-    
+
     Core::NodeRoots root;
     GetNodeChildren(scene->mRootNode, root);
     info.RootNode = root;
 
     info.AnimNodes.resize(scene->mAnimations[0]->mNumChannels);
-    
+
     for (int i = 0; i < scene->mAnimations[0]->mNumChannels; i++) {
         const aiNodeAnim* node = scene->mAnimations[0]->mChannels[i];
 
@@ -64,7 +64,7 @@ Core::aiSceneInfo Core::AnimatorBase::ConvertAi(const aiScene* scene)
         anim.NumPositionsKeys = node->mNumPositionKeys;
         anim.NumRotationKeys = node->mNumRotationKeys;
         anim.NumScalingKeys = node->mNumScalingKeys;
-        
+
         anim.PositionKeys.reserve(anim.NumPositionsKeys);
         anim.PositionTime.reserve(anim.NumPositionsKeys);
         for (int posi = 0; posi < node->mNumPositionKeys; posi++) {
@@ -89,7 +89,7 @@ Core::aiSceneInfo Core::AnimatorBase::ConvertAi(const aiScene* scene)
     return info;
 }
 
-void Core::AnimatorBase::Init() 
+void Core::AnimatorBase::Init()
 {
     Core::Scene* scene = Core::Scene::GetInstance();
     for (auto& it : scene->GetGameObjects()->GetObjects()) {
@@ -101,7 +101,7 @@ void Core::AnimatorBase::Init()
             data.SceneInd = 0;
             for (const std::string& animpath : info->GetAnimations()) {
                 data.Paths.push_back("./models/" + animpath);
-                
+
                 auto it = std::find(AnimationMap.begin(), AnimationMap.end(), "./models/" + animpath);
 
                 std::size_t index = std::distance(std::begin(AnimationMap), it);
@@ -124,7 +124,7 @@ void Core::AnimatorBase::Init()
 }
 
 void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, const Core::aiSceneInfo& scene, const Core::NodeRoots& node, float timetick, const glm::mat4 parenttransform)
-{ 
+{
     std::string nodename = node.Name;
 
     const NodeAnim& nodeanim = FindAnim(scene, nodename);
@@ -134,14 +134,14 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
     if (!nodeanim.NodeName.empty()) {
         glm::vec3 scaling;
         glm::mat4 scm = InterpolateScale(scaling, timetick, nodeanim);
-   
+
         glm::quat rot;
         glm::mat4 rotm = InterpolateRot(rot, timetick, nodeanim);
 
         glm::vec3 Translation;
         glm::mat4 transl = InterpolatePos(Translation, timetick, nodeanim);
 
-        nodetransf = transl * rotm * scm; 
+        nodetransf = transl * rotm * scm;
     }
     glm::mat4 globaltransf = parenttransform * nodetransf;
 
@@ -158,11 +158,11 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
 std::vector<glm::mat4> Core::AnimatorBase::GetBonesTransform(Gfx::ModelInfo* model, int animid, float time)
 {
     Core::AnimationData& data = Animations[animid];
-    
+
     Core::aiSceneInfo& scene = Scenes[data.SceneInd];
 
     float tickespersec = (float)(scene.TicksPerSecond != 0 ? scene.TicksPerSecond : 25.0f);
-    
+
     float timeinticks = time * tickespersec;
     float timeticks =  fmod(timeinticks, (float)scene.Duration);
 
@@ -282,5 +282,5 @@ u_int Core::AnimatorBase::FindScale(float timeticks, const NodeAnim& animnode)
         }
     }
 
-    return 0;   
+    return 0;
 }

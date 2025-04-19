@@ -36,7 +36,7 @@ namespace Utils
     } LevelElements;
 #undef X
 
-    static std::string GetValue(const LevelElements& id) 
+    static std::string GetValue(const LevelElements& id)
     {
         std::string retval;
 #define X(element, name) if (id == element) { retval = name; } else
@@ -72,12 +72,12 @@ namespace Utils
         private:
             std::vector<std::string> File;
             TokensPair Tokens;
-  
+
             NodeIt RootNode;
             NodeIt ChildRange;
             NodeIt RootChildNode;
             NodeIt ChildNode;
-            
+
             void Tokenize(std::vector<std::string>::const_iterator it) ;
             std::string ConsrtuctElementName(const LevelElements& element) const;
     };
@@ -85,7 +85,7 @@ namespace Utils
     template<typename T>
     T Parser::GetElement(const NodeIt& node, const LevelElements& element, T defval) const
     {
-        std::string elemtstr = GetValue(element); 
+        std::string elemtstr = GetValue(element);
         std::string value = "0";
         bool samenode = true;
 

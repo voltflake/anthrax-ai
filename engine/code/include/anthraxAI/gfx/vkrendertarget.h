@@ -8,7 +8,7 @@
 
 namespace Gfx
 {
-    class RenderTarget 
+    class RenderTarget
     {
         public:
             RenderTarget() {}
@@ -20,9 +20,9 @@ namespace Gfx
 
 	        void MemoryBarrier(VkCommandBuffer cmd, VkImageLayout oldlayout, VkImageLayout newlayout);
 	        void Copy(VkCommandBuffer cmd, VkBuffer buffer, uint32_t width, uint32_t height);
-            
+
             VkFormat GetFormat() { return Format; }
-            
+
             void SetFormat(VkFormat format) { Format = format; }
             void SetDimensions(Vector2<int> dim) { Dimensions = dim; }
             void SetDepth(bool depth) { IsDepth = depth; }
@@ -38,7 +38,7 @@ namespace Gfx
             void Clean();
 
             VkDescriptorSet GetImGuiDescriptor() const { return ImGuiDescriptor; }
-            void SetImGuiDescriptor(VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) { ImGuiDescriptor = ImGui_ImplVulkan_AddTexture(Sampler, ImageView, layout); } 
+            void SetImGuiDescriptor(VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) { ImGuiDescriptor = ImGui_ImplVulkan_AddTexture(Sampler, ImageView, layout); }
 
         private:
             VkImage Image;
@@ -51,7 +51,7 @@ namespace Gfx
 
             VkDescriptorSet ImGuiDescriptor;
 
-            uint32_t ID = -1; 
+            uint32_t ID = -1;
             bool IsSampler = false;
             bool IsDepth = false;
             bool IsStorage = false;

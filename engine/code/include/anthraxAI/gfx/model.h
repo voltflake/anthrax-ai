@@ -46,7 +46,7 @@ namespace Gfx
     struct BoneInfo {
         std::vector<VertexBoneData> Vertext2Bone;
         std::map<std::string, int> BoneMap;
-        std::vector<glm::mat4> Transformes;
+        std::vector<glm::mat4> Transformers;
         std::vector<Bone> Info;
         std::vector<glm::mat4> FinTransform;
     };

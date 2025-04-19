@@ -31,7 +31,7 @@ class Engine : public Utils::Singleton<Engine>
         int GetState() const { return State; }
         void SetState(int state) { State |= state; }
         void ClearState(int state) {  Utils::ClearBit(&State, state); }
-        void ToogleEditorMode() { Utils::ToogleBit(&State, ENGINE_STATE_EDITOR);  Utils::ToogleBit(&State, ENGINE_STATE_PLAY);}
+        void ToggleEditorMode() { Utils::ToggleBit(&State, ENGINE_STATE_EDITOR);  Utils::ToggleBit(&State, ENGINE_STATE_PLAY);}
         void SetEditorMode() { Utils::ClearBit(&State, ENGINE_STATE_INTRO); State |= ENGINE_STATE_EDITOR; }
         void CheckState();
 

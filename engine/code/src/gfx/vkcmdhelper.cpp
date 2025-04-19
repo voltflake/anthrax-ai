@@ -119,7 +119,7 @@ void Gfx::CommandBuffer::BeginCmd(VkCommandBufferBeginInfo cmdinfo)
 
 void Gfx::CommandBuffer::EndCmd()
 {
-	VK_ASSERT(vkEndCommandBuffer(cmd), "failder to end command buffer");
+	VK_ASSERT(vkEndCommandBuffer(cmd), "failed to end command buffer");
 }
 
 void Gfx::CommandBuffer::MemoryBarrier(VkImage image, VkImageLayout oldlayout, VkImageLayout newlayout, VkImageSubresourceRange range)

@@ -132,7 +132,7 @@ namespace Gfx
         return retval;
     }
 
-    class InputAttachmens
+    class InputAttachments
     {
         public:
             void Add(Gfx::RenderTargetsList id, bool isdepth = false) { if (!isdepth) { Color = id; } else { Depth = id; } }
@@ -167,13 +167,13 @@ namespace Gfx
 
 
     struct BasicParams {
-        uint32_t camerabufer = 0;
+        uint32_t camerabuffer = 0;
         uint32_t texturehandle = 0;
         uint32_t storagebuffer = 0;
         uint32_t instancebuffer = 0;
     };
     struct CamBufferParams {
-        uint32_t camerabufer = 0;
+        uint32_t camerabuffer = 0;
         uint32_t pad0;
         uint32_t pad1;
         uint32_t pad2;

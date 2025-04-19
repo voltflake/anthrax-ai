@@ -12,11 +12,11 @@ namespace Gfx
     bool DeviceExtSupport(VkPhysicalDevice device) {
         uint32_t extensioncount;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensioncount, nullptr);
-        std::vector<VkExtensionProperties> availablexxtensions(extensioncount);
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensioncount, availablexxtensions.data());
+        std::vector<VkExtensionProperties> availableextensions(extensioncount);
+        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensioncount, availableextensions.data());
 
         std::set<std::string> requiredextensions(DEVICE_EXT.begin(), DEVICE_EXT.end());
-        for (const auto& extension : availablexxtensions) {
+        for (const auto& extension : availableextensions) {
             requiredextensions.erase(extension.extensionName);
         }
         return requiredextensions.empty();

@@ -47,7 +47,7 @@ glm::vec3 ProjectMouse(float xpos, float ypos, glm::vec3 objpos, int width, int 
     glm::vec4 objview = Gfx::Renderer::GetInstance()->GetView() * glm::vec4(objpos, 1.0);
     ray_eye = glm::vec4(ray_eye.x * objview.z, ray_eye.y * objview.z, ray_eye.z * objview.z, ray_eye.w * objpos.z);
     //printf("MOUSE EYE - OBJ VIEW: %f %f %f\n", ray_eye.x, ray_eye.y, ray_eye.z);
-    /*printf("Camera POS: %f %f %f\nCamera RIGHT: %f %f %f\nCamera Forward: %f %f %f\nCanera UP: %f %f %f\nRotATION: YAW %f | PITCH: %f\n",   */
+    /*printf("Camera POS: %f %f %f\nCamera RIGHT: %f %f %f\nCamera Forward: %f %f %f\nCamera UP: %f %f %f\nRotATION: YAW %f | PITCH: %f\n",   */
     /*       Core::Scene::GetInstance()->GetCamera().GetPos().x, Core::Scene::GetInstance()->GetCamera().GetPos().y, Core::Scene::GetInstance()->GetCamera().GetPos().z,*/
     /**/
     /*       Core::Scene::GetInstance()->GetCamera().GetRight().x, Core::Scene::GetInstance()->GetCamera().GetRight().y, Core::Scene::GetInstance()->GetCamera().GetRight().z,*/

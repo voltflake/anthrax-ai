@@ -50,7 +50,7 @@ void Gfx::Device::CreatePhysicalDevice()
 
 void Gfx::Device::CreateDevice()
 {
-    QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
+    QueueFamilyIndex indices = FindQueueFamilies(PhysicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueinfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.Graphics.value(), indices.Present.value()};
@@ -72,13 +72,13 @@ void Gfx::Device::CreateDevice()
 	dynfeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
     dynfeature.dynamicRendering = VK_TRUE;
 
-	VkPhysicalDeviceDescriptorIndexingFeatures descindeing{};
-	descindeing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-	descindeing.pNext = &dynfeature;
+	VkPhysicalDeviceDescriptorIndexingFeatures descindexing{};
+	descindexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	descindexing.pNext = &dynfeature;
 
     VkPhysicalDeviceShaderDrawParametersFeatures shaderdrawparams{};
     shaderdrawparams.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
-    shaderdrawparams.pNext = &descindeing;
+    shaderdrawparams.pNext = &descindexing;
     shaderdrawparams.shaderDrawParameters = VK_TRUE;
 
 	VkPhysicalDeviceFeatures2 devfeatures2{};
@@ -130,7 +130,7 @@ void Gfx::Device::CreateSwapchain()
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-	QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
+	QueueFamilyIndex indices = FindQueueFamilies(PhysicalDevice);
 	uint32_t queueFamilyIndices[] = {indices.Graphics.value(), indices.Present.value()};
 	if (indices.Graphics != indices.Present) {
 	    createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -202,7 +202,7 @@ void Gfx::Device::CreateWindowsSurface()
 }
 #endif
 
-Gfx::QueueFamilyIndex Gfx::Device::FindQueueFimilies(VkPhysicalDevice device)
+Gfx::QueueFamilyIndex Gfx::Device::FindQueueFamilies(VkPhysicalDevice device)
 {
 	QueueFamilyIndex index;
 	uint32_t queuefamilycount = 0;
@@ -254,7 +254,7 @@ VkQueue Gfx::Device::GetQueue(QueuesEnum q)
 bool Gfx::Device::IsDeviceSuitable(VkPhysicalDevice device)
 {
 	QueueFamilyIndex index;
-	index = FindQueueFimilies(device);
+	index = FindQueueFamilies(device);
 	bool extensionsupported = DeviceExtSupport(device);
 	bool swapchainsupport = false;
 	if (extensionsupported) {

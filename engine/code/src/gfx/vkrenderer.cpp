@@ -184,7 +184,7 @@ void Gfx::Renderer::EndRender()
     EndRendering(Cmd.GetCmd());
 }
 
-void Gfx::Renderer::StartRender(Gfx::InputAttachmens inputs, AttachmentRules rules)
+void Gfx::Renderer::StartRender(Gfx::InputAttachments inputs, AttachmentRules rules)
 {
     Gfx::RenderingAttachmentInfo info;
    	std::vector<RenderingAttachmentInfo> attachmentinfo;
@@ -549,15 +549,15 @@ void Gfx::Renderer::Sync()
 	VkSemaphoreCreateInfo semcreateinfo = SemaphoreCreateInfo(0);
 
 	VkFenceCreateInfo uploadfencecreateinfo = FenceCreateInfo(0);
-	VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &uploadfencecreateinfo, nullptr, &Upload.UploadFence), "failder to create upload fence ! ");
+	VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &uploadfencecreateinfo, nullptr, &Upload.UploadFence), "failed to create upload fence !");
 	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::SYNC, [=, this]() {
 		vkDestroyFence(Gfx::Device::GetInstance()->GetDevice(), Upload.UploadFence, nullptr);
 	});
 	for (int i = 0; i < MAX_FRAMES; i++) {
-		VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &fencecreateinfo, nullptr, &Frames[i].RenderFence), "failder to create fence ! ");
+		VK_ASSERT(vkCreateFence(Gfx::Device::GetInstance()->GetDevice(), &fencecreateinfo, nullptr, &Frames[i].RenderFence), "failed to create fence !");
 
-		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].PresentSemaphore), "failder to create present semaphore!");
-		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].RenderSemaphore), "failder to create render semaphore!");
+		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].PresentSemaphore), "failed to create present semaphore!");
+		VK_ASSERT(vkCreateSemaphore(Gfx::Device::GetInstance()->GetDevice(), &semcreateinfo, nullptr, &Frames[i].RenderSemaphore), "failed to create render semaphore!");
 
 		Core::Deletor::GetInstance()->Push(Core::Deletor::Type::SYNC, [=, this]() {
 			vkDestroyFence(Gfx::Device::GetInstance()->GetDevice(), Frames[i].RenderFence, nullptr);
@@ -719,7 +719,7 @@ void Gfx::Renderer::CreateCommands()
   	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");
 	vkCmdEndRenderingKHR = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdEndRenderingKHR");
 
-    Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFimilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
+    Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFamilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
     VkCommandPoolCreateInfo poolinfo = CommandPoolCreateInfo(indices.Graphics.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     for (int i = 0; i < MAX_FRAMES; i++) {
        	VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Frames[i].CommandPool), "failed to create command pool!");

@@ -32,7 +32,7 @@ const Core::NodeAnim& Core::AnimatorBase::FindAnim(const aiSceneInfo& scene, con
 void Core::AnimatorBase::GetNodeChildren(const aiNode* node, Core::NodeRoots& info)
 {
     info.Name = node->mName.C_Str();
-    info.Tranform = Gfx::mat2glm(node->mTransformation);
+    info.Transform = Gfx::mat2glm(node->mTransformation);
     info.ChildrenNum = node->mNumChildren;
     info.Children.reserve(info.ChildrenNum);
     for (int i = 0; i < node->mNumChildren; i++) {
@@ -129,7 +129,7 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
 
     const NodeAnim& nodeanim = FindAnim(scene, nodename);
 
-   glm::mat4 nodetransf = node.Tranform;
+   glm::mat4 nodetransf = node.Transform;
 
     if (!nodeanim.NodeName.empty()) {
         glm::vec3 scaling;

@@ -44,7 +44,7 @@ glm::vec3 ProjectMouseLight(float xpos, float ypos, glm::vec3 objpos, int width,
     glm::vec4 objview = Gfx::Renderer::GetInstance()->GetView() * glm::vec4(objpos, 1.0);
     ray_eye = glm::vec4(ray_eye.x * objview.z, ray_eye.y * objview.z, ray_eye.z * objview.z, ray_eye.w * objpos.z);
     //printf("MOUSE EYE - OBJ VIEW: %f %f %f\n", ray_eye.x, ray_eye.y, ray_eye.z);
-    /*printf("Camera POS: %f %f %f\nCamera RIGHT: %f %f %f\nCamera Forward: %f %f %f\nCanera UP: %f %f %f\nRotATION: YAW %f | PITCH: %f\n",   */
+    /*printf("Camera POS: %f %f %f\nCamera RIGHT: %f %f %f\nCamera Forward: %f %f %f\nCamera UP: %f %f %f\nRotATION: YAW %f | PITCH: %f\n",   */
     glm::vec4 inv_ray_wor = (glm::inverse( Gfx::Renderer::GetInstance()->GetView()) * (ray_eye));
     glm::vec3 ray_wor = glm::vec3(inv_ray_wor.x, inv_ray_wor.y, inv_ray_wor.z);
     //printf("RAY WORLD %f %f %f \nOBJ_WORLD %f %f %f\n\n", ray_wor.x, ray_wor.y, ray_wor.z, objpos.x, objpos.y, objpos.z);

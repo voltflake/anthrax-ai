@@ -58,7 +58,7 @@ bool Core::Audio::LoadWAV(const std::string& name, std::uint8_t& channels, std::
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read fmt/0");
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read subchunk size (16 for PCM)");
 
-    ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read audio format (1 for PCM -> liniar quantization)");
+    ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read audio format (1 for PCM -> linear quantization)");
 
     ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read nums of channels");
     channels = convert_to_int(buffer, 2);
@@ -68,7 +68,7 @@ bool Core::Audio::LoadWAV(const std::string& name, std::uint8_t& channels, std::
 
     ASSERT(!file.read(buffer, 4), "Core::Audio::LoadWAV(): could not read byte rate");
 
-    ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read data for block allign");
+    ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read data for block align");
 
     ASSERT(!file.read(buffer, 2), "Core::Audio::LoadWAV(): could not read bits per sample");
     bits_per_sample = convert_to_int(buffer, 2);
@@ -129,7 +129,7 @@ void Core::Audio::Load(const std::string& name)
         format = AL_FORMAT_STEREO16;
     }
     else {
-        ASSERT(true, "Core::Audio::Load(): Unkonw file format!");
+        ASSERT(true, "Core::Audio::Load(): Unknown file format!");
     }
 
     alBufferData(Buffer, format, sound_data.data(), sound_data.size(), sample_rate);

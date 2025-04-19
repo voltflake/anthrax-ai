@@ -79,7 +79,7 @@ namespace Utils
             NodeIt ChildNode;
 
             void Tokenize(std::vector<std::string>::const_iterator it) ;
-            std::string ConsrtuctElementName(const LevelElements& element) const;
+            std::string ConstructElementName(const LevelElements& element) const;
     };
 
     template<typename T>

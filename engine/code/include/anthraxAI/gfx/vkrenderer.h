@@ -61,7 +61,7 @@ namespace Gfx
             bool BeginFrame();
             void EndFrame();
             void EndRender();
-            void StartRender(Gfx::InputAttachmens inputs, AttachmentRules rules);
+            void StartRender(Gfx::InputAttachments inputs, AttachmentRules rules);
 
             void Draw(Gfx::RenderObject& object);
             void DrawMeshes(Gfx::RenderObject& object);

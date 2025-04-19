@@ -56,7 +56,7 @@ namespace Gfx
             bool LoadShader(const std::string& buffer, VkShaderModule* outshadermodule);
 
             bool LoadShader(const char* filepath, VkShaderModule* outshadermodule);
-            Material* CreateMaterial(VkPipeline pipelinew, VkPipelineLayout layout, const std::string& name);
+            Material* CreateMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name);
             void Setup(Gfx::RenderTargetsList id);
             void GetVertexDescription();
             VkPipelineVertexInputStateCreateInfo VertexInputStageCreateInfo();

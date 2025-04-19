@@ -7,7 +7,7 @@
 #include <ostream>
 #include <string>
 
-std::string Utils::Parser::ConsrtuctElementName(const LevelElements& element) const
+std::string Utils::Parser::ConstructElementName(const LevelElements& element) const
 {
     std::string name = Utils::GetValue(element) + ":";
     return name;

@@ -21,7 +21,7 @@ namespace Modules
     struct Info {
         int ColorID;
         int DepthID;
-        Gfx::InputAttachmens IAttachments;
+        Gfx::InputAttachments IAttachments;
         Gfx::BindlessDataType BindlessType;
     };
 
@@ -40,7 +40,7 @@ namespace Modules
 
             std::vector<Gfx::RenderObject>& GetRenderQueue() { return RenderQueue; }
             Gfx::BindlessDataType GetBindlessType() const { return BindlessType; }
-            Gfx::InputAttachmens GetIAttachments() const { return IAttachments; }
+            Gfx::InputAttachments GetIAttachments() const { return IAttachments; }
 
             bool GetCameraBuffer() const { return HasCameraBuffer; }
             bool GetStorageBuffer() const { return HasStorageBuffer; }
@@ -57,7 +57,7 @@ namespace Modules
             void SetRenderQueue(std::vector<Gfx::RenderObject>& rq) { RenderQueue = rq; }
         private:
             std::string Tag;
-            Gfx::InputAttachmens IAttachments;
+            Gfx::InputAttachments IAttachments;
             std::vector<Gfx::RenderObject> RenderQueue;
             Gfx::BindlessDataType BindlessType;
 

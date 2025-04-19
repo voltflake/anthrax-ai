@@ -28,7 +28,7 @@ namespace Core
 
     struct NodeRoots {
         std::string Name;
-        glm::mat4 Tranform;
+        glm::mat4 Transform;
 
         int ChildrenNum;
         std::vector<NodeRoots> Children;

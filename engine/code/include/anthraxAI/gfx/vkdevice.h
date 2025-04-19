@@ -50,7 +50,7 @@ namespace Gfx
             VkPhysicalDevice GetPhysicalDevice() const { return PhysicalDevice; }
             VkSurfaceKHR GetSurface() const { return Surface; }
 
-            QueueFamilyIndex FindQueueFimilies(VkPhysicalDevice device);
+            QueueFamilyIndex FindQueueFamilies(VkPhysicalDevice device);
             bool IsDeviceSuitable(VkPhysicalDevice device);
 
             VkQueue GetQueue(QueuesEnum q);

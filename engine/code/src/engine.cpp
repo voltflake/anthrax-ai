@@ -18,7 +18,7 @@ void Engine::CheckState()
         SetEditorMode();
     }
     else {
-        ToogleEditorMode();
+        ToggleEditorMode();
     }
 
 }

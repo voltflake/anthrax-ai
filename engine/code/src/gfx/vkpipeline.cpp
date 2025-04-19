@@ -40,7 +40,7 @@ VkPipelineInputAssemblyStateCreateInfo InputAssemblyCreateInfo(VkPrimitiveTopolo
 	return info;
 }
 
-VkPipelineRasterizationStateCreateInfo RasterezationCreateInfo(VkPolygonMode polygonmode) {
+VkPipelineRasterizationStateCreateInfo RasterizationCreateInfo(VkPolygonMode polygonmode) {
 
 	VkPipelineRasterizationStateCreateInfo info = {};
 	info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -150,10 +150,10 @@ Gfx::Material* Gfx::Pipeline::GetMaterial(const std::string& name)
 	}
 }
 
-Gfx::Material* Gfx::Pipeline::CreateMaterial(VkPipeline pipelinew, VkPipelineLayout layout, const std::string& name)
+Gfx::Material* Gfx::Pipeline::CreateMaterial(VkPipeline pipeline, VkPipelineLayout layout, const std::string& name)
 {
 	Gfx::Material mat;
-	mat.Pipeline = pipelinew;
+	mat.Pipeline = pipeline;
 	mat.PipelineLayout = layout;
 	Materials[name] = mat;
 
@@ -252,7 +252,7 @@ void Gfx::Pipeline::Build()
 	Scissor.offset = { 0, 0 };
 	Scissor.extent = { (uint32_t)Core::WindowManager::GetInstance()->GetScreenResolution().x, (uint32_t)Core::WindowManager::GetInstance()->GetScreenResolution().y };
 
-	Rasterizer = RasterezationCreateInfo(VK_POLYGON_MODE_FILL);
+	Rasterizer = RasterizationCreateInfo(VK_POLYGON_MODE_FILL);
 	Multisampling = MultiSamplingCreateInfo();
 	ColorBlendAttachment = ColorBlendAttachmentCreateInfo();
 	DepthStencil = DepthStencilCreateInfo(true, true, VK_COMPARE_OP_LESS_OR_EQUAL);
@@ -283,35 +283,35 @@ void Gfx::Pipeline::Build()
 
 // intro
 
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
     BuildMaterial("intro", &vertexshader, "./shaders/sprite.vert", &fragshader, "./shaders/intro.frag", main_rt);
 
 //grid
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
 	std::string frag = "./shaders/grid.frag";
 	std::string vert = "./shaders/grid.vert";
     BuildMaterial("grid", &vertexshader, vert, &fragshader, frag, main_rt);
 
 // mask
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
 	frag = "./shaders/mask.frag";
     vert = "./shaders/model.vert";
     BuildMaterial("mask", &vertexshader, vert, &fragshader, frag, mask_rt);
 
 // outline
-	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+	VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
 	frag = "./shaders/outline.frag";
     vert = "./shaders/outline.vert";
     BuildMaterial("outline", &vertexshader, vert, &fragshader, frag, main_rt);
 
 //gbuffer
-    VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+    VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
     frag = "./shaders/gbuffer.frag";
     vert = "./shaders/model.vert";
     BuildMaterial("gbuffer", &vertexshader, vert, &fragshader, frag, albedo_rt);
 
 //gbuffer
-    VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layput!");
+    VK_ASSERT(vkCreatePipelineLayout(Gfx::Device::GetInstance()->GetDevice(), &pipelinelayoutinfo, nullptr, &PipelineLayout), "failed to create pipeline layout!");
     frag = "./shaders/lighting.frag";
     vert = "./shaders/sprite.vert";
     BuildMaterial("lighting", &vertexshader, vert, &fragshader, frag, main_rt);

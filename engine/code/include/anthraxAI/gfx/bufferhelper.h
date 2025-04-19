@@ -6,7 +6,7 @@ namespace BufferHelper
     struct Buffer {
         VkBuffer Buffer;
         VkDeviceMemory DeviceMemory;
-        void* UniformMapedMemory;
+        void* UniformMappedMemory;
     };
 
     void    MapMemory(Buffer& buffer, VkDeviceSize size, VkDeviceSize offset, const void* datasrc);

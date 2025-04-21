@@ -2,7 +2,7 @@
 
 #include "defines/vertdef.h"
 #include "defines/defines.h"
-//#extension GL_EXT_debug_printf : enable
+#extension GL_EXT_debug_printf : enable
 
 void main()
 {
@@ -21,7 +21,7 @@ void main()
     vec4 position = bonetransforms * vec4(vposition.xyz, 1.0f);
     gl_Position = rendermatrix * position;
 
-    //debugPrintfEXT("instanceIndex=%d\n", gl_BaseInstance);
+    debugPrintfEXT("instanceIndex=%d | %d\n", gl_BaseInstance, GetUniformInd());
     outnormal = vnormal;
     outcoord = vuv;
     outweight = vweight;

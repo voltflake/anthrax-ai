@@ -10,25 +10,143 @@
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/utils/debug.h"
+#include "anthraxAI/utils/thread.h"
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <string>
+#include <sys/types.h>
+#include <vector>
 #include <vulkan/vulkan_core.h>
+
+void Core::Scene::RenderThreaded(Modules::Module& module)
+{
+    if (!sec_cmds.empty()) {
+        sec_cmds.clear();
+    }
+    else {
+        sec_cmds.reserve(8);
+    }
+    VkFormat formats3[3] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM };
+    VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
+
+    u_int32_t obj_size = module.GetRenderQueue().size();
+    uint32_t inst_ind = 0;//Gfx::Renderer::GetInstance()->GetInstanceInd();
+    std::vector<uint32_t> num_obj_per_thread(Thread::MAX_THREAD_NUM, (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM );
+
+    bool iseven = (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM) == 0;
+    if (!iseven) {
+        num_obj_per_thread[num_obj_per_thread.size() - 1] += (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM);
+    }
+    u_int32_t first_obj_size = 0;
+    u_int32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
+
+    uint32_t fin_inst_ind = 0;
+    uint32_t fin_inst_ind2 = 0;
+    std::vector<uint32_t> instance_inds(Thread::MAX_THREAD_NUM + 1, 0);//= { 0, 0};
+    for (uint32_t thread_id = 0; thread_id < Thread::MAX_THREAD_NUM; thread_id++) {
+        sec_obj_size += num_obj_per_thread[thread_id];
+        for (uint32_t obj_num = first_obj_size; obj_num < sec_obj_size; obj_num++) {
+
+            Gfx::RenderObject& obj = module.GetRenderQueue()[obj_num];
+            instance_inds[thread_id + 1] += obj.Model->Meshes.size();
+        }
+        first_obj_size = sec_obj_size;
+    }
+    first_obj_size = 0;
+    sec_obj_size = 0;
+    uint32_t inst = 0;
+    for (uint32_t thread_id = 0; thread_id < Thread::MAX_THREAD_NUM; thread_id++) {
+        sec_obj_size += num_obj_per_thread[thread_id];
+
+        inst += instance_inds[thread_id];
+        //printf(" first obj %d === sec obj %d\n", first_obj_size, sec_obj_size);
+        Thread::Pool::GetInstance()->PushByID(thread_id, { Thread::Task::Name::RENDER, Thread::Task::Type::EXECUTE,
+        {}, [this, formats3, depthformat, thread_id,  &module, inst, first_obj_size, sec_obj_size]() {
+
+        VkCommandBuffer secondary_cmd = Gfx::Renderer::GetInstance()->GetFrame().SecondaryCmd[thread_id].Cmd;
+        VkCommandBufferBeginInfo secondary_cmd_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+        VkCommandBufferInheritanceRenderingInfo inheritance_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_RENDERING_INFO };
+        inheritance_info.colorAttachmentCount = 3;
+        inheritance_info.pColorAttachmentFormats = formats3;
+        inheritance_info.depthAttachmentFormat = depthformat;
+        inheritance_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+        inheritance_info.flags = VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT;
+
+        VkCommandBufferInheritanceInfo base_inheritance_info = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO };
+        base_inheritance_info.pNext = &inheritance_info;
+        secondary_cmd_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+        secondary_cmd_info.pInheritanceInfo = &base_inheritance_info;
+
+        vkBeginCommandBuffer(secondary_cmd, &secondary_cmd_info);
+
+        uint32_t inst_ind = inst;
+        for (uint32_t obj_num = first_obj_size; obj_num < sec_obj_size; obj_num++) {
+
+            Gfx::RenderObject& obj = module.GetRenderQueue()[obj_num];
+            if (!obj.IsVisible) continue;
+
+            Gfx::MeshPushConstants constants;
+            constants.texturebind = obj.TextureBind;
+            constants.bufferbind = obj.BufferBind;
+            constants.selected = 0;
+            constants.boneID = -1;
+            if (obj.HasStorage) {
+                constants.storagebind = obj.StorageBind;
+                constants.instancebind = obj.InstanceBind;
+                constants.objectID = obj.ID;
+                constants.selected = (obj.IsSelected || obj.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
+                if (Utils::Debug::GetInstance()->Bones) {
+                    constants.boneID = Utils::Debug::GetInstance()->BoneID;
+                }
+                constants.gizmo = obj.GizmoType;
+            }
+
+            const int meshsize = obj.Model->Meshes.size();
+            for (int i = 0; i < meshsize; i++) {
+                Gfx::Renderer::GetInstance()->DrawThreaded(secondary_cmd, obj, obj.Material, obj.Model->Meshes[i], constants, true, inst_ind);
+                inst_ind++;
+            }
+        }
+        vkEndCommandBuffer(secondary_cmd);
+        }, 0,  nullptr, nullptr, nullptr});
+
+        first_obj_size = sec_obj_size;
+    }
+
+    if (module.GetTag() == "gbuffer") {
+        Thread::Pool::GetInstance()->Wait();
+        Gfx::Renderer::GetInstance()->SetInstanceInd(fin_inst_ind2);
+        for (int cb = 0; cb < Thread::MAX_THREAD_NUM; cb++) {
+            sec_cmds.emplace_back(Gfx::Renderer::GetInstance()->GetFrame().SecondaryCmd[cb].Cmd);
+        }
+        Gfx::Renderer::GetInstance()->SetCmd(Gfx::Renderer::GetInstance()->GetFrame().MainCommandBuffer);
+        if (!sec_cmds.empty()) {
+            vkCmdExecuteCommands(Gfx::Renderer::GetInstance()->GetCmd(),sec_cmds.size(), sec_cmds.data());
+        }
+    }
+}
 
 void Core::Scene::Render(Modules::Module& module)
 {
     Gfx::Renderer::GetInstance()->DebugRenderName(module.GetTag());
-    for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
-        if (!obj.IsVisible) continue;
-        if (module.GetTag() == "mask" && !obj.IsSelected) {
-            Gfx::Renderer::GetInstance()->IncInstanceInd(obj.Model->Meshes.size());
-            continue;
-        }
-        if (obj.VertexBase) {
-            Gfx::Renderer::GetInstance()->DrawSimple(obj);
-        }
-        else {
-            Gfx::Renderer::GetInstance()->Draw(obj);
+
+    if (module.GetTag() == "gbuffer" && module.GetRenderQueue().size() > Thread::MAX_THREAD_NUM) {
+        RenderThreaded(module);
+    }
+    else {
+        for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
+            if (!obj.IsVisible) continue;
+            if (module.GetTag() == "mask" && !obj.IsSelected) {
+                Gfx::Renderer::GetInstance()->IncInstanceInd(obj.Model->Meshes.size());
+                continue;
+            }
+            if (obj.VertexBase) {
+                Gfx::Renderer::GetInstance()->DrawSimple(obj);
+            }
+            else {
+                Gfx::Renderer::GetInstance()->Draw(obj);
+            }
         }
     }
     Gfx::Renderer::GetInstance()->EndRenderName();
@@ -37,6 +155,7 @@ void Core::Scene::Render(Modules::Module& module)
 void Core::Scene::RenderScene(bool playmode)
 {
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
+        Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
               Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
         }
@@ -50,14 +169,16 @@ void Core::Scene::RenderScene(bool playmode)
                 Render(GameModules->Get(CurrentScene));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
-            // objects from map
-            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
-            Render(GameModules->Get("gbuffer"));
-            Gfx::Renderer::GetInstance()->EndRender();
-
+            {
+                // objects from map
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+                Render(GameModules->Get("gbuffer"));
+                Gfx::Renderer::GetInstance()->EndRender();
+            }
             Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
             Render(GameModules->Get("lighting"));
             Gfx::Renderer::GetInstance()->EndRender();
+
 
             if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
 
@@ -85,6 +206,7 @@ void Core::Scene::RenderScene(bool playmode)
                 Gfx::Renderer::GetInstance()->EndRender();
             }
 
+
             // ui
             if (HasGBuffer) {
                 Gfx::Renderer::GetInstance()->TransferLayoutsDebug();
@@ -94,7 +216,12 @@ void Core::Scene::RenderScene(bool playmode)
             Gfx::Renderer::GetInstance()->EndRender();
         }
 
+
+        Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
+        Thread::PrintTime(Thread::Task::Name::RENDER);
         Gfx::Renderer::GetInstance()->EndFrame();
+
+
     }
 }
 
@@ -125,10 +252,7 @@ void Core::Scene::Loop()
         Thread::EndTime(Thread::Task::Name::UPDATE, (double)Engine::GetInstance()->GetTime());
         Thread::PrintTime(Thread::Task::Name::UPDATE);
 
-        Thread::BeginTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
         RenderScene(true);
-        Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
-        Thread::PrintTime(Thread::Task::Name::RENDER);
 
     }
 

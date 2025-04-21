@@ -190,6 +190,10 @@ const VkRenderingInfoKHR Gfx::CommandBuffer::GetRenderingInfo(std::vector<Render
 		.layerCount = 1,
 	};
 
+    if (attachmentinfo.size() >= 3) {
+        renderinfo.flags = VK_RENDERING_CONTENTS_SECONDARY_COMMAND_BUFFERS_BIT;
+    }
+
     colors.reserve(attachmentinfo.size());
     for (RenderingAttachmentInfo& info : attachmentinfo) {
 		if (info.IsDepth) {

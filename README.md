@@ -5,9 +5,9 @@ The Vulkan-Based Game Engine
 my youtube channel where I present my engine:
 https://youtu.be/SPF7VJPwy3w?si=xls0e43Iry86vWob 
 
-# usage
+# Usage
 
-WARNING ! Issues remains !
+⚠️ WARNING! [Issues remain](#known-issues)
 
 1. In Editor Window select provided scenes from "Scenes" dropdown
 2. Use 'Esc' to toggle between 'editor' and 'play' modes
@@ -21,7 +21,6 @@ WARNING ! Issues remains !
 <img alt="Preview" src="assets/textures/engine.png" width=80% />
 </div>
 
-[TOC]
 
 ## How to build
 
@@ -85,3 +84,7 @@ With the CMakeTools extension installed, you could select the compiler, and then
 project using the <kbd>F7</kbd> and <kbd>F5</kbd> keys, respectively.
 
 Don't forget that the <kbd>CTRL+SHIFT+P</kbd> key combination helps to `configure` and `build` as well.
+
+## Known Issues
+- Pascal and older nvidia cards are unsupported due to unavailable vulkan features on that hardware.
+- Modified CatchyOS packages break compilation of required `assimp` library

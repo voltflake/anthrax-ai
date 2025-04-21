@@ -12,6 +12,7 @@
 #include <atomic>
 #include <cstdint>
 #include <string>
+#include <vulkan/vulkan_core.h>
 namespace Core
 {
 
@@ -48,6 +49,7 @@ namespace Core
 
             void LoadScene(const std::string& filename);
             void Render(Modules::Module& module);
+            void RenderThreaded(Modules::Module& module);
 
             Keeper::Base* GameObjects = nullptr;
             Modules::Base* GameModules = nullptr;
@@ -60,7 +62,8 @@ namespace Core
             Keeper::Camera* EditorCamera;
 
             Utils::Parser Parse;
-            
+           VkPipeline ThreadedPipeline; 
+    std::vector<VkCommandBuffer> sec_cmds;
             bool HasEditor = false;
             bool HasGBuffer = false;
             bool HasFrameGizmo = false;

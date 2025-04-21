@@ -7,12 +7,16 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gameobjects/objects/camera.h"
+#include "anthraxAI/gfx/vkmesh.h"
 #include "anthraxAI/utils/debug.h"
+#include "anthraxAI/utils/defines.h"
+#include "anthraxAI/utils/thread.h"
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "glm/geometric.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <sys/types.h>
@@ -54,7 +58,6 @@ void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 		DrawMesh(object, object.Model->Meshes[i], true);
 	} 
 }
-
 void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel)
 {
 	bool bindpipe, bindindex = false;
@@ -93,6 +96,32 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 	}
 	else {
 		vkCmdDrawIndexed(Cmd.GetCmd(), static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);		
+	}
+}
+
+void Gfx::Renderer::DrawThreaded(VkCommandBuffer cmd, Gfx::RenderObject& object, Material* mat, Gfx::MeshInfo* mesh, Gfx::MeshPushConstants& constants, bool ismodel, uint32_t inst_ind)
+{
+	bool bindpipe, bindindex = false;
+	CheckTmpBindings(mesh, mat, &bindpipe, &bindindex);
+    
+	//if (bindpipe) {
+	    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat->Pipeline );
+    //}
+
+		vkCmdPushConstants(cmd, mat->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(Gfx::MeshPushConstants), &constants);
+
+	//if (bindindex) {
+		VkDeviceSize offset = {0};
+		vkCmdBindVertexBuffers(cmd, 0, 1, &mesh->VertexBuffer.Buffer, &offset);
+		vkCmdBindIndexBuffer(cmd, mesh->IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
+	//}
+	if (ismodel) {
+		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh->AIindices.size()), 1, 0, 0, inst_ind);
+        //InstanceIndex++;
+	}
+	else {
+		vkCmdDrawIndexed(cmd, static_cast<uint32_t>(mesh->Indices.size()), 1, 0, 0, 0);		
 	}
 }
 
@@ -394,16 +423,75 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     void* instancedata;
     vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(), 0, buffersize, 0, (void**)&instancedata);
     
+    Modules::ScenesMap map =  Core::Scene::GetInstance()->GetScenes();
+    Modules::Module& modulegizmo = map["gizmo"]; 
+    Modules::Module& module = map[Core::Scene::GetInstance()->GetCurrentScene()];
+    u_int32_t obj_size = module.GetRenderQueue().size();
+    uint32_t inst_ind = 0;//Gfx::Renderer::GetInstance()->GetInstanceInd();   
+    //
+    std::vector<uint32_t> num_obj_per_thread(Thread::MAX_THREAD_NUM, (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM );
+    //num_obj_per_thread = { (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM };
+    
+    bool iseven = (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM) == 0;
+    if (!iseven) {
+        num_obj_per_thread[num_obj_per_thread.size() - 1] += (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM);
+    }
+    /*for (uint32_t o : num_obj_per_thread) {*/
+    /**/
+    /*    printf("NUM OBJ PER thread === %d\n", o);*/
+    /*}*/
+    /*    printf("\n------------== size %d\n ------------\n", obj_size);*/
+    u_int32_t first_obj_size = 0;
+    u_int32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
+    
+    uint32_t fin_inst_ind = 0;
+    uint32_t fin_inst_ind2 = 0;
+            
+    /*int i = 0;*/
+    /*for (Gfx::RenderObject& obj : module.GetRenderQueue()) {*/
+    /**/
+    /*    if (!obj.Model || !obj.IsVisible) continue;*/
+    /*    for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {*/
+    /*     i++;*/
+    /*     }*/
+    /*} */
+    /*for (Gfx::RenderObject& obj : modulegizmo.GetRenderQueue()) {*/
+    /*     if (!obj.Model || !obj.IsVisible) continue;*/
+    /*        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {*/
+    /*     i++;*/
+    /*     }*/
+    /*}*/
+
+
+    /*for (uint32_t in : instance_inds) {*/
+    /**/
+    /*    printf("INSTANCE PER thread === %d\n", in);*/
+    /*}*/
+
+    /*for (uint32_t obj_num = first_obj_size; obj_num < obj_size; obj_num++) {*/
+    /*    Gfx::RenderObject& obj = module.GetRenderQueue()[obj_num];*/
+    /*    fin_inst_ind2 += obj.Model->Meshes.size();*/
+    /**/
+    /*}*/
+    first_obj_size = 0;
+    sec_obj_size = 0;
+    uint32_t inst = 0;
+    /*for (uint32_t thread_id = 0; thread_id < Thread::MAX_THREAD_NUM; thread_id++) {*/
+    /*    sec_obj_size += num_obj_per_thread[thread_id];*/
+    /**/
+    /*           //printf(" first obj %d === sec obj %d\n", first_obj_size, sec_obj_size);*/
+    /*    Thread::Pool::GetInstance()->PushByID(thread_id, { Thread::Task::Name::RENDER, Thread::Task::Type::EXECUTE,*/
+    /*    {}, [this,thread_id, &instancedata,&modulegizmo,  &module, inst, first_obj_size, sec_obj_size]() {*/
+        
     InstanceData* datas = (InstanceData*)instancedata;
     /*for (int i = 0; i < InstanceCount; i++) {*/
     /*    datas[i].rendermatrix = glm::mat4(1.0f); */
     /*}*/
     int i = 0;
     //for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
-    Modules::ScenesMap map =  Core::Scene::GetInstance()->GetScenes();
+  
     bool hasanim = false;
-
-    for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].GetRenderQueue()) {
+    for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
         if (!obj.Model || !obj.IsVisible) continue;
         hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
         for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
@@ -417,6 +505,56 @@ void Gfx::Renderer::PrepareInstanceBuffer()
                 /*std::thread upd(&Gfx::Renderer::GetTransforms, this, datas, obj, i);*/
                 /*upd.join();*/
                             }
+            datas[i].hasanimation = hasanim ? 1 : 0;
+            datas[i].rendermatrix =glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
+            //glm::mat4(1.0f);
+            i++;
+        }
+    }
+    for (Gfx::RenderObject& obj : modulegizmo.GetRenderQueue()) {
+         if (!obj.Model || !obj.IsVisible) continue;
+        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+            float dist = glm::distance(glm::vec3(CamData.viewpos.x, CamData.viewpos.y, CamData.viewpos.z), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z) )* 0.05;
+            if (dist <= 0.5) {
+                dist = 0.5;
+            }
+            
+
+            glm::vec3 distfin = glm::vec3(dist);
+
+
+            datas[i].rendermatrix = glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));
+            datas[i].rendermatrix = glm::scale(datas[i].rendermatrix, distfin); 
+            i++;
+        }
+
+    }
+
+     
+    /*    }, 0,  nullptr, nullptr, nullptr});*/
+    /**/
+    /*    first_obj_size = sec_obj_size;*/
+    /*}            */
+    /**/
+    /*    Thread::Pool::GetInstance()->Wait();*/
+
+/*
+    InstanceData* datas = (InstanceData*)instancedata;
+       int i = 0;
+    //for (auto& it : Core::Scene::GetInstance()->GetScenes()) {
+  
+    for (Gfx::RenderObject& obj : map[Core::Scene::GetInstance()->GetCurrentScene()].GetRenderQueue()) {
+        if (!obj.Model || !obj.IsVisible) continue;
+        hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
+        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+        
+            if (hasanim) {
+               // printf("IIIIII ======================================== %d\n", i);
+                for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {
+                    datas[i].bonesmatrices[k] = obj.Model->Bones.Info[k].FinTransform;
+                }
+                    //vec[i]
+                                         }
             datas[i].hasanimation = hasanim ? 1 : 0;
             datas[i].rendermatrix =glm::translate(glm::mat4(1.0f), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z));// * CamData.view *  ;
             //glm::mat4(1.0f);
@@ -440,23 +578,8 @@ void Gfx::Renderer::PrepareInstanceBuffer()
             i++;
         }
 
-    }
-    /*for (Gfx::RenderObject& obj : map["mask"].RenderQueue) {*/
-    /*    if (!obj.Model || !obj.IsVisible) continue;*/
-    /*    hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);*/
-    /*    for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {*/
-    /**/
-    /*        if (hasanim) {*/
-    /*            for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {*/
-    /*                datas[i].bonesmatrices[k] = obj.Model->Bones.Info[k].FinTransform;*/
-    /*            }*/
-    /*        }*/
-    /*        datas[i].hasanimation = hasanim ? 1 : 0;*/
-    /*        i++;*/
-    /*    }*/
-    /*}*/
-    /**/
-
+    }*/
+    
     InstanceCount = i;
     InstanceIndex = 0;
     //}
@@ -530,6 +653,7 @@ VkSubmitInfo SubmitInfo(VkCommandBuffer* cmd)
 
 uint32_t Gfx::Renderer::SyncFrame()
 {
+Time = Engine::GetInstance()->GetTime();
 	VK_ASSERT(vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence, true, 1000000000), "vkWaitForFences failed !");
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetSwapchain(), 1000000000, Frames[FrameIndex].PresentSemaphore, VK_NULL_HANDLE, &swapchainimageindex);
@@ -539,6 +663,10 @@ uint32_t Gfx::Renderer::SyncFrame()
 	}
 	VK_ASSERT(vkResetFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence), "vkResetFences failed !");
 	VK_ASSERT(vkResetCommandBuffer(Frames[FrameIndex].MainCommandBuffer, 0), "vkResetCommandBuffer failed!");
+
+    for (int i = 0; i < Thread::MAX_THREAD_NUM; i++) {
+        VK_ASSERT(vkResetCommandPool(Gfx::Device::GetInstance()->GetDevice(), Frames[FrameIndex].SecondaryCmd[i].Pool, 0), "Failed to reset command pool!");
+    }
 
 	return swapchainimageindex;
 }
@@ -728,6 +856,18 @@ void Gfx::Renderer::CreateCommands()
 
 		VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdinfo, &Frames[i].MainCommandBuffer), "failed to allocate command buffers!");
 
+        // secondary cmd size of thread pool
+        Frames[i].SecondaryCmd.resize(Thread::MAX_THREAD_NUM);
+        for (int j = 0; j < Thread::MAX_THREAD_NUM; j++) {
+            ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Frames[i].SecondaryCmd[j].Pool), "failed to create command pool!");
+        	
+		    VkCommandBufferAllocateInfo seccmdinfo = CommandBufferCreateInfo(Frames[i].SecondaryCmd[j].Pool, 1, VK_COMMAND_BUFFER_LEVEL_SECONDARY);
+		
+		    VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &seccmdinfo, &Frames[i].SecondaryCmd[j].Cmd), "failed to allocate command buffers!");
+            Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
+			    vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Frames[i].SecondaryCmd[j].Pool, nullptr);
+		    });
+        }
 		Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
 			vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Frames[i].CommandPool, nullptr);
 		});

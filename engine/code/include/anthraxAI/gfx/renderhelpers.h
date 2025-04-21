@@ -3,6 +3,7 @@
 #include "anthraxAI/gfx/model.h"
 #include <cstdint>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 namespace Gfx
 {
     enum BindlessDataType {
@@ -79,11 +80,16 @@ namespace Gfx
         float p2;
     };
 
+    struct SecondaryCmdInfo {
+        VkCommandBuffer Cmd;
+        VkCommandPool Pool;
+    };
     struct FrameData {
         VkSemaphore PresentSemaphore, RenderSemaphore;
         VkFence RenderFence;	
         VkCommandPool CommandPool;
         VkCommandBuffer MainCommandBuffer;
+        std::vector<SecondaryCmdInfo> SecondaryCmd;
     };
 
     struct UploadContext {

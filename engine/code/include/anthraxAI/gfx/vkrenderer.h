@@ -12,6 +12,7 @@
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkmesh.h"
 #include "glm/fwd.hpp"
+#include <cstdint>
 #include <vulkan/vulkan_core.h>
 
 namespace Gfx
@@ -57,13 +58,14 @@ namespace Gfx
             void Sync();
             uint32_t SyncFrame();
             void SetFrameInd() { FrameIndex = (FrameIndex + 1) % MAX_FRAMES; }
-
+            long long Time;
             bool BeginFrame();
             void EndFrame();
             void EndRender();
             void StartRender(Gfx::InputAttachmens inputs, AttachmentRules rules);
 
             void Draw(Gfx::RenderObject& object);
+            void DrawThreaded(VkCommandBuffer cmd, Gfx::RenderObject& object, Material* mat,  Gfx::MeshInfo* mesh, Gfx::MeshPushConstants& constatns, bool ismodel, uint32_t inst_ind);
             void DrawMeshes(Gfx::RenderObject& object);
             void DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel);
             void DrawSimple(Gfx::RenderObject& object);
@@ -85,6 +87,8 @@ namespace Gfx
 
             void ResetInstanceInd() { InstanceIndex = 0; }
             void IncInstanceInd(int size) { InstanceIndex += size; }
+            uint32_t GetInstanceInd() { return InstanceIndex; }// += size; }
+            void SetInstanceInd(uint32_t i) { InstanceIndex = i; }// += size; }
 
             void SetUpdateSamplers(bool upd) { UpdateSamples = upd; }
             bool GetUpdateSamplers() const { return UpdateSamples; }
@@ -93,6 +97,7 @@ namespace Gfx
             void EndRenderName();
 
             VkCommandBuffer GetCmd() { return Cmd.GetCmd(); }
+            void SetCmd(VkCommandBuffer cmd) { Cmd.SetCmd(cmd); }
         private:
             RenderTarget* RTs[RT_SIZE];
             TexturesMap Textures;

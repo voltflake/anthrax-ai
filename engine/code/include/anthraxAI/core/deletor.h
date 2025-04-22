@@ -5,9 +5,9 @@
 #include <utility>
 #include "anthraxAI/utils/singleton.h"
 #include <algorithm>
-namespace Core 
+namespace Core
 {
-    typedef std::pair<int, std::function<void()>> DeletorPair; 
+    typedef std::pair<int, std::function<void()>> DeletorPair;
     static inline DeletorPair Pair(int n, std::function<void()> function) { return std::make_pair(n, function); }
     class Deletor : public Utils::Singleton<Deletor>
     {
@@ -16,7 +16,7 @@ namespace Core
             void Push(int n, std::function<void()>&& function) {
                 Deletors.push_back(Core::Pair(n, function));
             }
-            
+
             void CleanIf(int val) {
                 auto it = std::remove_if(
                   Deletors.begin(), Deletors.end(),
@@ -43,7 +43,7 @@ namespace Core
             NONE = 0,
             PIPELINE = 1,
             CMD,
-            SYNC,            
+            SYNC,
         };
 
     };

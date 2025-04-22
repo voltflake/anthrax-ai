@@ -19,7 +19,7 @@
 
 namespace Gfx
 {
-    struct VertexBoneData {  
+    struct VertexBoneData {
         int BoneId[BONE_INFLUENCE]  ={0};
 	    float Weight[BONE_INFLUENCE]  ={0.0f};
 
@@ -46,7 +46,7 @@ namespace Gfx
     struct BoneInfo {
         std::vector<VertexBoneData> Vertext2Bone;
         std::map<std::string, int> BoneMap;
-        std::vector<glm::mat4> Transformes;
+        std::vector<glm::mat4> Transformers;
         std::vector<Bone> Info;
         std::vector<glm::mat4> FinTransform;
     };
@@ -54,7 +54,7 @@ namespace Gfx
         std::string texturename;
         std::vector<MeshInfo*> Meshes;
         std::vector<int> MeshBase;
-        
+
         BoneInfo Bones;
     };
     typedef std::unordered_map<std::string, ModelInfo> ModelsMap;
@@ -72,9 +72,9 @@ namespace Gfx
         private:
             void ProcessBones(std::vector<Vertex>& vert, const std::string& path, aiMesh* aimesh);
             void ProcessNode(const std::string& path, aiNode *node, const aiScene *scene);
-            
+
             void SetVertexBoneData(Gfx::Vertex& vert, int id, float weight);
-            
+
             ModelsMap Models;
             int TotalVertex = 0;
             int BoneCounter = 0;
@@ -90,7 +90,7 @@ namespace Gfx
     	to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
     	return to;
     }
-    
+
     static inline glm::mat3 mat2glm(aiMatrix3x3 from)
     {
     	glm::mat3 to;
@@ -100,16 +100,16 @@ namespace Gfx
     	to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3;
     	return to;
     }
-    
+
     static inline glm::quat quat2glm(const aiQuaternion& pOrientation)
     	{
     		return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
     	}
-    
-    static inline glm::vec3 vec2glm(aiVector3D vec) 
+
+    static inline glm::vec3 vec2glm(aiVector3D vec)
     {
     	glm::vec3 v;
-    	v.x = vec.x; 
+    	v.x = vec.x;
     	v.y = vec.y;
     	v.z = vec.z;
     	return v;

@@ -80,7 +80,7 @@ void Thread::Pool::Init(int num)
     for (int i = 0; i < num; ++i) {
         Threads.emplace_back(std::thread(&Thread::Pool::Work, this));
     }
-    
+
     printf("MAX THREADS = %d \n", std::thread::hardware_concurrency());
     RenderQueue.resize(MAX_THREAD_NUM);
     RenderThreads.reserve(MAX_THREAD_NUM);
@@ -157,7 +157,7 @@ bool Thread::Pool::PushByID(int id, const Task& task)
     }
 
     std::lock_guard<std::mutex> lock(RenderMutex[id]);
-    
+
     RenderQueue[id].push(task);
     RenderCondition[id].notify_all();
 

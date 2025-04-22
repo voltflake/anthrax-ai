@@ -60,7 +60,7 @@ RegisterUniform(Camera, {
     vec4 viewpos;
     vec4 mousepos;
     vec4 viewport;
-    
+
     mat4 model;
     mat4 view;
     mat4 proj;
@@ -95,6 +95,5 @@ RegisterBuffer(std140, readonly, Instance, {
 });
 
 RegisterBuffer(std430, writeonly, Storage, {
-    uint data[DEPTH_ARRAY_SCALE]; 
+    uint data[DEPTH_ARRAY_SCALE];
 });
-

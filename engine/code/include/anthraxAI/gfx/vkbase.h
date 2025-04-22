@@ -18,7 +18,7 @@ namespace Gfx
         public:
             void Init();
             void CleanUp();
-            
+
             bool ReloadShaders();
             void ReloadResources();
 
@@ -26,7 +26,7 @@ namespace Gfx
 
             VkInstance GetVkInstance() const { return Instance; }
             bool IsValidationLayersOn() const { return ValidationLayersOn; }
-            
+
             void SetRTDebugName(const std::string& name, VkImage image) {Debug.SetRTName(name, image); };
             void SetDebugName(VkDebugUtilsObjectNameInfoEXT info) { Debug.SetName(info); }
             void SetDebugRenderName(VkCommandBuffer cmd, VkDebugUtilsLabelEXT* info) { Debug.SetRenderName(cmd,info); }

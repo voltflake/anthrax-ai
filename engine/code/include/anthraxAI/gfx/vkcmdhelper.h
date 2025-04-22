@@ -22,7 +22,7 @@ namespace Gfx
             void SetCmd(VkCommandBuffer c) { cmd = c; }
 
             VkImageSubresourceRange GetSubresourceMainRange() { return range; }
-            
+
             VkCommandBufferBeginInfo InfoCmd(VkCommandBufferUsageFlags flags);
             void BeginCmd(VkCommandBufferBeginInfo cmdinfo);
             void EndCmd();
@@ -39,7 +39,7 @@ namespace Gfx
             void MemoryBarrier(VkImage image, VkImageLayout oldlayout, VkImageLayout newlayout, VkImageSubresourceRange range);
             void CopyImage(VkImage src, Vector2<int> srcsize, VkImageLayout srcoldlayout, VkImageLayout srcnewlayout, VkImage dst, Vector2<int> dstsize, VkImageLayout dstoldlayout, VkImageLayout dstnewlayout);
 
-            void SetRange(VkImageSubresourceRange r) { range = r;} 
+            void SetRange(VkImageSubresourceRange r) { range = r;}
         private:
         	VkImageSubresourceRange range{};
 

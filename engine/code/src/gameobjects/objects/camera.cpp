@@ -8,7 +8,7 @@ void Keeper::Camera::SetDirections()
     WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     Front = glm::vec3(0.0f, 0.0f, -1.0f);
-    Right = glm::normalize(glm::cross(WorldUp, Direction)); 
+    Right = glm::normalize(glm::cross(WorldUp, Direction));
     Up = glm::cross(Direction, Right);
 }
 
@@ -39,7 +39,7 @@ void Keeper::Camera::UpdateDirection()
     if (GizmoHandle) {
         return;
     }
-    float delta = Utils::Debug::GetInstance()->DeltaMs; 
+    float delta = Utils::Debug::GetInstance()->DeltaMs;
     Vector2<int> mousemove = Core::WindowManager::GetInstance()->GetMouseDelta();
     if (mousemove.x == 0 && mousemove.y == 0) return;
     float rotspeed = delta / 1000 * 0.0001;//0.001f;

@@ -17,7 +17,7 @@ void main()
     }
 
     mat4 rendermatrix = GetResource(Camera, GetUniformInd()).proj * GetResource(Camera, GetUniformInd()).view * GetResource(Instance, GetInstanceInd()).instances[gl_BaseInstance].rendermatrix;
-    
+
     vec4 position = bonetransforms * vec4(vposition.xyz, 1.0f);
     gl_Position = rendermatrix * position;
 

@@ -60,11 +60,11 @@ void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
         Gfx::Vertex vertex;
 
         SetVertexBoneDefaultData(vertex);
-       
-		glm::vec3 data; 
+
+		glm::vec3 data;
 		data.x = aimesh->mVertices[i].x;
 		data.y = aimesh->mVertices[i].y;
-		data.z = aimesh->mVertices[i].z; 
+		data.z = aimesh->mVertices[i].z;
 		vertex.position.x = data.x;
 		vertex.position.y = data.y;
 		vertex.position.z = data.z;
@@ -75,7 +75,7 @@ void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
 		vertex.normal = data;
 		if(aimesh->mTextureCoords[0]) {
 			glm::vec2 vec;
-			vec.x = aimesh->mTextureCoords[0][i].x; 
+			vec.x = aimesh->mTextureCoords[0][i].x;
 			vec.y = aimesh->mTextureCoords[0][i].y;
 			vertex.uv = vec;
 		}
@@ -87,7 +87,7 @@ void Gfx::Mesh::CreateMesh(aiMesh* aimesh, Gfx::MeshInfo* meshinfo)
 
 		meshinfo->Vertices.push_back(vertex);
     }
-    
+
     meshinfo->AIindices.reserve(aimesh->mNumFaces);
 	for(unsigned int i = 0; i < aimesh->mNumFaces; i++) {
 		aiFace face = aimesh->mFaces[i];
@@ -162,21 +162,21 @@ void Gfx::Mesh::CreateMeshes()
         mesh.Vertices[1].position = {0, 0 + it.second.GetSize().y, 0.0f, 1.0f};
         mesh.Vertices[2].position = {0 + it.second.GetSize().x, 0 + it.second.GetSize().y, 0.0f, 1.0f};
         mesh.Vertices[3].position ={0 + it.second.GetSize().x, 0, 0.0f, 1.0f};
-     
+
         mesh.Vertices[0].color = { 0.f, 1.f, 0.0f };
         mesh.Vertices[1].color = { 0.f, 1.f, 0.0f };
         mesh.Vertices[2].color = { 0.f, 1.f, 0.0f };
         mesh.Vertices[3].color = { 1.f, 0.f, 0.0f };
-        
+
         mesh.Vertices[0].uv = {0.0f, 0.0f};
         mesh.Vertices[1].uv = {0.0f, 1.0f};
         mesh.Vertices[2].uv = {1.0f, 1.0f};
         mesh.Vertices[3].uv = {1.0f, 0.0f};
-        
+
         Update(mesh);
         Meshes[it.first] = mesh;
     }
-    
+
     Vector2<int> res = Core::WindowManager::GetInstance()->GetScreenResolution();//, 1080 };
     mesh.Path = "dummy";
     mesh.Vertices[0].position = {0, 0, 0.0f, 1.0f};

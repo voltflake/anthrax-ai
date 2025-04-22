@@ -19,4 +19,3 @@ void main() {
     outpos = gl_Position ;
 
 }
-

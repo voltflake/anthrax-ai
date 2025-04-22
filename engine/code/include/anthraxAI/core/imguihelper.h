@@ -30,40 +30,40 @@ namespace UI
         SLIDER,
         DEBUG_IMAGE,
     };
-   
+
     class Element
     {
         public:
 
             Element(ElementType type, const std::string& label, bool isdyn = false)
             : Type(type), Label(label), IsDynamic(isdyn) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
-          
+
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func, bool addempty = false) 
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func, bool addempty = false)
             : Type(type), Label(label), IsDynamic(isdyn), Definition(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func, bool addempty = false) 
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func, bool addempty = false)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionWithElem(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
-            
+
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (bool)> func) 
+            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (bool)> func)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionBool(func) { EvaluateArgs(t, args...); }
 
-            Element(ElementType type, const std::string& label, bool isdyn, std::function<float (float)> func) 
+            Element(ElementType type, const std::string& label, bool isdyn, std::function<float (float)> func)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionFloatArg(func) {  }
 
-            Element(ElementType type, const std::string& label, bool isdyn,std::function<float ()> func) 
+            Element(ElementType type, const std::string& label, bool isdyn,std::function<float ()> func)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionFloat(func) { }
 
-            Element(ElementType type, const std::string& label, bool isdyn, std::function<std::string ()> func) 
+            Element(ElementType type, const std::string& label, bool isdyn, std::function<std::string ()> func)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionString(func) { }
 
             int GetID() const { return ID; }
             ElementType GetType() const { return Type; }
             std::string GetLabel() const { return Label; }
-            bool IsUIDynamic() const { return IsDynamic; }        
+            bool IsUIDynamic() const { return IsDynamic; }
 
             std::vector<std::string> GetComboList() { return ComboList;}
 
@@ -85,7 +85,7 @@ namespace UI
             void ClearComboList() { ComboList.clear(); }
 
         private:
-            
+
             void GetArg(const std::vector<std::string>& vec);
             void GetArg(void* nu) { }
             template <typename T>
@@ -101,13 +101,13 @@ namespace UI
             bool IsDynamic = false;
             bool Checkbox = true;
 };
-    
+
     class Window
     {
         public:
             Window(const std::string& name, Vector2<float> size, Vector2<float>pos, ImGuiWindowFlags flags)
             : Name(name), Size(size), Position(pos), Flags(flags) {}
-           
+
             ImGuiWindowFlags GetFlags() const { return Flags; }
             std::string GetName() const { return Name; }
             float GetSizeX() const { return Size.x; }
@@ -127,13 +127,13 @@ namespace UI
 }
 
 
-namespace Core 
-{ 
+namespace Core
+{
     class ImGuiHelper : public Utils::Singleton<ImGuiHelper>
     {
         public:
             ~ImGuiHelper();
-            
+
             void DisplayObjectInfo(const std::string& obj, const UI::Element& elem);
             void UpdateObjectInfo();
             void Init();
@@ -151,7 +151,7 @@ namespace Core
 #endif
             bool TextureNeedsUpdate() { return TextureUpdate; }
             void ResetTextureUpdate() { TextureUpdate = false;}
-            
+
             struct TextureForUpdate {
                 int ID;
                 std::string OldTextureName;
@@ -164,7 +164,7 @@ namespace Core
             void Image(UI::Element& element);
             void DebugImage(UI::Element& element);
             void Combo(UI::Element& element);
-            void Tree(UI::Element& element); 
+            void Tree(UI::Element& element);
             void ListBox(UI::Element& element);
             void ProcessUI(UI::Element& element);
 
@@ -174,7 +174,7 @@ namespace Core
             UI::UITabsElementsMap UITabs;
             UI::UIElementsMap UIElements;
             UI::UIWindowsMap UIWindows;
-            
+
             TextureForUpdate TextureUpdateInfo;
             bool TextureUpdate = false;
             bool IsDisplayInReset = false;

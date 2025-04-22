@@ -17,7 +17,7 @@ Keeper::Base::~Base()
       if (obj) {
         delete obj;
       }
-    } 
+    }
   }
   ObjectsList.clear();
 }
@@ -28,7 +28,7 @@ void Keeper::Base::CleanIfNot(Keeper::Type type, bool resetID)
         if (it->first != type) {
             for (auto* obj : it->second) {
                 if (resetID) {
-                    obj->ResetCounterID();  
+                    obj->ResetCounterID();
                 }
                 if (obj) {
                     delete obj;
@@ -43,7 +43,7 @@ void Keeper::Base::CleanIfNot(Keeper::Type type, bool resetID)
     }
 }
 
-const Keeper::Objects* Keeper::Base::GetObject(Keeper::Type type, int id) const 
+const Keeper::Objects* Keeper::Base::GetObject(Keeper::Type type, int id) const
 {
     std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
 
@@ -52,7 +52,7 @@ const Keeper::Objects* Keeper::Base::GetObject(Keeper::Type type, int id) const
     return *it;
 }
 
-Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, int id) 
+Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, int id)
 {
     std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
 
@@ -60,7 +60,7 @@ Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, int id)
 
     return *it;
 }
-Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, const std::string& str) 
+Keeper::Objects* Keeper::Base::GetNotConstObject(Keeper::Type type, const std::string& str)
 {
     std::vector<Keeper::Objects*> vec = ObjectsList.at(type);
 
@@ -102,7 +102,7 @@ void Keeper::Base::UpdateObjectNames()
             ObjectNames.emplace_back(objname);
         }
     }
-    
+
 }
 
 Keeper::Base::Base()
@@ -161,7 +161,7 @@ Keeper::Base::Base()
 void Keeper::Base::Update()
 {
     int id = SelectedID;
-    std::vector<Objects*>::iterator light_it = ObjectsList[Keeper::Type::LIGHT].end(); 
+    std::vector<Objects*>::iterator light_it = ObjectsList[Keeper::Type::LIGHT].end();
     std::vector<Objects*>::iterator selected_it = std::find_if(ObjectsList[Keeper::Type::NPC].begin(), ObjectsList[Keeper::Type::NPC].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
     if (selected_it == ObjectsList[Keeper::Type::NPC].end()) {
         light_it = std::find_if(ObjectsList[Keeper::Type::LIGHT].begin(), ObjectsList[Keeper::Type::LIGHT].end(), [id](const Keeper::Objects* obj) { return obj->GetID() == id; });
@@ -197,7 +197,7 @@ void Keeper::Base::Update()
             if (gizmo_it != ObjectsList[Keeper::Type::GIZMO].end() && (*gizmo_it)->GetHandle() && (*gizmo_it)->GetHandle()->GetID() == obj->GetID()) {
                     gizmo_handle = *gizmo_it;
                     obj->SetSelected(true);
-            }           
+            }
             else {
                     obj->SetSelected(false);
                 }
@@ -245,12 +245,12 @@ void Keeper::Base::Create(const std::vector<Keeper::Info>& info)
         else {
             Create<Keeper::Sprite>(new Keeper::Sprite(obj));
         }
-    } 
+    }
 }
 
-bool Keeper::Base::Find(Keeper::Type type) const 
+bool Keeper::Base::Find(Keeper::Type type) const
 {
-    return ObjectsList.find(type) != ObjectsList.end();     
+    return ObjectsList.find(type) != ObjectsList.end();
 }
 
 size_t Keeper::Base::GetObjectsSize() const
@@ -261,4 +261,3 @@ size_t Keeper::Base::GetObjectsSize() const
     }
     return size;
 }
-

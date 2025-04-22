@@ -43,14 +43,14 @@ void Gfx::Device::CreatePhysicalDevice()
 	VkPhysicalDeviceProperties props;
 	vkGetPhysicalDeviceProperties(PhysicalDevice, &props);
 	std::cout << "\nDevice: " << props.deviceName << '\n';
-	std::cout << "The GPU has a minimum buffer alignment of " << props.limits.minUniformBufferOffsetAlignment << std::endl;	
+	std::cout << "The GPU has a minimum buffer alignment of " << props.limits.minUniformBufferOffsetAlignment << std::endl;
 	MinUniformBufferOffsetAlignment = props.limits.minUniformBufferOffsetAlignment;
 	ASSERT(PhysicalDevice == VK_NULL_HANDLE, "failed to find a suitable GPU");
 }
 
 void Gfx::Device::CreateDevice()
 {
-    QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
+    QueueFamilyIndex indices = FindQueueFamilies(PhysicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueinfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.Graphics.value(), indices.Present.value()};
@@ -67,18 +67,18 @@ void Gfx::Device::CreateDevice()
     VkPhysicalDeviceFeatures devicefeatures{};
 	devicefeatures.samplerAnisotropy = VK_TRUE;
     devicefeatures.fragmentStoresAndAtomics = VK_TRUE;
-	
+
 	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynfeature{};
 	dynfeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
     dynfeature.dynamicRendering = VK_TRUE;
 
-	VkPhysicalDeviceDescriptorIndexingFeatures descindeing{};
-	descindeing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-	descindeing.pNext = &dynfeature;    	
+	VkPhysicalDeviceDescriptorIndexingFeatures descindexing{};
+	descindexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	descindexing.pNext = &dynfeature;
 
     VkPhysicalDeviceShaderDrawParametersFeatures shaderdrawparams{};
     shaderdrawparams.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
-    shaderdrawparams.pNext = &descindeing;
+    shaderdrawparams.pNext = &descindexing;
     shaderdrawparams.shaderDrawParameters = VK_TRUE;
 
 	VkPhysicalDeviceFeatures2 devfeatures2{};
@@ -130,13 +130,13 @@ void Gfx::Device::CreateSwapchain()
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-	QueueFamilyIndex indices = FindQueueFimilies(PhysicalDevice);
+	QueueFamilyIndex indices = FindQueueFamilies(PhysicalDevice);
 	uint32_t queueFamilyIndices[] = {indices.Graphics.value(), indices.Present.value()};
 	if (indices.Graphics != indices.Present) {
 	    createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 	    createInfo.queueFamilyIndexCount = 2;
 	    createInfo.pQueueFamilyIndices = queueFamilyIndices;
-	} 
+	}
 	else {
 	    createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	    createInfo.queueFamilyIndexCount = 0;
@@ -202,7 +202,7 @@ void Gfx::Device::CreateWindowsSurface()
 }
 #endif
 
-Gfx::QueueFamilyIndex Gfx::Device::FindQueueFimilies(VkPhysicalDevice device) 
+Gfx::QueueFamilyIndex Gfx::Device::FindQueueFamilies(VkPhysicalDevice device)
 {
 	QueueFamilyIndex index;
 	uint32_t queuefamilycount = 0;
@@ -236,7 +236,7 @@ void Gfx::Device::RecreateSwapchain()
     Gfx::Renderer::GetInstance()->SetOnResize(false);
 
     vkDeviceWaitIdle(LogicalDevice);
-    
+
     CleanUpSwapchain();
     CreateSwapchain();
     CreateSwapchainImageViews();
@@ -251,10 +251,10 @@ VkQueue Gfx::Device::GetQueue(QueuesEnum q)
 	return Queue.Present;
 }
 
-bool Gfx::Device::IsDeviceSuitable(VkPhysicalDevice device) 
-{	
+bool Gfx::Device::IsDeviceSuitable(VkPhysicalDevice device)
+{
 	QueueFamilyIndex index;
-	index = FindQueueFimilies(device);
+	index = FindQueueFamilies(device);
 	bool extensionsupported = DeviceExtSupport(device);
 	bool swapchainsupport = false;
 	if (extensionsupported) {

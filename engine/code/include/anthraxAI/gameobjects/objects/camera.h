@@ -5,7 +5,7 @@
 #include "anthraxAI/gameobjects/objects/gizmo.h"
 
 namespace Keeper {
-class Camera : public Keeper::Objects 
+class Camera : public Keeper::Objects
 {
     public:
         enum Type {
@@ -15,7 +15,7 @@ class Camera : public Keeper::Objects
         Camera() {};
         Camera(Type info, Vector3<float> pos)
             : Type(info), Position(pos.x, pos.y, pos.z) { SetDirections(); }
-    
+
 
         void SetPosition(glm::vec3 pos) { Position = pos; };
         void SetDirections();
@@ -35,7 +35,7 @@ class Camera : public Keeper::Objects
 
         void SetSelected(bool id) override { }
         void SetGizmo(Keeper::Objects* gizmo) override { GizmoHandle = reinterpret_cast<Keeper::Gizmo*>(gizmo); }
-        
+
         Keeper::Type GetType() const override { return ObjectType; }
 
     private:

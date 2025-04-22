@@ -27,11 +27,11 @@ void main()
     float top = texture(textures[GetTextureInd()], uv_top).r;
     float right = texture(textures[GetTextureInd()], uv_right).r;
     float top_right = texture(textures[GetTextureInd()], uv_top_right).r;
-   
+
     float dT = abs(center - top);
     float dR = abs(center - right);
     float dTR = abs(center - top_right);
-   
+
     float delta = 0.0;
     delta = max(delta, dT);
     delta = max(delta, dR);

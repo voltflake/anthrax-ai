@@ -58,7 +58,7 @@ if (WIN32)
 endif()
 make_library(imgui)
 # imgui requires the Vulkan ans X11 libraries, so we need to link them here
-target_link_libraries(imgui PRIVATE ${_libraryes})
+target_link_libraries(imgui PRIVATE ${_libraries})
 if (WIN32)
 target_link_libraries(imgui dwmapi)
 endif()

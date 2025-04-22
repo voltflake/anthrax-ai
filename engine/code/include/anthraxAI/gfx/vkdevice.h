@@ -50,7 +50,7 @@ namespace Gfx
             VkPhysicalDevice GetPhysicalDevice() const { return PhysicalDevice; }
             VkSurfaceKHR GetSurface() const { return Surface; }
 
-            QueueFamilyIndex FindQueueFimilies(VkPhysicalDevice device);
+            QueueFamilyIndex FindQueueFamilies(VkPhysicalDevice device);
             bool IsDeviceSuitable(VkPhysicalDevice device);
 
             VkQueue GetQueue(QueuesEnum q);
@@ -61,9 +61,9 @@ namespace Gfx
             Vector2<int> GetSwapchainSize() const { return { static_cast<int>(Swapchain.Extent.width), static_cast<int>(Swapchain.Extent.height) }; }
             VkImageView GetSwapchainImageView(uint32_t ind) { return Swapchain.ImageViews[ind]; }
             VkImage GetSwapchainImage(uint32_t ind) {  return Swapchain.Images[ind]; }
-            
+
             void CleanUpSwapchain();
-            
+
 	        size_t MinUniformBufferOffsetAlignment;
         private:
 #ifdef AAI_LINUX
@@ -73,7 +73,7 @@ namespace Gfx
 #endif
             void CreatePhysicalDevice();
             void CreateDevice();
-            
+
             void CreateSwapchain();
             void CreateSwapchainImageViews();
 

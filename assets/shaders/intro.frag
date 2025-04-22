@@ -6,7 +6,7 @@
 // layout (location = 0) out vec4 outfragcolor;
 
 const int font[] = int[](
- 0x69f99, 0x79797, 0xe111e, 0x79997, 0xf171f, 0xf1711, 0xe1d96, 0x99f99, 
+ 0x69f99, 0x79797, 0xe111e, 0x79997, 0xf171f, 0xf1711, 0xe1d96, 0x99f99,
  0xf444f, 0x88996, 0x95159, 0x1111f, 0x9f999, 0x9bd99, 0x69996, 0x79971,
  0x69b5a, 0x79759, 0xe1687, 0xf4444, 0x99996, 0x999a4, 0x999f9, 0x99699,
  0x99e8e, 0xf843f, 0x6bd96, 0x46444, 0x6942f, 0x69496, 0x99f88, 0xf1687,
@@ -62,7 +62,7 @@ const int font[] = int[](
 #define QUES 45
 #define COMM 46
 #define FSTP 47
-#define QUOT 48 
+#define QUOT 48
 #define BLNK 49
 #define COLN 50
 #define LPAR 51
@@ -74,14 +74,14 @@ const ivec2 MAP_SIZE = ivec2(4, 5);
 int DrawChar(int char, vec2 pos, vec2 size, vec2 uv)
 {
     uv -= pos;
-    uv /= size;    
+    uv /= size;
 
     // to bitmap space coordinates
     uv *= vec2(MAP_SIZE);
 
     // bitmap texel coordinates
     ivec2 iuv = ivec2(round(uv));
-    
+
     if (iuv.x < 0 || iuv.x > MAP_SIZE.x - 1 || iuv.y < 0 || iuv.y > MAP_SIZE.y - 1) {
         return 0;
     }
@@ -103,7 +103,7 @@ int DrawText(vec2 uv, vec2 resolution, const float size, vec2 pos, int text[20],
         chr += DrawChar(text[i], charpos, charsize, uv);
         charpos.x += spacesize;
     }
-    
+
     return chr;
 }
 
@@ -177,15 +177,15 @@ vec2 AnimCoords( vec2 p, float time )
     if (y < 0.1 && y > 0) {
         p.y += y;
     }
-   
+
     return vec2(p.x, p.y);
 }
 
 void main()
-{    
+{
     float time = GetResource(Camera, GetUniformInd()).time;
     vec2 resolution = GetResource(Camera, GetUniformInd()).viewport.xy;
-    
+
     if (incoord.x < 0.12 || incoord.x > 0.88) {
         outfragcolor = vec4(0);
         return;
@@ -196,12 +196,12 @@ void main()
 
 // background ---------------------------------------------------------------------
 
-    vec2 ipos = floor(uv); 
+    vec2 ipos = floor(uv);
     float dissapear = length(cos(vec3(time) + ipos.xyx * vec3(0.35)));
 
     vec3 col = vec3(random(ipos),random(ipos),random(ipos)) * dissapear * 0.5;
     col = col.r < (0.5) ? col : vec3(1.0, 0,0);
- 
+
 // dots ---------------------------------------------------------------------------
 
     if (incoord.x < 0.25 || incoord.x > 0.75) {
@@ -293,11 +293,11 @@ void main()
 
             vec3 ray_norm = normalize(-ray_origin);
             vec3 up = normalize(cross(ray_norm, normalize(cross(ray_norm, vec3(0.0,1.0,0.0)))));
-           
+
             vec3 uuv = ray_origin + ray_norm*50. + coord.x*normalize(cross(ray_norm, vec3(0.0,1.0,0.0)))  + coord.y*up;
-    
+
             vec3 rd = normalize(uuv-ray_origin);
-            
+
             vec4 col2 = raymarch(ray_origin, rd, time);
             col += col2.xyz;
             col = clamp(col, vec3(0), vec3(1));

@@ -66,7 +66,7 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 		writes.dstBinding = StorageBinding;
 		writes.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 	}
-    
+
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &writes, 0, nullptr);
 	BufferHandle++;
 
@@ -128,7 +128,7 @@ void Gfx::DescriptorsBase::CleanAll()
     BufferHandle = 0;
 
 	vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool, nullptr);
-	
+
 	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), BindlessLayout, nullptr);
 }
 

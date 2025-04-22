@@ -40,7 +40,7 @@ namespace Keeper {
         LIGHT,
         SIZE
     };
-    
+
     enum Infos {
         INFO_INTRO = 0,
         INFO_GRID,
@@ -58,7 +58,7 @@ namespace Keeper {
             Objects(const Info& info) { UniqueID = IDCounter; IDCounter++; }
             Objects(const Info& info, int axis) { UniqueID = IDCounter; IDCounter++; }
             virtual ~Objects() {}
-            
+
             virtual Type GetType() const { return SIZE; }
             virtual int GetAxis() const { return -1; }
 
@@ -68,11 +68,11 @@ namespace Keeper {
             virtual std::string GetVertexName() const { return ""; }
             virtual std::string GetMaterialName() const { return ""; }
             virtual Vector3<float> GetPosition() const { return {0.0f, 0.0f, 0.0f}; }
-            virtual const std::vector<std::string>& GetAnimations() const { return EmptyAnimations; }        
+            virtual const std::vector<std::string>& GetAnimations() const { return EmptyAnimations; }
 
-            virtual Keeper::Objects* GetHandle() const { return nullptr; } 
+            virtual Keeper::Objects* GetHandle() const { return nullptr; }
             virtual Keeper::Objects* GetGizmo() const { return  nullptr;}
-    
+
             virtual void SetTextureName(const std::string& str) {}
             virtual void SetSelected(bool id) { }
             virtual void SetGizmo(Keeper::Objects* gizmo) {}
@@ -89,14 +89,14 @@ namespace Keeper {
             virtual int GetID() const { return UniqueID; }
             virtual const std::string& GetParsedID() const { return ParsedID; }
             virtual void ResetCounterID() { IDCounter = 1; }
-            
+
         private:
             std::string ParsedID = "";
             std::vector<std::string> EmptyAnimations;
             int UniqueID = 1;
             inline static std::atomic_int IDCounter = 1;
     };
-    
+
     typedef std::map<int, std::vector<Objects*>> GameObjectsMap;
 
     class Base
@@ -109,11 +109,11 @@ namespace Keeper {
             void Create(T* type) { ASSERT(type->GetType() == SIZE, "Keeper::Base::Create(): Error: child has no GetType() defined"); ObjectsList[type->GetType()].push_back(type); }
 
             bool IsValid(Type type) { if (!ObjectsList[type].empty()) { return true; } return false; }
-            std::vector<Objects*>& Get(Type type) {  return ObjectsList[type]; } 
+            std::vector<Objects*>& Get(Type type) {  return ObjectsList[type]; }
 
-            void Create(const std::vector<Info>& info); 
+            void Create(const std::vector<Info>& info);
             void Update();
-           
+
             std::vector<Objects*> GetObjects(Type type) { return (ObjectsList[type]); }
             const GameObjectsMap& GetObjects() const { return ObjectsList; }
 
@@ -124,9 +124,9 @@ namespace Keeper {
 
             size_t GetObjectsSize() const;
             void UpdateObjectNames();
-            
-            Keeper::Objects* GetNotConstObject(Keeper::Type type, int id); 
-            Keeper::Objects* GetNotConstObject(Keeper::Type type, const std::string& str); 
+
+            Keeper::Objects* GetNotConstObject(Keeper::Type type, int id);
+            Keeper::Objects* GetNotConstObject(Keeper::Type type, const std::string& str);
             const Keeper::Objects* GetObject(Keeper::Type type, int id) const;
             const std::vector<std::string>& GetObjectNames() const { return ObjectNames; }
 

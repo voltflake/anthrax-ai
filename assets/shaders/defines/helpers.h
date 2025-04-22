@@ -1,10 +1,10 @@
-float near = 0.1; 
-float far  = 100.0; 
-  
-float LinearizeDepth(float depth) 
+float near = 0.1;
+float far  = 100.0;
+
+float LinearizeDepth(float depth)
 {
-    float z = depth * 2.0 - 1.0; // back to NDC 
-    return (2.0 * near * far) / (far + near - z * (far - near));	
+    float z = depth * 2.0 - 1.0; // back to NDC
+    return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
 vec3 UnprojectPos(vec3 pos, mat4 view, mat4 projection) {
@@ -24,4 +24,3 @@ float LinearDepth(vec3 pos, mat4 proj, mat4 view) {
     float depth = (2.0 * near * (far / 1)) / ((far / 1) + near - clipdepth * ((far / 1) - near)); // linear value between [0.01;10]
     return depth / (far / 1);
 }
-

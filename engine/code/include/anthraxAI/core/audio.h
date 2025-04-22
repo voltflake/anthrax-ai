@@ -11,11 +11,11 @@ namespace Core
         public:
             Audio() {}
             ~Audio() { ALCboolean closed = alcCloseDevice(Device); }
-            
+
             void Init();
             void Load(const std::string& name);
             void SetVolume(float volume) { alSourcef(Source, AL_GAIN, volume); }
-        
+
             void Play();
 
             const std::vector<std::string>& GetAudioNames() const { return AudioNames; }

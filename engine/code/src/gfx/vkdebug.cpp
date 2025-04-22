@@ -20,7 +20,7 @@ Gfx::VkDebug::VkDebug()
 	MessengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 	MessengerCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 	MessengerCreateInfo.pfnUserCallback = DebugCallback;
-	MessengerCreateInfo.pUserData = nullptr; 
+	MessengerCreateInfo.pUserData = nullptr;
 }
 
 void Gfx::VkDebug::Setup(VkInstance instance, bool validationon)
@@ -44,7 +44,7 @@ void Gfx::VkDebug::SetRTName(const std::string& name, VkImage image)
 
 void Gfx::VkDebug::SetName(VkDebugUtilsObjectNameInfoEXT info)
 {
-    SetDebugUtilsObjectNameEXT(Gfx::Device::GetInstance()->GetDevice(), &info);   
+    SetDebugUtilsObjectNameEXT(Gfx::Device::GetInstance()->GetDevice(), &info);
 }
 
 void Gfx::VkDebug::SetRenderName(VkCommandBuffer cmd, VkDebugUtilsLabelEXT* info)
@@ -65,7 +65,7 @@ void Gfx::VkDebug::Destroy(VkInstance instance, const VkAllocationCallbacks* pAl
     }
 }
 
-VkResult Gfx::VkDebug::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
+VkResult Gfx::VkDebug::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
     SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     SetBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT" );

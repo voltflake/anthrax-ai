@@ -32,7 +32,7 @@ namespace Gfx
             void CleanBindless();
 
             void AllocateBuffers();
-            
+
             VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
             VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
             BufferHelper::Buffer& GetCameraUBO() { return CameraBuffer; }
@@ -40,7 +40,7 @@ namespace Gfx
             VkBuffer GetStorageBuffer() const { return StorageBuffer.Buffer; }
             BufferHelper::Buffer& GetStorageUBO() { return StorageBuffer; }
             VkDeviceMemory GetStorageBufferMemory() const { return StorageBuffer.DeviceMemory; }
-            
+
             VkBuffer GetInstanceBuffer() const { return InstanceBuffer.Buffer; }
             BufferHelper::Buffer& GetInstanceUBO() { return InstanceBuffer; }
             VkDeviceMemory GetInstanceBufferMemory() const { return InstanceBuffer.DeviceMemory; }

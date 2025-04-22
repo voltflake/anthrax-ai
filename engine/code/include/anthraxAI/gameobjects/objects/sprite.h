@@ -5,18 +5,18 @@
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
 
-namespace Keeper 
+namespace Keeper
 {
-  class Sprite : public Keeper::Objects 
+  class Sprite : public Keeper::Objects
   {
         public:
             Sprite() {}
             Sprite(const Keeper::Info& info);
-            
+
             ~Sprite() {};
-            
+
             Type GetType() const override { return ObjectType; }
-            void Update() override { } 
+            void Update() override { }
             void SetSelected(bool id) override { }
             void SetVisible(bool vis) override { }
             bool IsVisible() const override{ return Visible; }
@@ -32,11 +32,11 @@ namespace Keeper
             std::string GetVertexName() const override { return Vertex; }
         private:
             Keeper::Type ObjectType = Type::SPRITE;
-            
+
             Vector3<float> Position;
-           
-            std::string ParsedID = ""; 
-            std::string Vertex; 
+
+            std::string ParsedID = "";
+            std::string Vertex;
             std::string Fragment;
             std::string TextureName;
             std::string MaterialName;
@@ -44,4 +44,3 @@ namespace Keeper
             bool Visible = true;
   };
 }
-

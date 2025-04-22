@@ -2,9 +2,9 @@
 
 #include "anthraxAI/gameobjects/gameobjects.h"
 
-namespace Keeper 
+namespace Keeper
 {
-  class Gizmo : public Objects 
+  class Gizmo : public Objects
   {
         public:
             enum Type {
@@ -17,9 +17,9 @@ namespace Keeper
             Gizmo() {}
             Gizmo(const Info& info) {}
             Gizmo(const Info& info, int axis);
-            
+
             ~Gizmo() {}
-            
+
             Keeper::Type GetType() const override { return ObjectType; }
             int GetAxis() const override { return Axis; }
             void SetSelected(bool id) override { }
@@ -27,7 +27,7 @@ namespace Keeper
             bool IsVisible() const override{ return Visible; }
             void Update() override;
             void PrintInfo() override;
-   
+
             Keeper::Objects* GetHandle() const override { return Handle; }
             Vector3<float> GetPosition() const override { return Position; }
             std::string GetModelName() const override { return ModelName; }
@@ -45,7 +45,7 @@ namespace Keeper
             Vector3<float> Position;
             Keeper::Objects* Handle = nullptr;
 
-            std::string Vertex; 
+            std::string Vertex;
             std::string Fragment;
             std::string TextureName;
             std::string MaterialName;

@@ -3,28 +3,28 @@
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/gizmo.h"
 
-namespace Keeper 
+namespace Keeper
 {
-  class Npc : public Objects 
+  class Npc : public Objects
   {
         public:
             Npc() {}
             Npc(const Info& info);
-            
+
             ~Npc() {}
-            
+
             Type GetType() const override { return ObjectType; }
             void SetSelected(bool id) override { Selected = id; }
             void SetVisible(bool vis) override { }
             bool IsVisible() const override{ return Visible; }
             void Update() override;
             void PrintInfo() override;
-   
+
             bool HasAnimations() const override { return IsAnimated; }
             void SetGizmo(Keeper::Objects* gizmo) override { GizmoHandle = reinterpret_cast<Keeper::Gizmo*>(gizmo); }
-            
+
             void SetTextureName(const std::string& str) override { TextureName = str; }
-           
+
             Keeper::Objects* GetGizmo() const override { return  reinterpret_cast<Keeper::Objects*>(GizmoHandle);}
             Vector3<float> GetPosition() const override { return Position; }
             std::string GetModelName() const override { return ModelName; }
@@ -34,16 +34,16 @@ namespace Keeper
             std::string GetVertexName() const override { return Vertex; }
 
             const std::string& GetParsedID() const override { return ParsedID; }
-            const std::vector<std::string>& GetAnimations() const override { return Animations; }        
+            const std::vector<std::string>& GetAnimations() const override { return Animations; }
         private:
             Keeper::Type ObjectType = Type::NPC;
-            
+
             Vector3<float> Position;
 
     bool ResetMouse = false;
-           
-            std::string ParsedID = ""; 
-            std::string Vertex; 
+
+            std::string ParsedID = "";
+            std::string Vertex;
             std::string Fragment;
             std::string TextureName;
             std::string MaterialName;
@@ -54,8 +54,7 @@ namespace Keeper
 
    bool reset = true;
             std::vector<std::string> Animations;
-            
+
             Keeper::Gizmo* GizmoHandle = nullptr;
   };
 }
-

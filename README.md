@@ -88,3 +88,9 @@ Don't forget that the <kbd>CTRL+SHIFT+P</kbd> key combination helps to `configur
 ## Known Issues
 - Pascal and older nvidia cards are unsupported due to unavailable vulkan features on that hardware.
 - Modified CatchyOS packages break compilation of required `assimp` library
+- ```
+./run.sh 
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Error: Core::Audio::Init(): Device was not created!
+```
+Occurs on Ubuntu distros and can be fixed by installing `libpipewire-0.3-dev` by default. Or by installing other appropiate lib if system uses other audio backend.

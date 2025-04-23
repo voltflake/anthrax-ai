@@ -12,6 +12,9 @@ install_dependencies_apt() {
         libxcb-keysyms1 libxcb-keysyms1-dev \
         libxcb-xfixes0 libxcb-xfixes0-dev \
         -y
+    
+    # Install zlib headers to make cmake configuration work
+    sudo apt install zlib1g-dev -y
 }
 
 # Function to install dependencies using pacman

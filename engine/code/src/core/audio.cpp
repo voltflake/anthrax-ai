@@ -3,6 +3,8 @@
 #include "anthraxAI/utils/debug.h"
 
 #include <fstream>
+#include <bit>
+
 void Core::Audio::Init()
 {
     if (!Device) {

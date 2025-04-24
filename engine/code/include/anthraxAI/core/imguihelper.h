@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include <string>
 
-#ifdef AAI_LINUX
+#ifdef __linux__
 #include <imgui_impl_x11.h>
 static ImGui_ImplVulkanH_Window MainWindowData;
 #endif
@@ -146,7 +146,7 @@ namespace Core
             void Add(UI::Element tab, const UI::Element& element) { UITabs[tab].emplace_back(element); }
             void Add(const std::string& scene, const UI::Window& window) { UIWindows[scene].emplace_back(window); }
             void Add(const std::string& scene, const UI::Element& element) { UIElements[scene].emplace_back(element); }
-#ifdef AAI_LINUX
+#ifdef __linux__
             void CatchEvent(xcb_generic_event_t *event) { ImGui_ImplX11_Event(event); }
 #endif
             bool TextureNeedsUpdate() { return TextureUpdate; }

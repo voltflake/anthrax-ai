@@ -66,7 +66,7 @@ namespace Gfx
 
 	        size_t MinUniformBufferOffsetAlignment;
         private:
-#ifdef AAI_LINUX
+#ifdef __linux__
             void CreateLinuxSurface();
 #else
             void CreateWindowsSurface();

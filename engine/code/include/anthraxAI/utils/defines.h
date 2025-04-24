@@ -14,7 +14,7 @@
 #include <imgui_internal.h>
 #include <imgui_impl_vulkan.h>
 
-#ifdef AAI_LINUX
+#ifdef __linux__
 	#define VK_USE_PLATFORM_XCB_KHR
 	#define ESC_KEY 65307
 	#define W_KEY 119

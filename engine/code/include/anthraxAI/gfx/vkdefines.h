@@ -4,13 +4,16 @@
 #include <cstring>
 
 #include <vulkan/vulkan.h>
-#ifdef AAI_WINDOWS
+
+#ifdef _WIN32
 #include <windows.h>
 #include <backends/imgui_impl_win32.h>
 #include <vulkan/vulkan_win32.h>
 #endif
+
 #include <vulkan/vk_enum_string_helper.h>
-#ifdef AAI_LINUX
+
+#ifdef __linux__
 #include <xcb/xcb.h>
 #include <vulkan/vulkan_xcb.h>
 const std::vector<const char*> INSTANCE_EXT =

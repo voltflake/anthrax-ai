@@ -5,7 +5,7 @@
 #include "anthraxAI/engine.h"
 
 #include <cstring>
-#ifdef AAI_LINUX
+#ifdef __linux__
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
 #include <xcb/xfixes.h>
@@ -16,9 +16,7 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 	xcb_intern_atom_cookie_t cookie = xcb_intern_atom(connection, onlyifexist, strlen(str), str);
 	return xcb_intern_atom_reply(connection, cookie, NULL);
 }
-#endif
-
-#if defined(AAI_WINDOWS)
+#elif defined(_WIN32)
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
 #include <backends/imgui_impl_win32.h>
@@ -52,7 +50,7 @@ namespace Core
 
     class WindowManager : public Utils::Singleton<WindowManager>
     {
-#ifdef AAI_LINUX
+#ifdef __linux__
         private:
             xcb_connection_t* 			Connection;
             xcb_window_t 				Window;
@@ -67,7 +65,7 @@ namespace Core
 
             xcb_connection_t* GetConnection() const { return Connection; }
             xcb_window_t* GetWindow() { return &Window; }
-#else
+#elif defined(_WIN32)
         public:
             void InitWindowsWindow();
             void RunWindows();
@@ -87,9 +85,9 @@ namespace Core
             void ReleaseMouseSelected() { Mouse.Selected = false;}
             void SetResizeExtents(int x, int y) { OnResizeExtents.x = x; OnResizeExtents.y = y; }
             void SetEvent(int event) { Event |= event; }
-#ifdef AAI_LINUX
+#ifdef __linux__
             xcb_keysym_t GetPressedKey() const { return PressedKey; }
-#else
+#elif defined(_WIN32)
         private:
             int PressedKey;
             HWND Hwnd;
@@ -105,9 +103,9 @@ namespace Core
 
             void Events();
             void ProcessEvents();
-#ifdef AAI_LINUX
+#ifdef __linux__
             int CatchEvent(xcb_generic_event_t *event);
-#else
+#elif defined(_WIN32)
             int CatchEvent();
 #endif
             bool running = true;

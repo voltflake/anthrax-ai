@@ -20,9 +20,9 @@
 void Core::ImGuiHelper::UpdateFrame()
 {
 	ImGui_ImplVulkan_NewFrame();
-#ifdef AAI_LINUX
+#ifdef __linux__
 	ImGui_ImplX11_NewFrame();
-#else
+#elif defined(_WIN32)
 	ImGui_ImplWin32_NewFrame();
 #endif
 	ImGui::NewFrame();
@@ -30,9 +30,9 @@ void Core::ImGuiHelper::UpdateFrame()
 
 Core::ImGuiHelper::~ImGuiHelper()
 {
-#if defined(AAI_LINUX)
+#if defined(__linux__)
     ImGui_ImplX11_Shutdown();
-#elif defined(AAI_WINDOWS)
+#elif defined(_WIN32)
 	ImGui_ImplWin32_Shutdown();
 #endif
     ImGui::DestroyContext();
@@ -66,9 +66,9 @@ void Core::ImGuiHelper::Init()
 	VK_ASSERT(vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &pool_info, nullptr, &imguiPool), "failed to creat imgui descriptor set!");
 
 	ImGui::CreateContext();
-#if defined(AAI_LINUX)
+#if defined(__linux__)
     ImGui_ImplX11_Init(Core::WindowManager::GetInstance()->GetConnection(), Core::WindowManager::GetInstance()->GetWindow());
-#elif defined(AAI_WINDOWS)
+#elif defined(_WIN32)
 	ImGui_ImplWin32_Init(Core::WindowManager::GetInstance()->GetWinWindow());
 #endif
 

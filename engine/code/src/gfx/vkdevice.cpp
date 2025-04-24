@@ -3,7 +3,7 @@
 
 void Gfx::Device::Init()
 {
-#ifdef AAI_LINUX
+#ifdef __linux__
     CreateLinuxSurface();
 #else
     CreateWindowsSurface();
@@ -178,7 +178,7 @@ void Gfx::Device::CreateSwapchainImageViews() {
 	}
 }
 
-#ifdef AAI_LINUX
+#ifdef __linux__
 void Gfx::Device::CreateLinuxSurface()
 {
     VkXcbSurfaceCreateInfoKHR info = {};

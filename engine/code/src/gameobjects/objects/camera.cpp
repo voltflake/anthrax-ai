@@ -15,7 +15,7 @@ void Keeper::Camera::SetDirections()
 void Keeper::Camera::UpdateMovement()
 {
     float delta = Utils::Debug::GetInstance()->DeltaMs;
-#ifdef AAI_LINUX
+#ifdef __linux__
     const float camspeed = delta / 1000 * 0.03;//0.5f * delta;
 #else
     const float camspeed = 0.05f * delta;

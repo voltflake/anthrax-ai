@@ -76,7 +76,6 @@ void Gfx::Renderer::CreateTextures()
 
 Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
 {
-    RenderTarget texture;
     int width, height, channels;
 
     stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
@@ -91,6 +90,7 @@ Gfx::RenderTarget Gfx::Renderer::CreateTexture(const std::string& path)
 
     stbi_image_free(pixels);
 
+    RenderTarget texture(path);
     texture.SetFormat(VK_FORMAT_R8G8B8A8_SRGB);
     texture.SetDimensions({ width, height });
 

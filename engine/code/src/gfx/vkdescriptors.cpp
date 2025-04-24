@@ -23,9 +23,15 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 	return setbind;
 }
 
-uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler)
+
+uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name)
 {
-	VkDescriptorImageInfo imageinfo{};
+    auto it = std::find_if(TextureBindings.begin(), TextureBindings.end(), [&, name](const auto& n) { return n.first == name; });
+	if (it != TextureBindings.end()) {
+        return it->second;
+    }
+
+    VkDescriptorImageInfo imageinfo{};
 	imageinfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	imageinfo.imageView = imageview;
 	imageinfo.sampler = sampler;
@@ -41,7 +47,8 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
 	TextureHandle++;
-
+    
+    TextureBindings[name] = TextureHandle - 1;
 	return TextureHandle - 1;
 }
 

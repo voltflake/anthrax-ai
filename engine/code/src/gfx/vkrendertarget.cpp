@@ -7,6 +7,7 @@ Gfx::RenderTarget::RenderTarget(const RenderTarget& rt, uint32_t id) :
     Format(rt.Format), Dimensions(rt.Dimensions),
     IsDepth(rt.IsDepth), IsStorage(rt.IsStorage), ID(id)
 {
+    Name = Gfx::GetValue(static_cast<RenderTargetsList>(id));
 }
 
 VkImageCreateInfo ImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent)

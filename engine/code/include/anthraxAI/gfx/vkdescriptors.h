@@ -47,7 +47,7 @@ namespace Gfx
 
             size_t PadUniformBufferSize(size_t originalsize);
 
-            uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler);
+            uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name);
             uint32_t UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage);
 
             VkDescriptorSet* GetBindlessSet() { return &BindlessDescriptor; }
@@ -65,6 +65,7 @@ namespace Gfx
 	        VkDescriptorSetLayout BindlessLayout = VK_NULL_HANDLE;
             VkDescriptorSet BindlessDescriptor;
 
+            std::map<std::string, uint32_t> TextureBindings;
             uint32_t TextureHandle = 0;
             uint32_t BufferHandle = 0;
 

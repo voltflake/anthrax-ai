@@ -96,16 +96,16 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
         case Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER: {
             if (!obj.Textures.empty()) {
                 std::vector<Gfx::RenderTarget*>::iterator it = obj.Textures.begin();
-                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()));
+                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName());
                 it++;
                 for (; it != obj.Textures.end(); ++it) {
                     ASSERT(!(*it), "Modules::Base::UpdateResource() invalid render target pointer!");
-                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()));
+                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName());
                 }
             }
             else {
                 ASSERT(!obj.Texture, "Modules::Base::UpdateResource() invalid render target pointer!");
-                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()));
+                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName());
             }
     	    obj.BufferBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
             obj.StorageBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
@@ -236,7 +236,7 @@ void Modules::Base::UpdateTexture(const std::string& str, Core::ImGuiHelper::Tex
     if (it != SceneModules[str].GetRenderQueue().end()) {
         it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
         it->TextureName = upd.NewTextureName;
-        it->TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()));
+        it->TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()), it->Texture->GetName());
     }
 }
 

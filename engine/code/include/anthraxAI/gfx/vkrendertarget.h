@@ -8,11 +8,53 @@
 
 namespace Gfx
 {
+
+#define GBUFFER_RT_SIZE 3
+#define RT \
+    X(RT_MAIN_COLOR, "main_color") \
+    X(RT_MAIN_DEBUG, "main_debug") \
+    X(RT_DEPTH, "depth") \
+    X(RT_ALBEDO, "albedo") \
+    X(RT_NORMAL, "normal") \
+    X(RT_POSITION, "position") \
+    X(RT_MASK, "mask") \
+    X(RT_SIZE, "rts size") \
+
+#define X(element, name) element,
+    typedef enum {
+        RT
+    } RenderTargetsList;
+#undef X
+
+    static std::string GetValue(const RenderTargetsList id)
+    {
+        std::string retval;
+#define X(element, name) if (id == element) { retval = name; } else
+    RT
+#undef X
+        {
+            retval = "undef";
+        }
+        return retval;
+    }
+    static RenderTargetsList GetKey(const std::string& id)
+    {
+        RenderTargetsList retval;
+#define X(element, name) if (id == name) { retval = element; } else
+    RT
+#undef X
+        {
+            retval = RT_SIZE;
+        }
+        return retval;
+    }
     class RenderTarget
     {
         public:
-            RenderTarget() {}
-            RenderTarget(uint32_t id) : ID(id) {}
+            
+            RenderTarget() { Name = "please dont call this ctor"; }
+            RenderTarget(const std::string& name) : Name(name) {}
+            RenderTarget(uint32_t id) { Name = Gfx::GetValue(static_cast<RenderTargetsList>(id)); }
             RenderTarget(const RenderTarget& rt, uint32_t id);
 
             void CreateRenderTarget();
@@ -28,6 +70,7 @@ namespace Gfx
             void SetDepth(bool depth) { IsDepth = depth; }
             void SetSampler(bool samp) { IsSampler = samp; }
 
+            const std::string& GetName() const { ASSERT(Name.empty(), "RenderTarget::GetName() Name is empty!"); return Name; }
             VkSampler* GetSampler() { return &Sampler; }
             VkImage GetImage() { return Image; }
             VkImageView GetImageView() { return ImageView; }
@@ -55,5 +98,6 @@ namespace Gfx
             bool IsSampler = false;
             bool IsDepth = false;
             bool IsStorage = false;
+            std::string Name;
     };
 }

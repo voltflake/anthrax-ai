@@ -13,9 +13,9 @@
 #include <cstdint>
 #include <string>
 #include <vulkan/vulkan_core.h>
+//#include "tracy/Tracy.hpp"
 namespace Core
 {
-
     class Scene : public Utils::Singleton<Scene>
     {
         public:

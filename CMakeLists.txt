@@ -17,3 +17,4 @@ if(AAI_COMPILE_SHADERS)
 	include(AAICompileShaders)
 	aai_compile_shaders(DIRECTORY ${aai_assets_dir}/shaders)
 endif()
+

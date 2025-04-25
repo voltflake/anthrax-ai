@@ -1,6 +1,7 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include <cstdint>
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
 {
@@ -24,10 +25,10 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 }
 
 
-uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name)
+uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame)
 {
-    auto it = std::find_if(TextureBindings.begin(), TextureBindings.end(), [&, name](const auto& n) { return n.first == name; });
-	if (it != TextureBindings.end()) {
+    auto it = std::find_if(TextureBindings[frame].begin(), TextureBindings[frame].end(), [&, name](const auto& n) { return n.first == name; });
+	if (it != TextureBindings[frame].end()) {
         return it->second;
     }
 
@@ -40,7 +41,7 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	write.dstBinding = TextureBinding;
-	write.dstSet = BindlessDescriptor;
+	write.dstSet = BindlessDescriptor[frame];
 	write.descriptorCount = 1;
 	write.dstArrayElement = TextureHandle;
 	write.pImageInfo = &imageinfo;
@@ -48,11 +49,11 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
 	TextureHandle++;
     
-    TextureBindings[name] = TextureHandle - 1;
+    TextureBindings[frame][name] = TextureHandle - 1;
 	return TextureHandle - 1;
 }
 
-uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage)
+uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage, uint32_t frame)
 {
 	VkWriteDescriptorSet writes{};
 	VkDescriptorBufferInfo bufferinfo{};
@@ -60,7 +61,7 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 	bufferinfo.offset = 0;
 	bufferinfo.range = VK_WHOLE_SIZE;
 	writes.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writes.dstSet = BindlessDescriptor;
+	writes.dstSet = BindlessDescriptor[frame];
 	writes.descriptorCount = 1;
 	writes.dstArrayElement = BufferHandle;
 	writes.pBufferInfo = &bufferinfo;
@@ -83,50 +84,62 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 void Gfx::DescriptorsBase::AllocateDataBuffers()
 {
 	const size_t cambuffersize = (sizeof(CameraData));
-	BufferHelper::CreateBuffer(CameraBuffer, cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-	VkDebugUtilsObjectNameInfoEXT info;
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    BufferHelper::CreateBuffer(CameraBuffer[i], cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    }
+    VkDebugUtilsObjectNameInfoEXT info;
 	info.pNext = nullptr;
 	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-	info.objectHandle = reinterpret_cast<uint64_t>(CameraBuffer.DeviceMemory);
+	info.objectHandle = reinterpret_cast<uint64_t>(CameraBuffer[0].DeviceMemory);
 	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
-	info.pObjectName = "data buffer";
+	info.pObjectName = "data buffer #1 frame";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
-		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.Buffer, nullptr);
-    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer.DeviceMemory, nullptr);
-	});
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
+		    vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer[i].Buffer, nullptr);
+    	    vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), CameraBuffer[i].DeviceMemory, nullptr);
+	    });
+    }
 }
 void Gfx::DescriptorsBase::AllocateStorageBuffers()
 {
 	size_t buffersize = (sizeof(StorageData));
-	BufferHelper::CreateBuffer(StorageBuffer, buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-	VkDebugUtilsObjectNameInfoEXT info;
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    BufferHelper::CreateBuffer(StorageBuffer[i], buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    }
+    VkDebugUtilsObjectNameInfoEXT info;
 	info.pNext = nullptr;
 	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-	info.objectHandle = reinterpret_cast<uint64_t>(StorageBuffer.DeviceMemory);
+	info.objectHandle = reinterpret_cast<uint64_t>(StorageBuffer[0].DeviceMemory);
 	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
-	info.pObjectName = "storage buffer";
+	info.pObjectName = "storage buffer #1 frame";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
-		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.Buffer, nullptr);
-    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer.DeviceMemory, nullptr);
-	});
+    for (int i = 0; i < MAX_FRAMES; i++) {
+    	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
+    		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer[i].Buffer, nullptr);
+        	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), StorageBuffer[i].DeviceMemory, nullptr);
+    	});
+    }
 
     buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
-	BufferHelper::CreateBuffer(InstanceBuffer, buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    BufferHelper::CreateBuffer(InstanceBuffer[i], buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    }
 	info.pNext = nullptr;
 	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;
-	info.objectHandle = reinterpret_cast<uint64_t>(InstanceBuffer.DeviceMemory);
+	info.objectHandle = reinterpret_cast<uint64_t>(InstanceBuffer[0].DeviceMemory);
 	info.objectType = VK_OBJECT_TYPE_DEVICE_MEMORY;;
-	info.pObjectName = "INSTANCE buffer";
+	info.pObjectName = "INSTANCE buffer #1 frame";
 	Gfx::Vulkan::GetInstance()->SetDebugName(info);
 
-    Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
-		vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.Buffer, nullptr);
-    	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer.DeviceMemory, nullptr);
-	});
+    for (int i = 0; i < MAX_FRAMES; i++) {
+        Core::Deletor::GetInstance()->Push(Core::Deletor::Type::NONE, [=, this]() {
+	    	vkDestroyBuffer(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer[i].Buffer, nullptr);
+        	vkFreeMemory(Gfx::Device::GetInstance()->GetDevice(), InstanceBuffer[i].DeviceMemory, nullptr);
+	    });
+    }
 }
 
 void Gfx::DescriptorsBase::CleanAll()
@@ -134,8 +147,9 @@ void Gfx::DescriptorsBase::CleanAll()
 	TextureHandle = 0;
     BufferHandle = 0;
 
-	vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool, nullptr);
-
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool[i], nullptr);
+    }
 	vkDestroyDescriptorSetLayout(Gfx::Device::GetInstance()->GetDevice(), BindlessLayout, nullptr);
 }
 
@@ -174,8 +188,9 @@ void Gfx::DescriptorsBase::Init()
 	poolinfo.maxSets = 5000;
 	poolinfo.poolSizeCount = MAX_BINDING;
 	poolinfo.pPoolSizes = sizes;
-	vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Pool);
-
+    for (int i = 0; i < MAX_FRAMES; i++) {
+	    vkCreateDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Pool[i]);
+    }
 // bindless layout
 
 	for (int i = 0; i < MAX_BINDING; i++) {
@@ -200,13 +215,15 @@ void Gfx::DescriptorsBase::Init()
 
 // bindless descriptor
 
-	VkDescriptorSetAllocateInfo allocinfo{};
-	allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocinfo.pNext = nullptr;
-	allocinfo.descriptorPool = Pool;
-	allocinfo.pSetLayouts = &BindlessLayout;
-	allocinfo.descriptorSetCount = 1;
-	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, &BindlessDescriptor);
+    for (int i = 0; i < MAX_FRAMES; i++) {
+    	VkDescriptorSetAllocateInfo allocinfo{};
+    	allocinfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    	allocinfo.pNext = nullptr;
+    	allocinfo.descriptorPool = Pool[i];
+    	allocinfo.pSetLayouts = &BindlessLayout;
+    	allocinfo.descriptorSetCount = 1;
+    	vkAllocateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), &allocinfo, &BindlessDescriptor[i]);
+    }
 }
 
 void Gfx::DescriptorsBase::AllocateBuffers()

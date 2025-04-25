@@ -12,8 +12,8 @@ std::vector<glm::mat4> Core::AnimatorBase::Update(Gfx::RenderObject& object)
     }
 
     float timesec = (float)((double)Engine::GetInstance()->GetTime() - (double)Utils::Debug::GetInstance()->AnimStartMs) / 1000.0f;
-
-    std::vector<glm::mat4> vec =  GetBonesTransform(object.Model, object.ID, timesec);
+    uint32_t frame = Gfx::Renderer::GetInstance()->GetFrameInd();
+    std::vector<glm::mat4> vec =  GetBonesTransform(object.Model[frame], object.ID, timesec);
     return vec;
 }
 

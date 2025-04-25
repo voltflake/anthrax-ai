@@ -1,5 +1,6 @@
 #include "anthraxAI/gamemodules/modules.h"
 #include "anthraxAI/gfx/renderhelpers.h"
+#include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/utils/defines.h"
@@ -94,23 +95,25 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
 {
     switch (module.GetBindlessType()) {
         case Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER: {
+            for (int i = 0; i < MAX_FRAMES; i++) {
             if (!obj.Textures.empty()) {
                 std::vector<Gfx::RenderTarget*>::iterator it = obj.Textures.begin();
-                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName());
+                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i);
                 it++;
                 for (; it != obj.Textures.end(); ++it) {
                     ASSERT(!(*it), "Modules::Base::UpdateResource() invalid render target pointer!");
-                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName());
+                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i);
                 }
             }
             else {
                 ASSERT(!obj.Texture, "Modules::Base::UpdateResource() invalid render target pointer!");
-                obj.TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName());
+                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName(), i);
             }
-    	    obj.BufferBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-            obj.StorageBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-            obj.InstanceBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
-            obj.HasStorage = obj.Model ? true : false;
+    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, i);
+            obj.StorageBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, i);
+            obj.InstanceBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, i);
+            }
+            obj.HasStorage = obj.Model[0] ? true : false;
             module.SetCameraBuffer(true);
             module.SetStorageBuffer(true);
             module.SetTexture(true);
@@ -118,7 +121,9 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
             break;
         }
         case Gfx::BINDLESS_DATA_CAM_BUFFER: {
-    	    obj.BufferBind = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+            for (int i = 0; i < MAX_FRAMES; i++) {
+    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, i);
+            }
             module.SetCameraBuffer(true);
             break;
         }
@@ -236,7 +241,9 @@ void Modules::Base::UpdateTexture(const std::string& str, Core::ImGuiHelper::Tex
     if (it != SceneModules[str].GetRenderQueue().end()) {
         it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
         it->TextureName = upd.NewTextureName;
-        it->TextureBind = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()), it->Texture->GetName());
+        for (int i = 0; i < MAX_FRAMES; i++) {
+        it->TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()), it->Texture->GetName(), i);
+        }
     }
 }
 
@@ -285,7 +292,9 @@ Gfx::RenderObject Modules::Base::LoadResources(const Keeper::Objects* info)
     rqobj.Texture = Gfx::Renderer::GetInstance()->GetTexture(info->GetTextureName());
     rqobj.TextureName = info->GetTextureName();
     if (!info->GetModelName().empty()) {
-        rqobj.Model = Gfx::Model::GetInstance()->GetModel(info->GetModelName());
+        for (int i = 0; i < MAX_FRAMES; i++) {
+        rqobj.Model[i] = Gfx::Model::GetInstance()->GetModel(info->GetModelName());
+        }
     }
     else {
         rqobj.Mesh = Gfx::Mesh::GetInstance()->GetMesh(info->GetTextureName());

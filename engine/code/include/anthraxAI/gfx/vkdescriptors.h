@@ -6,6 +6,7 @@
 
 #include "anthraxAI/gfx/bufferhelper.h"
 
+#include <cstdint>
 #include <unordered_map>
 #include <algorithm>
 
@@ -33,39 +34,39 @@ namespace Gfx
 
             void AllocateBuffers();
 
-            VkDeviceMemory GetCameraBufferMemory() const { return CameraBuffer.DeviceMemory; }
-            VkBuffer GetCameraBuffer() const { return CameraBuffer.Buffer; }
-            BufferHelper::Buffer& GetCameraUBO() { return CameraBuffer; }
+            VkDeviceMemory GetCameraBufferMemory(uint32_t frame) const { return CameraBuffer[frame].DeviceMemory; }
+            VkBuffer GetCameraBuffer(uint32_t frame) const { return CameraBuffer[frame].Buffer; }
+            BufferHelper::Buffer& GetCameraUBO(uint32_t frame) { return CameraBuffer[frame]; }
 
-            VkBuffer GetStorageBuffer() const { return StorageBuffer.Buffer; }
-            BufferHelper::Buffer& GetStorageUBO() { return StorageBuffer; }
-            VkDeviceMemory GetStorageBufferMemory() const { return StorageBuffer.DeviceMemory; }
+            VkBuffer GetStorageBuffer(uint32_t frame) const { return StorageBuffer[frame].Buffer; }
+            BufferHelper::Buffer& GetStorageUBO(uint32_t frame) { return StorageBuffer[frame]; }
+            VkDeviceMemory GetStorageBufferMemory(uint32_t frame) const { return StorageBuffer[frame].DeviceMemory; }
 
-            VkBuffer GetInstanceBuffer() const { return InstanceBuffer.Buffer; }
-            BufferHelper::Buffer& GetInstanceUBO() { return InstanceBuffer; }
-            VkDeviceMemory GetInstanceBufferMemory() const { return InstanceBuffer.DeviceMemory; }
+            VkBuffer GetInstanceBuffer(uint32_t frame) const { return InstanceBuffer[frame].Buffer; }
+            BufferHelper::Buffer& GetInstanceUBO(uint32_t frame) { return InstanceBuffer[frame]; }
+            VkDeviceMemory GetInstanceBufferMemory(uint32_t frame) const { return InstanceBuffer[frame].DeviceMemory; }
 
             size_t PadUniformBufferSize(size_t originalsize);
 
-            uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name);
-            uint32_t UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage);
+            uint32_t UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame);
+            uint32_t UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage, uint32_t frame);
 
-            VkDescriptorSet* GetBindlessSet() { return &BindlessDescriptor; }
+            VkDescriptorSet* GetBindlessSet(uint32_t frame) { return &BindlessDescriptor[frame]; }
             VkDescriptorSetLayout GetBindlessLayout() { return BindlessLayout; }
 
         private:
             void AllocateDataBuffers();
             void AllocateStorageBuffers();
 
-            BufferHelper::Buffer CameraBuffer;
-            BufferHelper::Buffer StorageBuffer;
-            BufferHelper::Buffer InstanceBuffer;
+            BufferHelper::Buffer CameraBuffer[MAX_FRAMES];
+            BufferHelper::Buffer StorageBuffer[MAX_FRAMES];
+            BufferHelper::Buffer InstanceBuffer[MAX_FRAMES];
 
-            VkDescriptorPool Pool;
+            VkDescriptorPool Pool[MAX_FRAMES];
 	        VkDescriptorSetLayout BindlessLayout = VK_NULL_HANDLE;
-            VkDescriptorSet BindlessDescriptor;
+            VkDescriptorSet BindlessDescriptor[MAX_FRAMES];
 
-            std::map<std::string, uint32_t> TextureBindings;
+            std::map<std::string, uint32_t> TextureBindings[MAX_FRAMES];
             uint32_t TextureHandle = 0;
             uint32_t BufferHandle = 0;
 

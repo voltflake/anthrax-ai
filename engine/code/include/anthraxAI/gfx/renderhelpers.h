@@ -1,4 +1,5 @@
 #pragma once
+#include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
 #include "anthraxAI/gfx/model.h"
 #include <cstdint>
@@ -19,10 +20,10 @@ namespace Gfx
 
     struct RenderObject {
 	    Gfx::MeshInfo* Mesh = nullptr;
-	    Gfx::ModelInfo* Model = nullptr;
+	    Gfx::ModelInfo* Model[MAX_FRAMES] = { nullptr };
 	    Gfx::Material* Material = nullptr;
         Gfx::RenderTarget* Texture = nullptr;
-    std::vector<Gfx::RenderTarget*> Textures;
+        std::vector<Gfx::RenderTarget*> Textures;
 
         std::string MaterialName;
         std::string TextureName;
@@ -39,10 +40,10 @@ namespace Gfx
 
         uint32_t GizmoType;
 
-        uint32_t BufferBind;
-        uint32_t StorageBind;
-        uint32_t InstanceBind;
-        uint32_t TextureBind;
+        uint32_t BufferBind[MAX_FRAMES];
+        uint32_t StorageBind[MAX_FRAMES];
+        uint32_t InstanceBind[MAX_FRAMES];
+        uint32_t TextureBind[MAX_FRAMES];
     };
 
     #define DEPTH_ARRAY_SCALE 512

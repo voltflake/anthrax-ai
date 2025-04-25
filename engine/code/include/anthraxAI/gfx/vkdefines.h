@@ -20,7 +20,7 @@ const std::vector<const char*> INSTANCE_EXT =
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 #endif
 
-#define MAX_FRAMES 2
+#define MAX_FRAMES 3
 
 const std::vector<const char*> VALIDATION_LAYER = { "VK_LAYER_KHRONOS_validation" };
 const std::vector<const char*> DEVICE_EXT = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };

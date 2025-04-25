@@ -34,6 +34,7 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
     uint32_t inst_ind = 0;//Gfx::Renderer::GetInstance()->GetInstanceInd();
     std::vector<uint32_t> num_obj_per_thread(Thread::MAX_THREAD_NUM, (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM );
 
+    uint32_t frameind = Gfx::Renderer::GetInstance()->GetFrameInd();
     bool iseven = (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM) == 0;
     if (!iseven) {
         num_obj_per_thread[num_obj_per_thread.size() - 1] += (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM);
@@ -49,7 +50,7 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
         for (uint32_t obj_num = first_obj_size; obj_num < sec_obj_size; obj_num++) {
 
             Gfx::RenderObject& obj = module.GetRenderQueue()[obj_num];
-            instance_inds[thread_id + 1] += obj.Model->Meshes.size();
+            instance_inds[thread_id + 1] += obj.Model[frameind]->Meshes.size();
         }
         first_obj_size = sec_obj_size;
     }
@@ -62,7 +63,7 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
         inst += instance_inds[thread_id];
         //printf(" first obj %d === sec obj %d\n", first_obj_size, sec_obj_size);
         Thread::Pool::GetInstance()->PushByID(thread_id, { Thread::Task::Name::RENDER, Thread::Task::Type::EXECUTE,
-        {}, [this, formats3, depthformat, thread_id,  &module, inst, first_obj_size, sec_obj_size]() {
+        {}, [this, formats3, frameind, depthformat, thread_id,  &module, inst, first_obj_size, sec_obj_size]() {
 
         VkCommandBuffer secondary_cmd = Gfx::Renderer::GetInstance()->GetFrame().SecondaryCmd[thread_id].Cmd;
         VkCommandBufferBeginInfo secondary_cmd_info = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
@@ -87,13 +88,13 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
             if (!obj.IsVisible) continue;
 
             Gfx::MeshPushConstants constants;
-            constants.texturebind = obj.TextureBind;
-            constants.bufferbind = obj.BufferBind;
+            constants.texturebind = obj.TextureBind[frameind];
+            constants.bufferbind = obj.BufferBind[frameind];
             constants.selected = 0;
             constants.boneID = -1;
             if (obj.HasStorage) {
-                constants.storagebind = obj.StorageBind;
-                constants.instancebind = obj.InstanceBind;
+                constants.storagebind = obj.StorageBind[frameind];
+                constants.instancebind = obj.InstanceBind[frameind];
                 constants.objectID = obj.ID;
                 constants.selected = (obj.IsSelected || obj.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
                 if (Utils::Debug::GetInstance()->Bones) {
@@ -102,9 +103,9 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
                 constants.gizmo = obj.GizmoType;
             }
 
-            const int meshsize = obj.Model->Meshes.size();
+            const int meshsize = obj.Model[frameind]->Meshes.size();
             for (int i = 0; i < meshsize; i++) {
-                Gfx::Renderer::GetInstance()->DrawThreaded(secondary_cmd, obj, obj.Material, obj.Model->Meshes[i], constants, true, inst_ind);
+                Gfx::Renderer::GetInstance()->DrawThreaded(secondary_cmd, obj, obj.Material, obj.Model[frameind]->Meshes[i], constants, true, inst_ind);
                 inst_ind++;
             }
         }
@@ -135,10 +136,11 @@ void Core::Scene::Render(Modules::Module& module)
         RenderThreaded(module);
     }
     else {
+        uint32_t frameind = Gfx::Renderer::GetInstance()->GetFrameInd();
         for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
             if (!obj.IsVisible) continue;
             if (module.GetTag() == "mask" && !obj.IsSelected) {
-                Gfx::Renderer::GetInstance()->IncInstanceInd(obj.Model->Meshes.size());
+                Gfx::Renderer::GetInstance()->IncInstanceInd(obj.Model[frameind]->Meshes.size());
                 continue;
             }
             if (obj.VertexBase) {
@@ -154,6 +156,7 @@ void Core::Scene::Render(Modules::Module& module)
 
 void Core::Scene::RenderScene(bool playmode)
 {
+    //ZoneScoped;
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
@@ -223,6 +226,7 @@ void Core::Scene::RenderScene(bool playmode)
 
 
     }
+    //FrameMarkEnd("hey");
 }
 
 void Core::Scene::Loop()

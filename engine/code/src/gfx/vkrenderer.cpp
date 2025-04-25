@@ -29,19 +29,19 @@ void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 	CheckTmpBindings(object.Mesh, object.Material, &bindpipe, &bindindex);
 
     if (bindpipe) {
-        vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+        vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(GetFrameInd()), 0, nullptr);
 
 		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
     }
 
 	Gfx::MeshPushConstants constants;
-	constants.texturebind = object.TextureBind;
-	constants.bufferbind = object.BufferBind;
+	constants.texturebind = object.TextureBind[GetFrameInd()];
+	constants.bufferbind = object.BufferBind[GetFrameInd()];
     constants.selected = 0;
     constants.boneID = -1;
     if (object.HasStorage) {
-        constants.storagebind = object.StorageBind;
-        constants.instancebind = object.InstanceBind;
+        constants.storagebind = object.StorageBind[GetFrameInd()];
+        constants.instancebind = object.InstanceBind[GetFrameInd()];
         constants.objectID = object.ID;
         constants.selected = (object.IsSelected || object.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
         constants.boneID = Utils::Debug::GetInstance()->BoneID;
@@ -52,10 +52,10 @@ void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 
 void Gfx::Renderer::DrawMeshes(Gfx::RenderObject& object)
 {
-	const int meshsize = object.Model->Meshes.size();
+	const int meshsize = object.Model[GetFrameInd()]->Meshes.size();
 	for (int i = 0; i < meshsize; i++) {
 
-		DrawMesh(object, object.Model->Meshes[i], true);
+		DrawMesh(object, object.Model[GetFrameInd()]->Meshes[i], true);
 	}
 }
 void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, bool ismodel)
@@ -64,18 +64,18 @@ void Gfx::Renderer::DrawMesh(Gfx::RenderObject& object, Gfx::MeshInfo* mesh, boo
 	CheckTmpBindings(mesh, object.Material, &bindpipe, &bindindex);
 
 	if (bindpipe) {
-	    vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+	    vkCmdBindDescriptorSets(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(GetFrameInd()), 0, nullptr);
 		vkCmdBindPipeline(Cmd.GetCmd(), VK_PIPELINE_BIND_POINT_GRAPHICS, object.Material->Pipeline);
     }
 
 	Gfx::MeshPushConstants constants;
-	constants.texturebind = object.TextureBind;
-	constants.bufferbind = object.BufferBind;
+	constants.texturebind = object.TextureBind[GetFrameInd()];
+	constants.bufferbind = object.BufferBind[GetFrameInd()];
     constants.selected = 0;
     constants.boneID = -1;
     if (object.HasStorage) {
-        constants.storagebind = object.StorageBind;
-        constants.instancebind = object.InstanceBind;
+        constants.storagebind = object.StorageBind[GetFrameInd()];
+        constants.instancebind = object.InstanceBind[GetFrameInd()];
         constants.objectID = object.ID;
         constants.selected = (object.IsSelected || object.ID == Core::Scene::GetInstance()->GetSelectedID()) ? 1 : 0;
         if (Utils::Debug::GetInstance()->Bones) {
@@ -105,7 +105,7 @@ void Gfx::Renderer::DrawThreaded(VkCommandBuffer cmd, Gfx::RenderObject& object,
 	CheckTmpBindings(mesh, mat, &bindpipe, &bindindex);
 
 	//if (bindpipe) {
-	    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(), 0, nullptr);
+	    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat->PipelineLayout, 0, 1, Gfx::DescriptorsBase::GetInstance()->GetBindlessSet(GetFrameInd()), 0, nullptr);
 		vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mat->Pipeline );
     //}
 
@@ -128,7 +128,7 @@ void Gfx::Renderer::DrawThreaded(VkCommandBuffer cmd, Gfx::RenderObject& object,
 void Gfx::Renderer::Draw(Gfx::RenderObject& object)
 {
     bool bindpipe, bindindex = false;
-    if (object.Model) {
+    if (object.Model[GetFrameInd()]) {
 		DrawMeshes(object);
 	}
 	else {
@@ -366,7 +366,7 @@ void Gfx::Renderer::PrepareStorageBuffer()
 	if (!Core::WindowManager::GetInstance()->IsMouseSelected()) {
     void* storage;
     VkDeviceSize storagesize = sizeof(uint32_t) * DEPTH_ARRAY_SCALE;
-    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(), 0, storagesize, 0, (void**)&storage);
+    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(GetFrameInd()), 0, storagesize, 0, (void**)&storage);
 
     uint32_t* u = static_cast<uint32_t*>(storage);
     for (int i = 0; i < DEPTH_ARRAY_SCALE; i++) {
@@ -393,7 +393,7 @@ void Gfx::Renderer::PrepareStorageBuffer()
 
     uint32_t dst[DEPTH_ARRAY_SCALE] = {0};
     memcpy(storage, dst, DEPTH_ARRAY_SCALE * sizeof(uint32_t));
-    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory());
+    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetStorageBufferMemory(GetFrameInd()));
 
 	}
 
@@ -421,7 +421,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
 {
     const size_t buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
     void* instancedata;
-    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(), 0, buffersize, 0, (void**)&instancedata);
+    vkMapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(GetFrameInd()), 0, buffersize, 0, (void**)&instancedata);
 
     Modules::ScenesMap map =  Core::Scene::GetInstance()->GetScenes();
     Modules::Module& modulegizmo = map["gizmo"];
@@ -492,14 +492,14 @@ void Gfx::Renderer::PrepareInstanceBuffer()
 
     bool hasanim = false;
     for (Gfx::RenderObject& obj : module.GetRenderQueue()) {
-        if (!obj.Model || !obj.IsVisible) continue;
+        if (!obj.Model[GetFrameInd()] || !obj.IsVisible) continue;
         hasanim = Core::Scene::GetInstance()->HasAnimation(obj.ID);
-        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+        for (int j = 0; j < obj.Model[GetFrameInd()]->Meshes.size(); j++ ) {
 
             if (hasanim) {
                // printf("IIIIII ======================================== %d\n", i);
-                for (int k = 0; k < obj.Model->Bones.Info.size(); k++) {
-                    datas[i].bonesmatrices[k] = obj.Model->Bones.Info[k].FinTransform;
+                for (int k = 0; k < obj.Model[GetFrameInd()]->Bones.Info.size(); k++) {
+                    datas[i].bonesmatrices[k] = obj.Model[GetFrameInd()]->Bones.Info[k].FinTransform;
                 }
                     //vec[i]
                 /*std::thread upd(&Gfx::Renderer::GetTransforms, this, datas, obj, i);*/
@@ -512,8 +512,8 @@ void Gfx::Renderer::PrepareInstanceBuffer()
         }
     }
     for (Gfx::RenderObject& obj : modulegizmo.GetRenderQueue()) {
-         if (!obj.Model || !obj.IsVisible) continue;
-        for (int j = 0; j < obj.Model->Meshes.size(); j++ ) {
+         if (!obj.Model[GetFrameInd()] || !obj.IsVisible) continue;
+        for (int j = 0; j < obj.Model[GetFrameInd()]->Meshes.size(); j++ ) {
             float dist = glm::distance(glm::vec3(CamData.viewpos.x, CamData.viewpos.y, CamData.viewpos.z), glm::vec3(obj.Position.x, obj.Position.y, obj.Position.z) )* 0.05;
             if (dist <= 0.5) {
                 dist = 0.5;
@@ -633,7 +633,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     InstanceCount = i;
     InstanceIndex = 0;
     //}
-    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory());
+    vkUnmapMemory(Gfx::Device::GetInstance()->GetDevice(),Gfx::DescriptorsBase::GetInstance()->GetInstanceBufferMemory(GetFrameInd()));
 
 }
 void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
@@ -652,7 +652,7 @@ void Gfx::Renderer::PrepareCameraBuffer(Keeper::Camera& camera)
     CamData.time = static_cast<float>(Engine::GetInstance()->GetTimeSinceStart()) / 1000.0;
 
     const size_t buffersize = (sizeof(CameraData));
-    BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(), buffersize, 0, &CamData);
+    BufferHelper::MapMemory(Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(GetFrameInd()), buffersize, 0, &CamData);
 }
 
 VkFenceCreateInfo FenceCreateInfo(VkFenceCreateFlags flags)

@@ -155,8 +155,10 @@ void Core::Scene::Render(Modules::Module& module)
 }
 
 void Core::Scene::RenderScene(bool playmode)
-{
-    //ZoneScoped;
+{ 
+    SCOPE_ZONE("Scene::RenderScene")
+    VK_ZONE(Gfx::Renderer::GetInstance()->GetFrameInd(), "before begine frame");
+
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
@@ -226,7 +228,7 @@ void Core::Scene::RenderScene(bool playmode)
 
 
     }
-    //FrameMarkEnd("hey");
+    END_FRAME("hey"); 
 }
 
 void Core::Scene::Loop()

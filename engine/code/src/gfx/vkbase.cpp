@@ -1,5 +1,8 @@
 #include "anthraxAI/gfx/vkbase.h"
+#include "anthraxAI/gfx/vkdefines.h"
+#include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
+#include <cstdio>
 
 void Gfx::Vulkan::Init()
 {
@@ -17,6 +20,16 @@ void Gfx::Vulkan::Init()
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
+
+    ON_TRACY()
+    {
+        for (int i = 0; i < MAX_FRAMES; i++) {
+            TracyVk[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Gfx::Renderer::GetInstance()->Frames[i].MainCommandBuffer);
+            char buf[50];
+            int n = sprintf(buf, "Vulkan Context [%d]", i);
+            TracyVkContextName(TracyVk[i], buf, n); 
+        }
+    }
 }
 
 bool Gfx::Vulkan::ReloadShaders()
@@ -90,6 +103,14 @@ void Gfx::Vulkan::CleanUp()
 	vkDestroySurfaceKHR(Instance, Gfx::Device::GetInstance()->GetSurface(), nullptr);
 	vkDestroyDevice(Gfx::Device::GetInstance()->GetDevice(), nullptr);
 	vkDestroyInstance(Instance, nullptr);
+
+    ON_TRACY()
+    {
+        for (int i = 0; i < MAX_FRAMES; i++) {
+            TracyVkDestroy(TracyVk[i]);
+        }
+    }
+
 }
 
 void Gfx::Vulkan::CreateVkInstance()

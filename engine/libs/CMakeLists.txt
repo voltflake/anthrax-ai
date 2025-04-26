@@ -82,16 +82,15 @@ list(APPEND _libraries lib::stb)
 
 list(APPEND _includes ${_path}/tinyobjloader)
 
-#=====================================================================================#
-# FetchContent_Declare(
-# tracy
-# GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-# GIT_TAG master
-# GIT_SHALLOW TRUE
-# GIT_PROGRESS TRUE
-# )
-# FetchContent_MakeAvailable(tracy)
-
+#==================================Tracy Profiler=======================================#
+FetchContent_Declare(
+tracy
+GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+GIT_TAG master
+GIT_SHALLOW TRUE
+GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(tracy)
 #=================================== assimp ===================================#
 
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
@@ -144,7 +143,7 @@ endif()
 
 target_link_libraries(libraries INTERFACE shaderc_shared )
 
-#target_link_libraries(libraries INTERFACE Tracy::TracyClient )
+target_link_libraries(libraries INTERFACE Tracy::TracyClient )
 target_include_directories(libraries SYSTEM INTERFACE ${_includes})
 
 if (WIN32)

@@ -85,6 +85,16 @@ project using the <kbd>F7</kbd> and <kbd>F5</kbd> keys, respectively.
 
 Don't forget that the <kbd>CTRL+SHIFT+P</kbd> key combination helps to `configure` and `build` as well.
 
+## Tracy Profiler
+
+Install Tracy Profiler locally, run the profiler
+In order to connect the engine run this command
+```
+sudo sh run.sh tracy
+```
+- since you run as sudo Audio functionality will be disabled due to code errors
+Connect anthraxAI engine in the profiler.
+
 ## Known Issues
 - Pascal and older nvidia cards are unsupported due to unavailable vulkan features on that hardware.
 - Modified CatchyOS packages break compilation of required `assimp` library

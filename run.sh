@@ -1,4 +1,6 @@
 # !/bin/bash
 
 cd assets
-../build/demos/demo-models/anthraxAI-demo-models
+
+echo $1
+../build/demos/demo-models/anthraxAI-demo-models $1

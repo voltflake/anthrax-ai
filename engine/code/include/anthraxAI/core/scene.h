@@ -13,7 +13,8 @@
 #include <cstdint>
 #include <string>
 #include <vulkan/vulkan_core.h>
-//#include "tracy/Tracy.hpp"
+#include "anthraxAI/utils/tracy.h"
+
 namespace Core
 {
     class Scene : public Utils::Singleton<Scene>

@@ -8,7 +8,6 @@
 #include "anthraxAI/core/imguihelper.h"
 
 #include "anthraxAI/gfx/vkbase.h"
-
 #include <sys/time.h>
 
 enum EngineState {
@@ -24,7 +23,7 @@ enum EngineState {
 class Engine : public Utils::Singleton<Engine>
 {
     public:
-        void Init();
+        void Init(char** argv);
         void Run();
         void CleanUp();
 
@@ -39,6 +38,7 @@ class Engine : public Utils::Singleton<Engine>
         long long GetTimeSinceStart() const { return GetTime() - StartTime; }
 
         bool OnResize();
+
     private:
         int State;
         long long StartTime;

@@ -32,6 +32,7 @@ namespace Gfx
             void SetDebugRenderName(VkCommandBuffer cmd, VkDebugUtilsLabelEXT* info) { Debug.SetRenderName(cmd,info); }
             void EndDebugRenderName(VkCommandBuffer cmd) { Debug.EndRenderName(cmd); }
 
+            TracyVkCtx TracyVk[MAX_FRAMES]; 
         private:
             VkDebug Debug;
             VkInstance Instance;

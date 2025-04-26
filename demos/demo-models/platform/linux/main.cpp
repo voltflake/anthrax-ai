@@ -2,7 +2,7 @@
 
 int main(int argc, char **argv) {
 
-	Engine::GetInstance()->Init();
+	Engine::GetInstance()->Init(argv);
 	Engine::GetInstance()->Run();
 
 	return 0;

@@ -1,5 +1,7 @@
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkdevicehelper.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void Gfx::Device::Init()
 {

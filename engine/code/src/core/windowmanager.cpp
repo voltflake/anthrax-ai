@@ -7,6 +7,7 @@
 #include "anthraxAI/utils/defines.h"
 #include <ctime>
 #include <iostream>
+#include "tracy/Tracy.hpp"
 
 #ifdef AAI_LINUX
 void Core::WindowManager::InitLinuxWindow()

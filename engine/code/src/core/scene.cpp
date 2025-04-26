@@ -158,21 +158,22 @@ void Core::Scene::Render(Modules::Module& module)
 
 void Core::Scene::RenderScene(bool playmode)
 {
-    auto test2 = Gfx::Vulkan::GetInstance()->IsValidationLayersOn();
-    std::cout << test2 << std::endl;
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         ZoneScopedN("Scene::RenderScene");
         auto test = Gfx::Renderer::GetInstance()->GetFrameInd();
-        TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[test], Gfx::Renderer::GetInstance()->GetCmd(), "RenderScene1")
-
-        Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
-        if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
-              Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
-        }
-
-        Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
-        Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
+            TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[test], Gfx::Renderer::GetInstance()->GetCmd(), "StorageBufferPrep")
+
+            Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
+            if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
+                Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
+            }
+
+            Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
+            Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
+        }
+        {
+            TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[test], Gfx::Renderer::GetInstance()->GetCmd(), "scene render")
             // used for intro
             if (!HasGBuffer) {
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);

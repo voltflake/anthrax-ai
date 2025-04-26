@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <unordered_map>
+#include "tracy/Tracy.hpp"
 
 Keeper::Npc::Npc(const Info& info)
     : Objects(info)

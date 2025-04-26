@@ -1,6 +1,8 @@
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/core/scene.h"
 #include "anthraxAI/gfx/vkbase.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void Gfx::Model::SetVertexBoneData(Gfx::Vertex& vert, int id, float weight)
 {

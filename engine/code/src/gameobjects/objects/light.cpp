@@ -5,6 +5,7 @@
 
 #include <cstdio>
 #include <unordered_map>
+#include "tracy/Tracy.hpp"
 
 Keeper::Light::Light(const Info& info)
     : Objects(info)

@@ -1,6 +1,8 @@
 #include "anthraxAI/gfx/vkdebug.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL Gfx::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

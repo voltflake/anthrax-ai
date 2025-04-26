@@ -2,6 +2,8 @@
 #include <queue>
 #include <thread>
 #include <utility>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void Thread::Pool::Process(const Task& task)
 {

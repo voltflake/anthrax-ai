@@ -4,6 +4,7 @@
 #include "anthraxAI/engine.h"
 #include "assimp/anim.h"
 #include "assimp/scene.h"
+#include "tracy/Tracy.hpp"
 
 std::vector<glm::mat4> Core::AnimatorBase::Update(Gfx::RenderObject& object)
 {

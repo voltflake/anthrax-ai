@@ -1,5 +1,7 @@
 #include "anthraxAI/gfx/vkcmdhelper.h"
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 VkAccessFlags GetAccessFlags(VkImageLayout layout)
 {

@@ -8,6 +8,8 @@
 #include <string>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 bool Gfx::Renderer::CreateTextureFromInfo(const std::string& texturename)
 {

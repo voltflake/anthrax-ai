@@ -8,6 +8,8 @@
 #include <cstdio>
 #include <string>
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo() {
 

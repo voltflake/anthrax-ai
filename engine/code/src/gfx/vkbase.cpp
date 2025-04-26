@@ -33,7 +33,13 @@ void Gfx::Vulkan::Init()
             char buf[50];
             int n = sprintf(buf, "Vulkan Context [%d]", i);
             TracyVkContextName(TracyVk[i], buf, n);
-			vkBeginCommandBuffer(Gfx::Renderer::GetInstance()->Frames[i].TracyVkCommandBuffer, nullptr);
+			VkCommandBufferBeginInfo cmdBeginInfo = {
+				VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+				nullptr,
+				NULL,
+				nullptr
+			};
+			vkBeginCommandBuffer(Gfx::Renderer::GetInstance()->Frames[i].TracyVkCommandBuffer, &cmdBeginInfo);
         }
 	#endif
 }

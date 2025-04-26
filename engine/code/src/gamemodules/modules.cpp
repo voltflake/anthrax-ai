@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include "tracy/Tracy.hpp"
 
 void Modules::Base::Clear()
 {

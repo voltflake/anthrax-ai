@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
 
 void Core::ImGuiHelper::UpdateFrame()
 {

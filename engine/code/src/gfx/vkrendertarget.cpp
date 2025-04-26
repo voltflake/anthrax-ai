@@ -2,6 +2,8 @@
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include <cstdint>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 Gfx::RenderTarget::RenderTarget(const RenderTarget& rt, uint32_t id) :
     Format(rt.Format), Dimensions(rt.Dimensions),

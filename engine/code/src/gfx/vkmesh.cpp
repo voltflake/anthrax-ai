@@ -2,6 +2,8 @@
 #include "anthraxAI/core/windowmanager.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 Gfx::MeshInfo* Gfx::Mesh::GetMesh(const std::string& name)
 {

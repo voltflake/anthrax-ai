@@ -6,6 +6,8 @@
 #include <fstream>
 #include <ostream>
 #include <string>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 std::string Utils::Parser::ConstructElementName(const LevelElements& element) const
 {

@@ -1,6 +1,8 @@
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/bufferhelper.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void BufferHelper::CopyBuffer(VkBuffer& srcbuffer, VkBuffer& dstbuffer, VkDeviceSize size)
 {

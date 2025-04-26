@@ -1,4 +1,5 @@
 #include "anthraxAI/gameobjects/objects/sprite.h"
+#include "tracy/Tracy.hpp"
 
 Keeper::Sprite::Sprite(const Info& info)
     : Objects(info)

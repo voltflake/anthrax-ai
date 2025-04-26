@@ -2,6 +2,8 @@
 #include "anthraxAI/gfx/renderhelpers.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include <cstdint>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
 {

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <string>
+#include "tracy/Tracy.hpp"
 Keeper::Base::~Base()
 {
   for (auto& it : ObjectsList) {

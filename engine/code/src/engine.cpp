@@ -1,5 +1,7 @@
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 long long Engine::GetTime() const {
 #ifdef AAI_WINDOWS
@@ -41,7 +43,7 @@ void Engine::Init(char** argv)
 
     Core::Scene::GetInstance()->Init();
 
-    #ifdef TRACY_ENABLE
+    #ifndef TRACY_ENABLE
         Core::Audio::GetInstance()->Init();
     #endif
 

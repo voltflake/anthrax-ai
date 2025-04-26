@@ -1,6 +1,7 @@
 #include "anthraxAI/gameobjects/objects/gizmo.h"
 #include "anthraxAI/gameobjects/objects/npc.h"
 #include <cstdio>
+#include "tracy/Tracy.hpp"
 
 Keeper::Gizmo::Gizmo(const Info& info, int axis)
     : Objects(info)

@@ -1,6 +1,7 @@
 #include "anthraxAI/gameobjects/objects/camera.h"
 #include "anthraxAI/core/windowmanager.h"
 #include <cstdio>
+#include "tracy/Tracy.hpp"
 
 void Keeper::Camera::SetDirections()
 {

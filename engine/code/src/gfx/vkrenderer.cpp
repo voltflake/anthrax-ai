@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void Gfx::Renderer::DrawSimple(Gfx::RenderObject& object)
 {
@@ -294,47 +296,49 @@ void Gfx::Renderer::CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsL
 
 void Gfx::Renderer::EndFrame()
 {
-	Cmd.CopyImage(	GetRT(Gfx::RT_MAIN_COLOR)->GetImage(),
-					GetRT(Gfx::RT_MAIN_COLOR)->GetSize(),
-					VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-					Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
-					{(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height},
-					VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    {
+        // TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[FrameIndex], Gfx::Renderer::GetInstance()->GetCmd(), "EndFrame()")
+        Cmd.CopyImage(	GetRT(Gfx::RT_MAIN_COLOR)->GetImage(),
+                        GetRT(Gfx::RT_MAIN_COLOR)->GetSize(),
+                        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                        Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
+                        {(int)Gfx::Device::GetInstance()->GetSwapchainExtent().width, (int)Gfx::Device::GetInstance()->GetSwapchainExtent().height},
+                        VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
-					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-					Cmd.GetSubresourceMainRange());
+        Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
+                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                        Cmd.GetSubresourceMainRange());
 
-    Cmd.EndCmd();
+        Cmd.EndCmd();
 
-    VkSubmitInfo submit = {};
-	submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit.pNext = nullptr;
-	VkPipelineStageFlags waitstage2 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	submit.pWaitDstStageMask = &waitstage2;
-	submit.waitSemaphoreCount = 1;
-	submit.pWaitSemaphores = &GetFrame().PresentSemaphore;
-	submit.signalSemaphoreCount = 1;
-	submit.pSignalSemaphores = &GetFrame().RenderSemaphore;
-	submit.commandBufferCount = 1;
-	VkCommandBuffer cmd = Cmd.GetCmd();
-	submit.pCommandBuffers = &cmd;
-	VK_ASSERT(vkQueueSubmit(Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE), 1, &submit, GetFrame().RenderFence), "failed to submit queue!");
+        VkSubmitInfo submit = {};
+        submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submit.pNext = nullptr;
+        VkPipelineStageFlags waitstage2 = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        submit.pWaitDstStageMask = &waitstage2;
+        submit.waitSemaphoreCount = 1;
+        submit.pWaitSemaphores = &GetFrame().PresentSemaphore;
+        submit.signalSemaphoreCount = 1;
+        submit.pSignalSemaphores = &GetFrame().RenderSemaphore;
+        submit.commandBufferCount = 1;
+        VkCommandBuffer cmd = Cmd.GetCmd();
+        submit.pCommandBuffers = &cmd;
+        VK_ASSERT(vkQueueSubmit(Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE), 1, &submit, GetFrame().RenderFence), "failed to submit queue!");
 
-	VkResult presentresult = Cmd.Present(
-		Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE),
-		Cmd.PresentInfo(
-			&Gfx::Device::GetInstance()->GetSwapchain(),
-			&GetFrame().RenderSemaphore,
-			&SwapchainIndex
-		)
-	);
+        VkResult presentresult = Cmd.Present(
+            Gfx::Device::GetInstance()->GetQueue(Gfx::GRAPHICS_QUEUE),
+            Cmd.PresentInfo(
+                &Gfx::Device::GetInstance()->GetSwapchain(),
+                &GetFrame().RenderSemaphore,
+                &SwapchainIndex
+            )
+        );
+        if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
+            OnResize = true;
+        }
+    }
 
     TracyVkCollect(Gfx::Vulkan::GetInstance()->TracyVk[GetFrameInd()], Gfx::Renderer::GetInstance()->GetCmd());
-
-	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
-       OnResize = true;
-	}
 
    SetFrameInd();
 }

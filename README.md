@@ -87,12 +87,13 @@ Don't forget that the <kbd>CTRL+SHIFT+P</kbd> key combination helps to `configur
 
 ## Tracy Profiler
 
-Install Tracy Profiler locally, run the profiler
+Install [Tracy Profiler](https://github.com/wolfpld/tracy) locally, run the profiler
 In order to connect the engine run this command
 ```
 sudo sh run.sh tracy
 ```
 - since you run as sudo Audio functionality will be disabled due to code errors
+
 Connect anthraxAI engine in the profiler.
 
 ## Known Issues

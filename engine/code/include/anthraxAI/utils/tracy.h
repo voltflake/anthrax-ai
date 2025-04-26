@@ -1,4 +1,4 @@
-#pragma oncce
+#pragma once
 
 #include "anthraxAI/gfx/vkdefines.h"
 #include "tracy/Tracy.hpp"

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 set(aai_root ${CMAKE_CURRENT_SOURCE_DIR}) # aai - Anthrax AI
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_compile_definitions(TRACY_ENABLE)
 project(aai)
 
 include(${aai_root}/cmake/options.cmake)

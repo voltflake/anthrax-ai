@@ -30,9 +30,6 @@ bool Engine::OnResize()
 
 void Engine::Init(char** argv)
 {
-    if (argv[1] && strcmp(argv[1], "tracy") == 0) {
-        SET_TRACY(true);
-    }
     SetState(ENGINE_STATE_INIT);
   	ASSERT(!Utils::IsBitSet(State, ENGINE_STATE_INIT), "How is it possible?");
 
@@ -43,7 +40,10 @@ void Engine::Init(char** argv)
 #endif
 
     Core::Scene::GetInstance()->Init();
-    TRACY_NOT_INCLUDED(Core::Audio::GetInstance()->Init());
+
+    #ifdef TRACY_ENABLE
+        Core::Audio::GetInstance()->Init();
+    #endif
 
     Gfx::Vulkan::GetInstance()->Init();
 

@@ -18,6 +18,8 @@
 #include <sys/types.h>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 void Core::Scene::RenderThreaded(Modules::Module& module)
 {
@@ -155,11 +157,14 @@ void Core::Scene::Render(Modules::Module& module)
 }
 
 void Core::Scene::RenderScene(bool playmode)
-{ 
-    SCOPE_ZONE("Scene::RenderScene")
-    VK_ZONE(Gfx::Renderer::GetInstance()->GetFrameInd(), "before begine frame");
-
+{
+    auto test2 = Gfx::Vulkan::GetInstance()->IsValidationLayersOn();
+    std::cout << test2 << std::endl;
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
+        ZoneScopedN("Scene::RenderScene");
+        auto test = Gfx::Renderer::GetInstance()->GetFrameInd();
+        TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[test], Gfx::Renderer::GetInstance()->GetCmd(), "RenderScene1")
+
         Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
               Gfx::Renderer::GetInstance()->PrepareStorageBuffer();
@@ -225,14 +230,14 @@ void Core::Scene::RenderScene(bool playmode)
         Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
         Thread::PrintTime(Thread::Task::Name::RENDER);
         Gfx::Renderer::GetInstance()->EndFrame();
-
-
+        // TracyVkCollect(Gfx::Vulkan::GetInstance()->TracyVk[test], Gfx::Renderer::GetInstance()->GetCmd());
     }
-    END_FRAME("hey"); 
 }
 
 void Core::Scene::Loop()
 {
+    FrameMarkStart("Scene::Loop");
+
     Core::Audio::GetInstance()->Play();
 
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
@@ -259,7 +264,6 @@ void Core::Scene::Loop()
         Thread::PrintTime(Thread::Task::Name::UPDATE);
 
         RenderScene(true);
-
     }
 
     GameModules->Update(Modules::Update::TEXTURE_UI_MANAGER);
@@ -270,7 +274,7 @@ void Core::Scene::Loop()
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
         ReloadResources();
     }
-
+    FrameMarkEnd("Scene::Loop");
 }
 
 void Core::Scene::Init()

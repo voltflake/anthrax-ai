@@ -13,7 +13,8 @@
 #include <cstdint>
 #include <string>
 #include <vulkan/vulkan_core.h>
-#include "anthraxAI/utils/tracy.h"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyVulkan.hpp"
 
 namespace Core
 {

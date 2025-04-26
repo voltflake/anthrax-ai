@@ -90,6 +90,7 @@ namespace Gfx
         VkFence RenderFence;
         VkCommandPool CommandPool;
         VkCommandBuffer MainCommandBuffer;
+        VkCommandBuffer TracyVkCommandBuffer;
         std::vector<SecondaryCmdInfo> SecondaryCmd;
     };
 

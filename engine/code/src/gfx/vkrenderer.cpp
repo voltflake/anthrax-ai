@@ -330,6 +330,8 @@ void Gfx::Renderer::EndFrame()
 		)
 	);
 
+    TracyVkCollect(Gfx::Vulkan::GetInstance()->TracyVk[GetFrameInd()], Gfx::Renderer::GetInstance()->GetCmd());
+
 	if (presentresult == VK_ERROR_OUT_OF_DATE_KHR) {
        OnResize = true;
 	}

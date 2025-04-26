@@ -3,6 +3,7 @@
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include <cstdio>
+
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyVulkan.hpp"
 
@@ -26,14 +27,13 @@ void Gfx::Vulkan::Init()
 
 	#ifdef TRACY_ENABLE
         for (int i = 0; i < MAX_FRAMES; i++) {
-            TracyVk[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Gfx::Renderer::GetInstance()->Frames[i].MainCommandBuffer);
-			if (!TracyVk[i]) {
-				printf("Failed to initialize Tracy Vulkan context %d.\n", i);
-			}
-			char buf[50];
+			VkCommandBufferAllocateInfo cmdinfo = Gfx::Renderer::GetInstance()->CommandBufferCreateInfo(Gfx::Renderer::GetInstance()->Frames[i].CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdinfo, &Gfx::Renderer::GetInstance()->Frames[i].TracyVkCommandBuffer), "failed to allocate command buffers!");
+            TracyVk[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Gfx::Renderer::GetInstance()->Frames[i].TracyVkCommandBuffer);
+            char buf[50];
             int n = sprintf(buf, "Vulkan Context [%d]", i);
             TracyVkContextName(TracyVk[i], buf, n);
-			vkBeginCommandBuffer(Gfx::Renderer::GetInstance()->Frames[i].MainCommandBuffer, nullptr);
+			vkBeginCommandBuffer(Gfx::Renderer::GetInstance()->Frames[i].TracyVkCommandBuffer, nullptr);
         }
 	#endif
 }

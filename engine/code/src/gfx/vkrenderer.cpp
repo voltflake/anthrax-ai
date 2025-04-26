@@ -882,18 +882,6 @@ VkCommandPoolCreateInfo CommandPoolCreateInfo(uint32_t graphicsfamily, VkCommand
 	return info;
 }
 
-VkCommandBufferAllocateInfo CommandBufferCreateInfo(VkCommandPool pool, uint32_t count, VkCommandBufferLevel level) {
-
-	VkCommandBufferAllocateInfo info = {};
-	info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	info.pNext = nullptr;
-
-	info.commandPool = pool;
-	info.commandBufferCount = count;
-	info.level = level;
-	return info;
-}
-
 void Gfx::Renderer::CreateCommands()
 {
   	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");

@@ -96,6 +96,18 @@ namespace Gfx
             void DebugRenderName(const std::string& str);
             void EndRenderName();
 
+            VkCommandBufferAllocateInfo CommandBufferCreateInfo(VkCommandPool pool, uint32_t count, VkCommandBufferLevel level) {
+
+                VkCommandBufferAllocateInfo info = {};
+                info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+                info.pNext = nullptr;
+            
+                info.commandPool = pool;
+                info.commandBufferCount = count;
+                info.level = level;
+                return info;
+            }
+
             VkCommandBuffer GetCmd() { return Cmd.GetCmd(); }
             void SetCmd(VkCommandBuffer cmd) { Cmd.SetCmd(cmd); }
         private:

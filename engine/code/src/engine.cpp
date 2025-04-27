@@ -30,11 +30,8 @@ bool Engine::OnResize()
     return Gfx::Vulkan::GetInstance()->OnResize();
 }
 
-void Engine::Init(char** argv)
+void Engine::Init()
 {
-    if (argv[1] && strcmp(argv[1], "tracy") == 0) {
-        SET_TRACY(true);
-    }
     SetState(ENGINE_STATE_INIT);
   	ASSERT(!Utils::IsBitSet(State, ENGINE_STATE_INIT), "How is it possible?");
 
@@ -45,8 +42,9 @@ void Engine::Init(char** argv)
 #endif
 
     Core::Scene::GetInstance()->Init();
-    TRACY_NOT_INCLUDED(Core::Audio::GetInstance()->Init());
-
+#ifndef TRACY
+    Core::Audio::GetInstance()->Init();
+#endif
     Gfx::Vulkan::GetInstance()->Init();
 
     Core::Scene::GetInstance()->InitModules();

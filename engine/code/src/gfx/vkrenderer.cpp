@@ -11,6 +11,7 @@
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/defines.h"
 #include "anthraxAI/utils/thread.h"
+#include "anthraxAI/gfx/vkdefines.h"
 #include "glm/detail/qualifier.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
@@ -305,8 +306,10 @@ void Gfx::Renderer::EndFrame()
 	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 					Cmd.GetSubresourceMainRange());
- 
-    VK_COLLECT();
+    
+#ifdef TRACY
+   TracyVkCollect(Gfx::Renderer::GetInstance()->GetTracyContext(), Gfx::Renderer::GetInstance()->GetCmd());
+#endif
     Cmd.EndCmd();
 
     VkSubmitInfo submit = {};
@@ -977,11 +980,10 @@ void Gfx::Renderer::CreateCommands()
 {
   	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");
 	vkCmdEndRenderingKHR = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdEndRenderingKHR");
-    ON_TRACY()
-    {
+#ifdef TRACY
         Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT = (PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
         Tracy.GetCalibratedTimestampsEXT = (PFN_vkGetCalibratedTimestampsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetCalibratedTimestampsKHR");
-    }
+#endif
 
     Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFamilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
     VkCommandPoolCreateInfo poolinfo = CommandPoolCreateInfo(indices.Graphics.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);

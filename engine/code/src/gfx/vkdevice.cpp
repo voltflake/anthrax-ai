@@ -74,10 +74,10 @@ void Gfx::Device::CreateDevice()
     VkPhysicalDeviceVulkan12Features features12{};
     features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
     features12.descriptorIndexing = true;
-    ON_TRACY()
-    {
-        features12.hostQueryReset = true;
-    }
+    
+#ifdef TRACY
+    features12.hostQueryReset = true;
+#endif
 
     VkPhysicalDeviceDynamicRenderingFeaturesKHR dynfeature{};
 	dynfeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
@@ -105,14 +105,13 @@ void Gfx::Device::CreateDevice()
    // createInfo.pEnabledFeatures = &devicefeatures;
     int count = static_cast<uint32_t>(DEVICE_EXT.size());
     std::vector<const char*> ext = DEVICE_EXT; 
-    ON_TRACY()
-    {
+#ifdef TRACY
         printf("ssdsdsdsdsdsdsd\n");
         count++;
         ext.push_back("VK_EXT_calibrated_timestamps");
         count++;
         ext.push_back("VK_EXT_host_query_reset");
-    }
+#endif
     createInfo.enabledExtensionCount = static_cast<uint32_t>(count);
     createInfo.ppEnabledExtensionNames = ext.data();
 

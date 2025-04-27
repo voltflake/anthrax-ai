@@ -157,9 +157,10 @@ void Core::Scene::Render(Modules::Module& module)
 
 void Core::Scene::RenderScene(bool playmode)
 {
+#ifdef TRACY
     START_FRAME("frame") 
-    //SCOPE_ZONE("Scene::RenderScene");
     ZoneScopedN("Scene::RenderScene");
+#endif
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
@@ -169,16 +170,15 @@ void Core::Scene::RenderScene(bool playmode)
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
+#ifdef TRACY
         TracyVkZoneC(Gfx::Renderer::GetInstance()->GetTracyContext(), Gfx::Renderer::GetInstance()->GetCmd(), "VulkanBeginRenderingModules", tracy::Color::Red);
-
-        //VK_ZONE("VulkanBeginRenderingModules", tracy::Color::Red);
+#endif
             // used for intro
             if (!HasGBuffer) {
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
                 Render(GameModules->Get(CurrentScene));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
-           // VK_COLLECT(Gfx::Renderer::GetInstance()->GetFrameInd())
             {
                 // objects from map
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
@@ -228,7 +228,9 @@ void Core::Scene::RenderScene(bool playmode)
         Thread::PrintTime(Thread::Task::Name::RENDER);
         Gfx::Renderer::GetInstance()->EndFrame();
     }
+#ifdef TRACY
     END_FRAME("frame"); 
+#endif
 }
 
 void Core::Scene::Loop()
@@ -271,7 +273,6 @@ void Core::Scene::Loop()
         ReloadResources();
     }
 
-  //  FrameMarkEnd("aaaa");
 }
 
 void Core::Scene::Init()

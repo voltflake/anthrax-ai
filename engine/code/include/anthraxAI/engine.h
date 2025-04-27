@@ -23,7 +23,7 @@ enum EngineState {
 class Engine : public Utils::Singleton<Engine>
 {
     public:
-        void Init(char** argv);
+        void Init();
         void Run();
         void CleanUp();
 

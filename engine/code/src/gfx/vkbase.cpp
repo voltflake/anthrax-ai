@@ -24,10 +24,9 @@ void Gfx::Vulkan::Init()
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
 
-    ON_TRACY()
-    {
+#ifdef TRACY
         Gfx::Renderer::GetInstance()->InitTracy();
-    }
+#endif
  }
 
 bool Gfx::Vulkan::ReloadShaders()
@@ -97,11 +96,9 @@ void Gfx::Vulkan::CleanUp()
 
 	Gfx::Device::GetInstance()->CleanUpSwapchain();
     
-    ON_TRACY()
-    {
+#ifdef TRACY
         Gfx::Renderer::GetInstance()->DestroyTracy();    
-    }
-
+#endif
 	Core::Deletor::GetInstance()->CleanAll();
    
 	vkDestroySurfaceKHR(Instance, Gfx::Device::GetInstance()->GetSurface(), nullptr);

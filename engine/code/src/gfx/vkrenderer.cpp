@@ -205,6 +205,7 @@ bool Gfx::Renderer::BeginFrame()
     }
     Cmd.SetCmd(GetFrame().MainCommandBuffer);
 	Cmd.BeginCmd(Cmd.InfoCmd(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT));
+   
     return true;
 }
 
@@ -304,7 +305,8 @@ void Gfx::Renderer::EndFrame()
 	Cmd.MemoryBarrier(Gfx::Device::GetInstance()->GetSwapchainImage(SwapchainIndex),
 					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 					Cmd.GetSubresourceMainRange());
-
+ 
+    VK_COLLECT();
     Cmd.EndCmd();
 
     VkSubmitInfo submit = {};
@@ -346,6 +348,85 @@ Gfx::RenderTarget* Gfx::Renderer::GetTexture(const std::string& name)
 	else {
 		return &(*it).second;
 	}
+}
+
+std::string time_domain_to_string(VkTimeDomainEXT input_time_domain)
+{
+	switch (input_time_domain)
+	{
+		case VK_TIME_DOMAIN_DEVICE_EXT:
+			return "device time domain";
+		case VK_TIME_DOMAIN_CLOCK_MONOTONIC_EXT:
+			return "clock monotonic time domain";
+		case VK_TIME_DOMAIN_CLOCK_MONOTONIC_RAW_EXT:
+			return "clock monotonic raw time domain";
+		case VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_EXT:
+			return "query performance time domain";
+		default:
+			return "unknown time domain";
+	}
+}
+void Gfx::Renderer::InitTracy()
+{
+/*	// Initialize time domain count:*/
+/*	uint32_t time_domain_count = 0;*/
+/*	// Update time domain count:*/
+/*	VkResult result = Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT(Gfx::Device::GetInstance()->GetPhysicalDevice(), &time_domain_count, nullptr);*/
+/**/
+/*	if (result == VK_SUCCESS)*/
+/*	{timestamps_info.resize(time_domain_count);*/
+/*		// Resize time domains vector:*/
+/*		time_domains.resize(time_domain_count);*/
+/*		// Update time_domain vector:*/
+/*		result = Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT(Gfx::Device::GetInstance()->GetPhysicalDevice(), &time_domain_count, time_domains.data());*/
+/*	}*/
+/*		if (result == VK_SUCCESS && time_domain_count > 0)*/
+/*	{*/
+/*		for (VkTimeDomainEXT time_domain : time_domains)*/
+/*		{*/
+/*			// Initialize in-scope time stamp info variable:*/
+/*			VkCalibratedTimestampInfoEXT timestamp_info{};*/
+/**/
+/*			// Configure timestamp info variable:*/
+/*			timestamp_info.sType      = VK_STRUCTURE_TYPE_CALIBRATED_TIMESTAMP_INFO_EXT;*/
+/*			timestamp_info.pNext      = nullptr;*/
+/*			timestamp_info.timeDomain = time_domain;*/
+/**/
+/*			// Push-back timestamp info to timestamps info vector:*/
+/*			timestamps_info.push_back(timestamp_info);*/
+/*            printf("aaaaa |%s|\n\n", time_domain_to_string(time_domain).c_str());*/
+/*		}*/
+/**/
+/*		// Resize time stamps vector*/
+/*		timestamps.resize(time_domain_count);*/
+/*		// Resize max deviations vector*/
+/*		max_deviations.resize(time_domain_count);*/
+/*	}*/
+/*printf("TIME COUNT %d|%d\n", time_domain_count, Tracy.GetCalibratedTimestampsEXT != nullptr);*/
+/*	// Ensures that time domain exists*/
+/*	{*/
+/*		// Get calibrated timestamps:*/
+/*		VK_ASSERT(Tracy.GetCalibratedTimestampsEXT(Gfx::Device::GetInstance()->GetDevice(), static_cast<uint32_t>(time_domains.size()), timestamps_info.data(), timestamps.data(), max_deviations.data()), "ehm?");*/
+/*	}*/
+/**/
+    for (int i = 0; i < MAX_FRAMES; i++) {
+        //Tracy.Context[i] = TracyVkContextCalibrated(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Tracy.Cmd, Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT, Tracy.GetCalibratedTimestampsEXT );
+        Tracy.Context[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Tracy.Cmd);
+        char buf[50];
+        int n = sprintf(buf, "Vulkan Context [%d]", i);
+        TracyVkContextName(Tracy.Context[i], buf, n); 
+    }
+
+   // Gfx::Renderer::GetInstance()->BeginTracy();
+
+}
+
+void Gfx::Renderer::DestroyTracy()
+{
+    for (int i = 0; i < MAX_FRAMES; i++) {
+            TracyVkDestroy(Tracy.Context[i]);
+        }
+
 }
 
 void Gfx::Renderer::PrepareStorageBuffer()
@@ -896,6 +977,11 @@ void Gfx::Renderer::CreateCommands()
 {
   	vkCmdBeginRenderingKHR = (PFN_vkCmdBeginRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdBeginRenderingKHR");
 	vkCmdEndRenderingKHR = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdEndRenderingKHR");
+    ON_TRACY()
+    {
+        Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT = (PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
+        Tracy.GetCalibratedTimestampsEXT = (PFN_vkGetCalibratedTimestampsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetCalibratedTimestampsKHR");
+    }
 
     Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFamilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
     VkCommandPoolCreateInfo poolinfo = CommandPoolCreateInfo(indices.Graphics.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -930,6 +1016,14 @@ void Gfx::Renderer::CreateCommands()
 	});
 	VkCommandBufferAllocateInfo cmdallocinfo = CommandBufferCreateInfo(Upload.CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdallocinfo, &Upload.CommandBuffer), "failed to allocate upload command buffers!");
+
+    VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Tracy.Pool), "failed to create upload command pool!");
+	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
+		vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Tracy.Pool, nullptr);
+	});
+	VkCommandBufferAllocateInfo cmdallocinfotracy = CommandBufferCreateInfo(Tracy.Pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+	VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdallocinfotracy, &Tracy.Cmd), "failed to allocate upload command buffers!");
+
 }
 
 void Gfx::Renderer::Submit(std::function<void(VkCommandBuffer cmd)>&& function)

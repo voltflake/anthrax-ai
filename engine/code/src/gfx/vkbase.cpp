@@ -1,8 +1,11 @@
 #include "anthraxAI/gfx/vkbase.h"
+#include "anthraxAI/gfx/vkdebug.h"
 #include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrenderer.h"
+#include "anthraxAI/utils/tracy.h"
 #include <cstdio>
+#include <vulkan/vulkan_core.h>
 
 void Gfx::Vulkan::Init()
 {
@@ -23,14 +26,9 @@ void Gfx::Vulkan::Init()
 
     ON_TRACY()
     {
-        for (int i = 0; i < MAX_FRAMES; i++) {
-            TracyVk[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Gfx::Renderer::GetInstance()->Frames[i].MainCommandBuffer);
-            char buf[50];
-            int n = sprintf(buf, "Vulkan Context [%d]", i);
-            TracyVkContextName(TracyVk[i], buf, n); 
-        }
+        Gfx::Renderer::GetInstance()->InitTracy();
     }
-}
+ }
 
 bool Gfx::Vulkan::ReloadShaders()
 {
@@ -67,7 +65,7 @@ bool Gfx::Vulkan::OnResize()
 
         Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::CMD);
         Core::Deletor::GetInstance()->CleanIf(Core::Deletor::Type::SYNC);
-
+        
         Gfx::Renderer::GetInstance()->CreateCommands();
         Gfx::Renderer::GetInstance()->CreateRenderTargets();
         Gfx::Renderer::GetInstance()->SetUpdateSamplers(true);
@@ -77,6 +75,7 @@ bool Gfx::Vulkan::OnResize()
 
 	    Gfx::Mesh::GetInstance()->UpdateDummy();
         Gfx::Pipeline::GetInstance()->Build();
+        
         return true;
     }
     return false;
@@ -97,19 +96,17 @@ void Gfx::Vulkan::CleanUp()
 	Gfx::DescriptorsBase::GetInstance()->CleanBindless();
 
 	Gfx::Device::GetInstance()->CleanUpSwapchain();
+    
+    ON_TRACY()
+    {
+        Gfx::Renderer::GetInstance()->DestroyTracy();    
+    }
 
 	Core::Deletor::GetInstance()->CleanAll();
-
+   
 	vkDestroySurfaceKHR(Instance, Gfx::Device::GetInstance()->GetSurface(), nullptr);
 	vkDestroyDevice(Gfx::Device::GetInstance()->GetDevice(), nullptr);
 	vkDestroyInstance(Instance, nullptr);
-
-    ON_TRACY()
-    {
-        for (int i = 0; i < MAX_FRAMES; i++) {
-            TracyVkDestroy(TracyVk[i]);
-        }
-    }
 
 }
 

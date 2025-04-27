@@ -11,6 +11,7 @@
 #include "anthraxAI/gfx/model.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/thread.h"
+#include "anthraxAI/utils/tracy.h"
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
@@ -155,10 +156,10 @@ void Core::Scene::Render(Modules::Module& module)
 }
 
 void Core::Scene::RenderScene(bool playmode)
-{ 
-    SCOPE_ZONE("Scene::RenderScene")
-    VK_ZONE(Gfx::Renderer::GetInstance()->GetFrameInd(), "before begine frame");
-
+{
+    START_FRAME("frame") 
+    //SCOPE_ZONE("Scene::RenderScene");
+    ZoneScopedN("Scene::RenderScene");
     if (Gfx::Renderer::GetInstance()->BeginFrame()) {
         Thread::BeginTime(Thread::Task::Name::RENDER, (double)Gfx::Renderer::GetInstance()->Time);
         if (GameModules->Get(CurrentScene).GetStorageBuffer()) {
@@ -168,12 +169,16 @@ void Core::Scene::RenderScene(bool playmode)
         Gfx::Renderer::GetInstance()->PrepareInstanceBuffer();
         Gfx::Renderer::GetInstance()->PrepareCameraBuffer(*EditorCamera);
         {
+        TracyVkZoneC(Gfx::Renderer::GetInstance()->GetTracyContext(), Gfx::Renderer::GetInstance()->GetCmd(), "VulkanBeginRenderingModules", tracy::Color::Red);
+
+        //VK_ZONE("VulkanBeginRenderingModules", tracy::Color::Red);
             // used for intro
             if (!HasGBuffer) {
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get(CurrentScene).GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
                 Render(GameModules->Get(CurrentScene));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
+           // VK_COLLECT(Gfx::Renderer::GetInstance()->GetFrameInd())
             {
                 // objects from map
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
@@ -210,8 +215,6 @@ void Core::Scene::RenderScene(bool playmode)
                 Render(GameModules->Get("gizmo"));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
-
-
             // ui
             if (HasGBuffer) {
                 Gfx::Renderer::GetInstance()->TransferLayoutsDebug();
@@ -221,14 +224,11 @@ void Core::Scene::RenderScene(bool playmode)
             Gfx::Renderer::GetInstance()->EndRender();
         }
 
-
         Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
         Thread::PrintTime(Thread::Task::Name::RENDER);
         Gfx::Renderer::GetInstance()->EndFrame();
-
-
     }
-    END_FRAME("hey"); 
+    END_FRAME("frame"); 
 }
 
 void Core::Scene::Loop()
@@ -242,7 +242,7 @@ void Core::Scene::Loop()
         Core::ImGuiHelper::GetInstance()->Render();
 
         Thread::Pool::GetInstance()->Pause(true);
-
+        
         RenderScene(false);
     }
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_PLAY)) {
@@ -271,6 +271,7 @@ void Core::Scene::Loop()
         ReloadResources();
     }
 
+  //  FrameMarkEnd("aaaa");
 }
 
 void Core::Scene::Init()

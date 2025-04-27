@@ -12,6 +12,7 @@ namespace Utils
         bool Grid = true;
         bool Bones;
         int BoneID = 0;
+        bool Tracy = false;
     };
 
     static  bool IsBitSet(int state, int bit) { return (state & bit) != 0; }

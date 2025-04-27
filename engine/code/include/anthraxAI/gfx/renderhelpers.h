@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <vector>
 #include <vulkan/vulkan_core.h>
+#include "anthraxAI/utils/tracy.h"
+
 namespace Gfx
 {
     enum BindlessDataType {
@@ -97,6 +99,14 @@ namespace Gfx
         VkFence UploadFence;
         VkCommandPool CommandPool;
         VkCommandBuffer CommandBuffer;
+    };
+
+    struct TracyInfo {
+        VkCommandPool Pool;
+        VkCommandBuffer Cmd;
+        TracyVkCtx Context[MAX_FRAMES]; 
+        PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT GetPhysicalDeviceCalibrateableTimeDomainsEXT;
+        PFN_vkGetCalibratedTimestampsEXT GetCalibratedTimestampsEXT;
     };
 
     class InputAttachments

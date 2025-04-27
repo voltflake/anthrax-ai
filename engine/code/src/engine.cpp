@@ -1,5 +1,7 @@
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
+#include "anthraxAI/utils/tracy.h"
+#include <cstdio>
 
 long long Engine::GetTime() const {
 #ifdef AAI_WINDOWS

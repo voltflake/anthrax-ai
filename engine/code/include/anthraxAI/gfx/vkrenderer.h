@@ -98,6 +98,11 @@ namespace Gfx
 
             VkCommandBuffer GetCmd() { return Cmd.GetCmd(); }
             void SetCmd(VkCommandBuffer cmd) { Cmd.SetCmd(cmd); }
+
+            void InitTracy();
+            void DestroyTracy();
+
+            TracyVkCtx GetTracyContext() { return Tracy.Context[GetFrameInd()]; }
         private:
             RenderTarget* RTs[RT_SIZE];
             TexturesMap Textures;
@@ -106,6 +111,8 @@ namespace Gfx
             InstanceData InstanceBuffer;
             CameraData 	CamData;
             UploadContext Upload;
+
+            TracyInfo Tracy;
 
             uint32_t InstanceCount = 0;
             uint32_t InstanceIndex = 0;
@@ -123,5 +130,10 @@ namespace Gfx
 
             Gfx::Material* TmpBindMaterial = nullptr;
 	        Gfx::MeshInfo* TmpBindMesh = nullptr;
+    std::vector<VkTimeDomainEXT>time_domains;
+    std::vector<VkCalibratedTimestampInfoEXT>       timestamps_info{};        // This vector is essential to vkGetCalibratedTimestampsEXT, and only need to be registered once.
+    std::vector<uint64_t>        timestamps{};                       // timestamps vector
+	std::vector<uint64_t>        max_deviations{};  
+
     };
 }

@@ -1,5 +1,8 @@
 #include "anthraxAI/gfx/vkdevice.h"
+#include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkdevicehelper.h"
+#include "anthraxAI/utils/tracy.h"
+#include <cstdio>
 
 void Gfx::Device::Init()
 {
@@ -67,35 +70,51 @@ void Gfx::Device::CreateDevice()
     VkPhysicalDeviceFeatures devicefeatures{};
 	devicefeatures.samplerAnisotropy = VK_TRUE;
     devicefeatures.fragmentStoresAndAtomics = VK_TRUE;
+    
+    VkPhysicalDeviceVulkan12Features features12{};
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.descriptorIndexing = true;
+    ON_TRACY()
+    {
+        features12.hostQueryReset = true;
+    }
 
-	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynfeature{};
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR dynfeature{};
 	dynfeature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
     dynfeature.dynamicRendering = VK_TRUE;
-
-	VkPhysicalDeviceDescriptorIndexingFeatures descindexing{};
-	descindexing.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-	descindexing.pNext = &dynfeature;
+    dynfeature.pNext = &features12;
 
     VkPhysicalDeviceShaderDrawParametersFeatures shaderdrawparams{};
     shaderdrawparams.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES;
-    shaderdrawparams.pNext = &descindexing;
+    shaderdrawparams.pNext = &dynfeature;
     shaderdrawparams.shaderDrawParameters = VK_TRUE;
 
+     
 	VkPhysicalDeviceFeatures2 devfeatures2{};
 	devfeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 	devfeatures2.pNext = &shaderdrawparams;
 	devfeatures2.features = devicefeatures;
 
 	vkGetPhysicalDeviceFeatures2(PhysicalDevice, &devfeatures2);
-
+   
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pNext = &devfeatures2;// &DynamicRenderingFeature,
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueinfos.size());
     createInfo.pQueueCreateInfos = queueinfos.data();
    // createInfo.pEnabledFeatures = &devicefeatures;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXT.size());
-    createInfo.ppEnabledExtensionNames = DEVICE_EXT.data();
+    int count = static_cast<uint32_t>(DEVICE_EXT.size());
+    std::vector<const char*> ext = DEVICE_EXT; 
+    ON_TRACY()
+    {
+        printf("ssdsdsdsdsdsdsd\n");
+        count++;
+        ext.push_back("VK_EXT_calibrated_timestamps");
+        count++;
+        ext.push_back("VK_EXT_host_query_reset");
+    }
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(count);
+    createInfo.ppEnabledExtensionNames = ext.data();
 
     if (Gfx::Vulkan::GetInstance()->IsValidationLayersOn()) {
         createInfo.enabledLayerCount = static_cast<uint32_t>(VALIDATION_LAYER.size());

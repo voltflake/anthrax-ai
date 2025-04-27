@@ -19,11 +19,13 @@ namespace Gfx
             void SetRTName(const std::string& name, VkImage image);
             void SetRenderName(VkCommandBuffer cmd, VkDebugUtilsLabelEXT* info);
             void EndRenderName(VkCommandBuffer cmd);
+            
         private:
             VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) ;
             PFN_vkSetDebugUtilsObjectNameEXT SetDebugUtilsObjectNameEXT;
             PFN_vkCmdBeginDebugUtilsLabelEXT SetBeginDebugUtilsLabelEXT;
             PFN_vkCmdEndDebugUtilsLabelEXT SetEndDebugUtilsLabelEXT;
+                        
             VkDebugUtilsMessengerEXT Messenger;
             VkDebugUtilsMessengerCreateInfoEXT MessengerCreateInfo;
     };

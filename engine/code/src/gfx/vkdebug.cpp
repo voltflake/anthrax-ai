@@ -1,5 +1,6 @@
 #include "anthraxAI/gfx/vkdebug.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include "anthraxAI/utils/tracy.h"
 #include <vulkan/vulkan_core.h>
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL Gfx::DebugCallback(
@@ -70,6 +71,7 @@ VkResult Gfx::VkDebug::CreateDebugUtilsMessengerEXT(VkInstance instance, const V
     SetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
     SetBeginDebugUtilsLabelEXT = (PFN_vkCmdBeginDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdBeginDebugUtilsLabelEXT" );
     SetEndDebugUtilsLabelEXT = (PFN_vkCmdEndDebugUtilsLabelEXT)vkGetInstanceProcAddr(instance, "vkCmdEndDebugUtilsLabelEXT" );
+
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);

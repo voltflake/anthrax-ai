@@ -3,23 +3,22 @@
 #include "anthraxAI/gfx/vkdefines.h"
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyVulkan.hpp"
+#include "common/TracyColor.hpp"
 
-#define SET_TRACY(x) Utils::Tracy = x
-#define ON_TRACY() if (Utils::Tracy)
+
+#define SET_TRACY(x) Utils::Debug::GetInstance()->Tracy = x
+#define ON_TRACY() if (Utils::Debug::GetInstance()->Tracy )
 
 #define TRACY_NOT_INCLUDED(x) \
 {                           \
-    if (!Utils::Tracy) {    \
+    if (!Utils::Debug::GetInstance()->Tracy ) {    \
         x;                  \
     }                       \
 }
 
 #define SCOPE_ZONE(s)        \
 {                           \
-    ON_TRACY()              \
-    {                       \
         ZoneScopedN(s);     \
-    }                       \
 }                             
 
 #define END_FRAME(s)        \
@@ -30,15 +29,21 @@
     }                       \
 }
 
-#define VK_ZONE(i, name) \
-{                             \
-    ON_TRACY()                \
-    {                         \
-        TracyVkZone(Gfx::Vulkan::GetInstance()->TracyVk[i], Gfx::Renderer::GetInstance()->GetCmd(), name) \
-    }                         \
-}                             \
-
-namespace Utils
-{
-    static inline bool Tracy = false;
+#define START_FRAME(s)        \
+{                           \
+    ON_TRACY()              \
+    {                       \
+        FrameMarkStart(s);    \
+    }                       \
 }
+
+#define VK_ZONE(name, color) \
+{                             \
+    TracyVkZoneC(Gfx::Renderer::GetInstance()->GetTracyContext(), Gfx::Renderer::GetInstance()->GetCmd(), name, color) \
+}                             
+
+#define VK_COLLECT()         \
+{                             \
+    TracyVkCollect(Gfx::Renderer::GetInstance()->GetTracyContext(), Gfx::Renderer::GetInstance()->GetCmd());   \
+}
+

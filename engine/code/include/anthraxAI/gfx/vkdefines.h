@@ -14,7 +14,7 @@
 #include <xcb/xcb.h>
 #include <vulkan/vulkan_xcb.h>
 const std::vector<const char*> INSTANCE_EXT =
-{VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_xcb_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+{VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_xcb_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME, "VK_KHR_get_physical_device_properties2"};
 #else
 const std::vector<const char*> INSTANCE_EXT =
 {VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_UTILS_EXTENSION_NAME};

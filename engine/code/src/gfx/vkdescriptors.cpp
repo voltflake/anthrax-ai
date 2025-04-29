@@ -25,10 +25,10 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 }
 
 
-uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame)
+uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame, bool force_update)
 {
     auto it = std::find_if(TextureBindings[frame].begin(), TextureBindings[frame].end(), [&, name](const auto& n) { return n.first == name; });
-	if (it != TextureBindings[frame].end()) {
+	if (!force_update && it != TextureBindings[frame].end()) {
         return it->second;
     }
 

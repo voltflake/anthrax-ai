@@ -267,6 +267,7 @@ void Gfx::Renderer::TransferLayoutsDebug()
     GetRT(Gfx::RT_ALBEDO)->MemoryBarrier(Cmd.GetCmd(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     GetRT(Gfx::RT_POSITION)->MemoryBarrier(Cmd.GetCmd(),VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     GetRT(Gfx::RT_NORMAL)->MemoryBarrier(Cmd.GetCmd(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+   // GetRT(Gfx::RT_MASK)->MemoryBarrier(Cmd.GetCmd(), VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
 void Gfx::Renderer::RenderUI()
@@ -371,57 +372,12 @@ std::string time_domain_to_string(VkTimeDomainEXT input_time_domain)
 }
 void Gfx::Renderer::InitTracy()
 {
-/*	// Initialize time domain count:*/
-/*	uint32_t time_domain_count = 0;*/
-/*	// Update time domain count:*/
-/*	VkResult result = Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT(Gfx::Device::GetInstance()->GetPhysicalDevice(), &time_domain_count, nullptr);*/
-/**/
-/*	if (result == VK_SUCCESS)*/
-/*	{timestamps_info.resize(time_domain_count);*/
-/*		// Resize time domains vector:*/
-/*		time_domains.resize(time_domain_count);*/
-/*		// Update time_domain vector:*/
-/*		result = Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT(Gfx::Device::GetInstance()->GetPhysicalDevice(), &time_domain_count, time_domains.data());*/
-/*	}*/
-/*		if (result == VK_SUCCESS && time_domain_count > 0)*/
-/*	{*/
-/*		for (VkTimeDomainEXT time_domain : time_domains)*/
-/*		{*/
-/*			// Initialize in-scope time stamp info variable:*/
-/*			VkCalibratedTimestampInfoEXT timestamp_info{};*/
-/**/
-/*			// Configure timestamp info variable:*/
-/*			timestamp_info.sType      = VK_STRUCTURE_TYPE_CALIBRATED_TIMESTAMP_INFO_EXT;*/
-/*			timestamp_info.pNext      = nullptr;*/
-/*			timestamp_info.timeDomain = time_domain;*/
-/**/
-/*			// Push-back timestamp info to timestamps info vector:*/
-/*			timestamps_info.push_back(timestamp_info);*/
-/*            printf("aaaaa |%s|\n\n", time_domain_to_string(time_domain).c_str());*/
-/*		}*/
-/**/
-/*		// Resize time stamps vector*/
-/*		timestamps.resize(time_domain_count);*/
-/*		// Resize max deviations vector*/
-/*		max_deviations.resize(time_domain_count);*/
-/*	}*/
-/*printf("TIME COUNT %d|%d\n", time_domain_count, Tracy.GetCalibratedTimestampsEXT != nullptr);*/
-/*	// Ensures that time domain exists*/
-/*	{*/
-/*		// Get calibrated timestamps:*/
-/*		VK_ASSERT(Tracy.GetCalibratedTimestampsEXT(Gfx::Device::GetInstance()->GetDevice(), static_cast<uint32_t>(time_domains.size()), timestamps_info.data(), timestamps.data(), max_deviations.data()), "ehm?");*/
-/*	}*/
-/**/
-    for (int i = 0; i < MAX_FRAMES; i++) {
-        //Tracy.Context[i] = TracyVkContextCalibrated(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Tracy.Cmd, Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT, Tracy.GetCalibratedTimestampsEXT );
-        Tracy.Context[i] = TracyVkContext(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Tracy.Cmd);
+	for (int i = 0; i < MAX_FRAMES; i++) {
+        Tracy.Context[i] = TracyVkContextCalibrated(Gfx::Device::GetInstance()->GetPhysicalDevice(), Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetQueue(GRAPHICS_QUEUE), Tracy.Cmd, Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT, Tracy.GetCalibratedTimestampsEXT );
         char buf[50];
         int n = sprintf(buf, "Vulkan Context [%d]", i);
         TracyVkContextName(Tracy.Context[i], buf, n); 
     }
-
-   // Gfx::Renderer::GetInstance()->BeginTracy();
-
 }
 
 void Gfx::Renderer::DestroyTracy()
@@ -787,7 +743,7 @@ VkSubmitInfo SubmitInfo(VkCommandBuffer* cmd)
 
 uint32_t Gfx::Renderer::SyncFrame()
 {
-Time = Engine::GetInstance()->GetTime();
+  Time = Engine::GetInstance()->GetTime();
 	VK_ASSERT(vkWaitForFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence, true, 1000000000), "vkWaitForFences failed !");
 	uint32_t swapchainimageindex;
 	VkResult e = vkAcquireNextImageKHR(Gfx::Device::GetInstance()->GetDevice(), Gfx::Device::GetInstance()->GetSwapchain(), 1000000000, Frames[FrameIndex].PresentSemaphore, VK_NULL_HANDLE, &swapchainimageindex);
@@ -795,14 +751,13 @@ Time = Engine::GetInstance()->GetTime();
     	OnResize = true;
 		return -1;
 	}
+  
 	VK_ASSERT(vkResetFences(Gfx::Device::GetInstance()->GetDevice(), 1, &Frames[FrameIndex].RenderFence), "vkResetFences failed !");
 	VK_ASSERT(vkResetCommandBuffer(Frames[FrameIndex].MainCommandBuffer, 0), "vkResetCommandBuffer failed!");
-
     for (int i = 0; i < Thread::MAX_THREAD_NUM; i++) {
         VK_ASSERT(vkResetCommandPool(Gfx::Device::GetInstance()->GetDevice(), Frames[FrameIndex].SecondaryCmd[i].Pool, 0), "Failed to reset command pool!");
     }
-
-	return swapchainimageindex;
+  	return swapchainimageindex;
 }
 
 void Gfx::Renderer::Sync()
@@ -982,7 +937,7 @@ void Gfx::Renderer::CreateCommands()
 	vkCmdEndRenderingKHR = (PFN_vkCmdEndRenderingKHR) vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkCmdEndRenderingKHR");
 #ifdef TRACY
         Tracy.GetPhysicalDeviceCalibrateableTimeDomainsEXT = (PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
-        Tracy.GetCalibratedTimestampsEXT = (PFN_vkGetCalibratedTimestampsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetCalibratedTimestampsKHR");
+        Tracy.GetCalibratedTimestampsEXT = (PFN_vkGetCalibratedTimestampsEXT)vkGetInstanceProcAddr(Gfx::Vulkan::GetInstance()->GetVkInstance(), "vkGetCalibratedTimestampsEXT");
 #endif
 
     Gfx::QueueFamilyIndex indices = Gfx::Device::GetInstance()->FindQueueFamilies(Gfx::Device::GetInstance()->GetPhysicalDevice());
@@ -1019,12 +974,14 @@ void Gfx::Renderer::CreateCommands()
 	VkCommandBufferAllocateInfo cmdallocinfo = CommandBufferCreateInfo(Upload.CommandPool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdallocinfo, &Upload.CommandBuffer), "failed to allocate upload command buffers!");
 
+#ifdef TRACY
     VK_ASSERT(vkCreateCommandPool(Gfx::Device::GetInstance()->GetDevice(), &poolinfo, nullptr, &Tracy.Pool), "failed to create upload command pool!");
 	Core::Deletor::GetInstance()->Push(Core::Deletor::Type::CMD, [=, this]() {
 		vkDestroyCommandPool(Gfx::Device::GetInstance()->GetDevice(), Tracy.Pool, nullptr);
 	});
 	VkCommandBufferAllocateInfo cmdallocinfotracy = CommandBufferCreateInfo(Tracy.Pool, 1, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
 	VK_ASSERT(vkAllocateCommandBuffers(Gfx::Device::GetInstance()->GetDevice(), &cmdallocinfotracy, &Tracy.Cmd), "failed to allocate upload command buffers!");
+#endif
 
 }
 

@@ -54,16 +54,13 @@ namespace Core
 
         std::vector<NodeAnim> AnimNodes;
 
-        //glm::mat4 NodeTransformation;
-
-
     };
   class AnimatorBase {
 
     public:
         AnimatorBase() {};
   	    void Init();
-        std::vector<glm::mat4> Update(Gfx::RenderObject& object);
+        void Update(Gfx::RenderObject& object);
 
         bool HasAnimation(int id) {
     		return Animations.find(id) != Animations.end();
@@ -99,7 +96,7 @@ namespace Core
 
     	    	const Core::NodeAnim& FindAnim(const aiSceneInfo& scene, const std::string nodename);
     	void ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, const Core::aiSceneInfo& scene, const NodeRoots& node, float timetick, const glm::mat4 parenttransform);
-        std::vector<glm::mat4> GetBonesTransform(Gfx::ModelInfo* model, int animid, float time);
+        void GetBonesTransform(Gfx::ModelInfo* model, int animid, float time);
 
         void GetNodeChildren(const aiNode* node, Core::NodeRoots& info);
 

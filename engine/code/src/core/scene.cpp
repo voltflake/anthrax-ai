@@ -179,16 +179,16 @@ void Core::Scene::RenderScene(bool playmode)
                 Render(GameModules->Get(CurrentScene));
                 Gfx::Renderer::GetInstance()->EndRender();
             }
-            {
+            else {
                 // objects from map
                 Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("gbuffer").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
                 Render(GameModules->Get("gbuffer"));
                 Gfx::Renderer::GetInstance()->EndRender();
+            
+                Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
+                Render(GameModules->Get("lighting"));
+                Gfx::Renderer::GetInstance()->EndRender();
             }
-            Gfx::Renderer::GetInstance()->StartRender(GameModules->Get("lighting").GetIAttachments(), Gfx::AttachmentRules::ATTACHMENT_RULE_CLEAR);
-            Render(GameModules->Get("lighting"));
-            Gfx::Renderer::GetInstance()->EndRender();
-
 
             if (HasFrameGrid && Utils::Debug::GetInstance()->Grid) {
 
@@ -236,6 +236,15 @@ void Core::Scene::RenderScene(bool playmode)
 void Core::Scene::Loop()
 {
     Core::Audio::GetInstance()->Play();
+    
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
+        ReloadResources();
+    }
+    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_SHADER_RELOAD)) {
+        GameModules->Update(Modules::Update::MATERIALS);
+        Engine::GetInstance()->ClearState(ENGINE_STATE_SHADER_RELOAD);
+    }
+    GameModules->Update(Modules::Update::SAMPLERS);
 
     if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
         RenderScene(false);
@@ -261,18 +270,8 @@ void Core::Scene::Loop()
         Thread::PrintTime(Thread::Task::Name::UPDATE);
 
         RenderScene(true);
-
     }
-
     GameModules->Update(Modules::Update::TEXTURE_UI_MANAGER);
-    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_SHADER_RELOAD)) {
-        GameModules->Update(Modules::Update::MATERIALS);
-        Engine::GetInstance()->ClearState(ENGINE_STATE_SHADER_RELOAD);
-    }
-    if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_RESOURCE_RELOAD)) {
-        ReloadResources();
-    }
-
 }
 
 void Core::Scene::Init()
@@ -287,14 +286,13 @@ void Core::Scene::Init()
 
 void Core::Scene::InitModules()
 {
-    Thread::Pool::GetInstance()->Init(8);
+    Thread::Pool::GetInstance()->Init(4);
 
     GameModules = new Modules::Base(GameObjects);
 
     Modules::Info info;
     info.BindlessType = Gfx::BINDLESS_DATA_CAM_BUFFER ;
     info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
-
     GameModules->Populate("intro", info,
         GameObjects->GetInfo(Keeper::Infos::INFO_INTRO)
     );
@@ -379,7 +377,6 @@ void Core::Scene::PopulateModules()
             Modules::Info info;
             info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
             info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
-           // info.IAttachments.Add(Gfx::RT_DEPTH, true);
             GameModules->Populate("lighting", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_LIGHTING)
             );
@@ -416,7 +413,6 @@ void Core::Scene::PopulateModules()
             Modules::Info info;
             info.BindlessType = Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER ;
             info.IAttachments.Add(Gfx::RT_MAIN_COLOR);
-            info.IAttachments.Add(Gfx::RT_DEPTH, true);
             GameModules->Populate("outline", info,
                 GameObjects->GetInfo(Keeper::Infos::INFO_OUTLINE)
             );
@@ -425,7 +421,7 @@ void Core::Scene::PopulateModules()
         HasFrameGrid = true;
         HasFrameGizmo = true;
     }
-    GameModules->Update(Modules::Update::RESOURCES);
+    GameModules->Update(Modules::Update::RESOURCES, true);
 
     GameModules->RestartAnimator();
 }

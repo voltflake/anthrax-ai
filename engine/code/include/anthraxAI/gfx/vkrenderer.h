@@ -103,6 +103,7 @@ namespace Gfx
             void DestroyTracy();
 
             TracyVkCtx GetTracyContext() { return Tracy.Context[GetFrameInd()]; }
+            VkCommandBuffer GetTracyCmd() { return Tracy.Cmd; }
         private:
             RenderTarget* RTs[RT_SIZE];
             TexturesMap Textures;

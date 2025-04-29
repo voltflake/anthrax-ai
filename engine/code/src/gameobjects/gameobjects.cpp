@@ -90,7 +90,7 @@ void Keeper::Base::UpdateObjectNames()
             if (obj->GetType() == Keeper::Type::SPRITE) {
                 objtype = "Sprite";
             }
-            if (obj->GetType() == Keeper::Type::SPRITE) {
+            if (obj->GetType() == Keeper::Type::LIGHT) {
                 objtype = "Light";
             }
 

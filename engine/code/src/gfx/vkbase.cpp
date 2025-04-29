@@ -74,6 +74,7 @@ bool Gfx::Vulkan::OnResize()
 
 	    Gfx::Mesh::GetInstance()->UpdateDummy();
         Gfx::Pipeline::GetInstance()->Build();
+        Engine::GetInstance()->SetState(ENGINE_STATE_SHADER_RELOAD);
         
         return true;
     }

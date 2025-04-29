@@ -5,6 +5,7 @@
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/defines.h"
+#include <chrono>
 #include <ctime>
 #include <iostream>
 
@@ -155,17 +156,35 @@ void Core::WindowManager::RunLinux()
     xcb_flush(Connection);
 
     long long start, end = 0;
-    float delta = 0;
+    float delta, deltaTime, accumulate  = 0;
+    std::chrono::high_resolution_clock timer;
+    std::chrono::time_point endc = timer.now();
+    std::chrono::time_point startc =timer.now();
+    using ms = std::chrono::duration<float, std::milli>;
 	while (running) {
+        startc = timer.now();
         start = clock();
-        Events();
+        deltaTime = std::chrono::duration_cast<ms>(startc - endc).count();
+endc = timer.now();
+//accumulate += deltaTime;
+                printf("222ms: %f|%f\n", deltaTime, accumulate);
+ while (deltaTime <= 1000.0f / MAX_FPS) {
+            startc = timer.now();
+            deltaTime = std::chrono::duration_cast<ms>(startc - endc).count();
+            Utils::Debug::GetInstance()->DeltaMs = deltaTime;
+            //accumulate -= 1000.0f / MAX_FPS;
+               // printf("ms 2 : %f\n", deltaTime);
+        }
 
-        while (delta < CLOCKS_PER_SEC / MAX_FPS) {
-			start = clock();
-			delta = (float(start - end));
-			Utils::Debug::GetInstance()->DeltaMs = delta;
-		}
-        Utils::Debug::GetInstance()->FPS = CLOCKS_PER_SEC / delta;
+
+        Events();
+		/**/
+		/*while (delta < CLOCKS_PER_SEC / MAX_FPS) {*/
+		/*	start = clock();*/
+		/*	delta = float(start - end);*/
+		/*	Utils::Debug::GetInstance()->DeltaMs = delta;*/
+		/*}*/
+        Utils::Debug::GetInstance()->FPS = 1000.0f / deltaTime;
 
 		Core::ImGuiHelper::GetInstance()->UpdateFrame();
         Core::Scene::GetInstance()->Loop();
@@ -173,9 +192,10 @@ void Core::WindowManager::RunLinux()
 		if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EXIT)) {
 			xcb_key_symbols_free(KeySymbols);
 		}
-
-        end = clock();
+                end = clock();
         delta = (float(end - start));
+        printf("original ms: %f\n", delta / 1000);
+       
       //  Utils::Debug::GetInstance()->DeltaMs = (end - start) / float(CLOCKS_PER_SEC) ;// / float(CLOCKS_PER_SEC) * 1000.0;
 	//	printf("%f DELTA\n", Utils::Debug::GetInstance()->DeltaMs);
 	}

@@ -30,6 +30,7 @@ namespace Modules
         MATERIALS,
         RQ,
         TEXTURE_UI_MANAGER,
+        SAMPLERS,
     };
 
     class Module
@@ -79,7 +80,7 @@ namespace Modules
             ~Base() { if (Animator) delete Animator; }
             void Clear();
 
-            void Update(uint32_t update_type);
+            void Update(uint32_t update_type, bool force_update = false);
 
             void Populate(const std::string& key, Info scene, std::function<bool(Keeper::Type)> skip_type);
             void Populate(const std::string& key, Info scene, Keeper::Info info);
@@ -104,11 +105,12 @@ namespace Modules
             Core::AnimatorBase* Animator = nullptr;
 
             Gfx::RenderObject LoadResources(const Keeper::Objects* info);
-            void UpdateResources();
-            void UpdateResource(Modules::Module& module, Gfx::RenderObject& obj);
+            void UpdateResources(bool force_update);
+            void UpdateResource(Modules::Module& module, Gfx::RenderObject& obj, bool force_update);
             void UpdateMaterials();
             void UpdateTexture(const std::string& str, Core::ImGuiHelper::TextureForUpdate upd);
             void UpdateTextureUIManager();
+            void UpdateSamplers();
             void UpdateRQ();
             void ThreadedRQ(int i, Keeper::Objects* info);
     };

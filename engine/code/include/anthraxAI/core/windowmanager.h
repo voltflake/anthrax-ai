@@ -111,5 +111,6 @@ namespace Core
             int CatchEvent();
 #endif
             bool running = true;
+            float frames = 0;
     };
 }

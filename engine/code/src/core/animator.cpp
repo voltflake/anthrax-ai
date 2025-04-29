@@ -5,16 +5,15 @@
 #include "assimp/anim.h"
 #include "assimp/scene.h"
 
-std::vector<glm::mat4> Core::AnimatorBase::Update(Gfx::RenderObject& object)
+void Core::AnimatorBase::Update(Gfx::RenderObject& object)
 {
     if (Animations.empty()) {
-        return {glm::mat4(1.0f)};
+        return;
     }
 
     float timesec = (float)((double)Engine::GetInstance()->GetTime() - (double)Utils::Debug::GetInstance()->AnimStartMs) / 1000.0f;
     uint32_t frame = Gfx::Renderer::GetInstance()->GetFrameInd();
-    std::vector<glm::mat4> vec =  GetBonesTransform(object.Model[frame], object.ID, timesec);
-    return vec;
+    GetBonesTransform(object.Model[frame], object.ID, timesec);
 }
 
 const Core::NodeAnim& Core::AnimatorBase::FindAnim(const aiSceneInfo& scene, const std::string nodename)
@@ -148,6 +147,8 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
     if (model->Bones.BoneMap.find(nodename) != model->Bones.BoneMap.end()) {
         int boneind = model->Bones.BoneMap[nodename];
         model->Bones.Info[boneind].FinTransform = GlobalInverse * globaltransf * model->Bones.Info[boneind].Offset;
+        //model->Bones.FinTransform[boneind] = GlobalInverse * globaltransf * model->Bones.Info[boneind].Offset;
+
     }
 
     for (int i = 0; i < node.ChildrenNum; i++) {
@@ -155,7 +156,7 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
     }
 }
 
-std::vector<glm::mat4> Core::AnimatorBase::GetBonesTransform(Gfx::ModelInfo* model, int animid, float time)
+void Core::AnimatorBase::GetBonesTransform(Gfx::ModelInfo* model, int animid, float time)
 {
     Core::AnimationData& data = Animations[animid];
 
@@ -165,21 +166,20 @@ std::vector<glm::mat4> Core::AnimatorBase::GetBonesTransform(Gfx::ModelInfo* mod
 
     float timeinticks = time * tickespersec;
     float timeticks =  fmod(timeinticks, (float)scene.Duration);
-
+    
+    //model->Bones.FinTransform.reserve(model->Bones.Info.size());
     ReadNodeHierarchy(model, animid, scene, scene.RootNode, timeticks, glm::mat4(1.0));
-    std::vector<glm::mat4> vec;
-    vec.resize(model->Bones.Info.size(), glm::mat4(1.0));
-    model->Bones.FinTransform.reserve(model->Bones.Info.size());
+    //std::vector<glm::mat4> vec;
+    //vec.resize(model->Bones.Info.size(), glm::mat4(1.0));
 
-    for (int i = 0; i < model->Bones.Info.size(); i++) {
-        vec[i] = (model->Bones.Info[i].FinTransform);
-        model->Bones.FinTransform[i] = model->Bones.Info[i].FinTransform;
-
-    //    printf("\n\tmodel id: %d", animid);
-    //    printf("\n|%f||%f||%f|\n|%f||%f||%f|\n", vec[i][0][0], vec[i][0][1],vec[i][0][2],vec[i][1][0],vec[i][2][0],vec[i][3][0]);
-    }
+    /*for (int i = 0; i < model->Bones.Info.size(); i++) {*/
+    /*  //  vec[i] = (model->Bones.Info[i].FinTransform);*/
+    /*    model->Bones.FinTransform[i] = model->Bones.Info[i].FinTransform;*/
+    /**/
+    /*//    printf("\n\tmodel id: %d", animid);*/
+    /*//    printf("\n|%f||%f||%f|\n|%f||%f||%f|\n", vec[i][0][0], vec[i][0][1],vec[i][0][2],vec[i][1][0],vec[i][2][0],vec[i][3][0]);*/
+    /*}*/
     // printf("-----------------------------\n");
-    return  vec;
 }
 
 glm::mat4 Core::AnimatorBase::InterpolatePos(glm::vec3 out, float timeticks, const NodeAnim& animnode)

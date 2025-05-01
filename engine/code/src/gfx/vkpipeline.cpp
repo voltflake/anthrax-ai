@@ -220,8 +220,6 @@ void Gfx::Pipeline::Build()
     Gfx::RenderTargetsList albedo_rt = Gfx::RT_ALBEDO;
     Gfx::RenderTargetsList mask_rt = Gfx::RT_MASK;
 
-
-
     std::map<std::string, VkShaderModule> fragmap;
     std::map<std::string, VkShaderModule> vertmap;
 
@@ -277,6 +275,8 @@ void Gfx::Pipeline::Build()
             }
             else {
                 BuildMaterial(info->GetMaterialName(), &vertexshader, vert, &fragshader, frag, main_rt);
+                fragmap[frag] = fragshader;
+                vertmap[vert] = vertexshader;
 	        }
         }
     }

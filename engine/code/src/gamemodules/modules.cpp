@@ -111,9 +111,9 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
                 ASSERT(!obj.Texture, "Modules::Base::UpdateResource() invalid render target pointer!");
                 obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName(), i);
             }
-    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, i);
-            obj.StorageBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, i);
-            obj.InstanceBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, i);
+    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(i).tag, i);
+            obj.StorageBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Gfx::DescriptorsBase::GetInstance()->GetStorageUBO(i).tag, i);
+            obj.InstanceBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetInstanceBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, Gfx::DescriptorsBase::GetInstance()->GetInstanceUBO(i).tag, i);
             }
             obj.HasStorage = obj.Model[0] ? true : false;
             module.SetCameraBuffer(true);
@@ -124,7 +124,7 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
         }
         case Gfx::BINDLESS_DATA_CAM_BUFFER: {
             for (int i = 0; i < MAX_FRAMES; i++) {
-    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, i);
+    	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, Gfx::DescriptorsBase::GetInstance()->GetCameraUBO(i).tag,i);
             }
             module.SetCameraBuffer(true);
             break;

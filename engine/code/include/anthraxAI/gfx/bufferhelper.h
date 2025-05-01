@@ -7,6 +7,7 @@ namespace BufferHelper
         VkBuffer Buffer;
         VkDeviceMemory DeviceMemory;
         void* UniformMappedMemory;
+        std::string tag;
     };
 
     void    MapMemory(Buffer& buffer, VkDeviceSize size, VkDeviceSize offset, const void* datasrc);

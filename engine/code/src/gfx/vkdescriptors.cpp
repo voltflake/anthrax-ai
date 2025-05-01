@@ -33,6 +33,12 @@ void Gfx::DescriptorsBase::ClearTextures()
         TextureBindings[i].clear();
     }
     TextureHandle = 0;
+
+    for (int i = 0; i < MAX_FRAMES; i++) {
+        BufferBindings[i].clear();
+    }
+    BufferHandle = 0;
+
 }
 
 uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame)
@@ -60,11 +66,8 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
     bind = TextureHandle;
     if (force_update && it != TextureBindings[frame].end()) {
         bind = it->second;
-	    write.dstArrayElement = bind;
     }
-    else {
-	    write.dstArrayElement = bind;
-    }
+	write.dstArrayElement = bind;
 
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
 
@@ -78,8 +81,14 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 	return TextureHandle - 1;
 }
 
-uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage, uint32_t frame)
+uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBits usage, const std::string& name, uint32_t frame)
 {
+    if (!name.empty()) {
+        auto it = std::find_if(BufferBindings[frame].begin(), BufferBindings[frame].end(), [&, name](const auto& n) { return n.first == name; });
+	    if (it != BufferBindings[frame].end()) {
+            return it->second;
+        }
+    }
 	VkWriteDescriptorSet writes{};
 	VkDescriptorBufferInfo bufferinfo{};
 	bufferinfo.buffer = buffer;
@@ -103,7 +112,10 @@ uint32_t Gfx::DescriptorsBase::UpdateBuffer(VkBuffer buffer, VkBufferUsageFlagBi
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &writes, 0, nullptr);
 	BufferHandle++;
 
-	return BufferHandle - 1;
+    if (!name.empty()) {
+        BufferBindings[frame][name] = BufferHandle - 1;
+    }
+    return BufferHandle - 1;
 }
 
 void Gfx::DescriptorsBase::AllocateDataBuffers()
@@ -111,6 +123,7 @@ void Gfx::DescriptorsBase::AllocateDataBuffers()
 	const size_t cambuffersize = (sizeof(CameraData));
     for (int i = 0; i < MAX_FRAMES; i++) {
 	    BufferHelper::CreateBuffer(CameraBuffer[i], cambuffersize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        CameraBuffer[i].tag = "camera";
     }
     VkDebugUtilsObjectNameInfoEXT info;
 	info.pNext = nullptr;
@@ -132,6 +145,7 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
 	size_t buffersize = (sizeof(StorageData));
     for (int i = 0; i < MAX_FRAMES; i++) {
 	    BufferHelper::CreateBuffer(StorageBuffer[i], buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        StorageBuffer[i].tag = "storage";
     }
     VkDebugUtilsObjectNameInfoEXT info;
 	info.pNext = nullptr;
@@ -151,6 +165,7 @@ void Gfx::DescriptorsBase::AllocateStorageBuffers()
     buffersize = sizeof(InstanceData) * MAX_INSTANCES ;
     for (int i = 0; i < MAX_FRAMES; i++) {
 	    BufferHelper::CreateBuffer(InstanceBuffer[i], buffersize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        InstanceBuffer[i].tag = "instance";
     }
 	info.pNext = nullptr;
 	info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT;

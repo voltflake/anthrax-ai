@@ -3,7 +3,7 @@
 #include "anthraxAI/utils/mathdefines.h"
 
 #include "anthraxAI/engine.h"
-
+#include <chrono>
 #include <cstring>
 #ifdef AAI_LINUX
 #include <xcb/xcb.h>
@@ -52,6 +52,7 @@ namespace Core
 
     class WindowManager : public Utils::Singleton<WindowManager>
     {
+        using ms = std::chrono::duration<float, std::milli>;
 #ifdef AAI_LINUX
         private:
             xcb_connection_t* 			Connection;

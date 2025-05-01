@@ -5,9 +5,6 @@
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/defines.h"
-#include <chrono>
-#include <ctime>
-#include <iostream>
 
 #ifdef AAI_LINUX
 void Core::WindowManager::InitLinuxWindow()
@@ -155,25 +152,23 @@ void Core::WindowManager::RunLinux()
 {
     xcb_flush(Connection);
 
-    long long start, end = 0;
-    float delta, deltaTime  = 0;
+    float delta = 0;
     std::chrono::high_resolution_clock timer;
-    std::chrono::time_point endc = timer.now();
-    std::chrono::time_point startc =timer.now();
-    using ms = std::chrono::duration<float, std::milli>;
+    std::chrono::time_point end = timer.now();
+    std::chrono::time_point start = timer.now();
+
 	while (running) {
-        startc = timer.now();
-        deltaTime = std::chrono::duration_cast<ms>(startc - endc).count();
-        endc = timer.now();
+        start = timer.now();
+        delta = std::chrono::duration_cast<ms>(start - end).count();
         
-        while (deltaTime <= 1000.0f / MAX_FPS) {
-            startc = timer.now();
-            deltaTime = std::chrono::duration_cast<ms>(startc - endc).count();
-            Utils::Debug::GetInstance()->DeltaMs = deltaTime;
+        while (delta <= 1000.0f / MAX_FPS) {
+            start = timer.now();
+            delta = std::chrono::duration_cast<ms>(start - end).count();
+            Utils::Debug::GetInstance()->DeltaMs = delta;
         }
 
         Events();
-        Utils::Debug::GetInstance()->FPS = 1000.0f / deltaTime;
+        Utils::Debug::GetInstance()->FPS = 1000.0f / delta;
 
 		Core::ImGuiHelper::GetInstance()->UpdateFrame();
         Core::Scene::GetInstance()->Loop();
@@ -181,8 +176,8 @@ void Core::WindowManager::RunLinux()
 		if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_EXIT)) {
 			xcb_key_symbols_free(KeySymbols);
 		}
-                end = clock();
-        delta = (float(end - start));
+        
+        end = timer.now();
 	//	printf("%f DELTA\n", Utils::Debug::GetInstance()->DeltaMs);
 	}
 }

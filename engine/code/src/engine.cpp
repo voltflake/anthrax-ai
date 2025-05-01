@@ -1,16 +1,15 @@
 #include "anthraxAI/engine.h"
 #include "anthraxAI/utils/debug.h"
 #include "anthraxAI/utils/tracy.h"
+#include <chrono>
 #include <cstdio>
 
 long long Engine::GetTime() const {
 #ifdef AAI_WINDOWS
     return GetTickCount();
 #else
-    timeval t;
-    gettimeofday(&t, NULL);
-    long long tim = t.tv_sec * 1000 + t.tv_usec / 1000;
-	  return (tim);
+    std::chrono::duration<long int, std::ratio<1, 1000000000>> t = Timer.now().time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(t).count();
 #endif
 }
 

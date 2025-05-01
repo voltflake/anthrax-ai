@@ -9,6 +9,7 @@
 
 #include "anthraxAI/gfx/vkbase.h"
 #include <sys/time.h>
+#include <chrono>
 
 enum EngineState {
     ENGINE_STATE_INIT 	= 1 << 0,	/* 0000 0001 */
@@ -22,6 +23,7 @@ enum EngineState {
 
 class Engine : public Utils::Singleton<Engine>
 {
+    using ms = std::chrono::duration<float, std::milli>;
     public:
         void Init();
         void Run();
@@ -38,8 +40,10 @@ class Engine : public Utils::Singleton<Engine>
         long long GetTimeSinceStart() const { return GetTime() - StartTime; }
 
         bool OnResize();
-
+        
     private:
+        std::chrono::high_resolution_clock Timer;
+        
         int State;
         long long StartTime;
 };

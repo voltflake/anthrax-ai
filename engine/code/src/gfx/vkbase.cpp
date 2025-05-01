@@ -20,6 +20,7 @@ void Gfx::Vulkan::Init()
 
 	Gfx::DescriptorsBase::GetInstance()->Init();
 	Gfx::DescriptorsBase::GetInstance()->AllocateBuffers();
+	Gfx::Renderer::GetInstance()->BindTextures();
 	Gfx::Pipeline::GetInstance()->Build();
 	Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();
@@ -52,6 +53,7 @@ void Gfx::Vulkan::ReloadResources()
 
 	Gfx::DescriptorsBase::GetInstance()->Init();
 	Gfx::Renderer::GetInstance()->CreateTextures();
+	Gfx::Renderer::GetInstance()->BindTextures();
 	Gfx::Pipeline::GetInstance()->Build();
     Gfx::Mesh::GetInstance()->CreateMeshes();
 	Gfx::Model::GetInstance()->LoadModels();

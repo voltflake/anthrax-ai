@@ -105,8 +105,8 @@ namespace Modules
             Core::AnimatorBase* Animator = nullptr;
 
             Gfx::RenderObject LoadResources(const Keeper::Objects* info);
-            void UpdateResources(bool force_update);
-            void UpdateResource(Modules::Module& module, Gfx::RenderObject& obj, bool force_update);
+            void UpdateResources();
+            void UpdateResource(Modules::Module& module, Gfx::RenderObject& obj);
             void UpdateMaterials();
             void UpdateTexture(const std::string& str, Core::ImGuiHelper::TextureForUpdate upd);
             void UpdateTextureUIManager();

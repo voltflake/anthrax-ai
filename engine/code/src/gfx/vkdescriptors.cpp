@@ -1,7 +1,10 @@
 #include "anthraxAI/gfx/vkdescriptors.h"
 #include "anthraxAI/gfx/renderhelpers.h"
+#include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkdevice.h"
+#include "anthraxAI/gfx/vkrenderer.h"
 #include <cstdint>
+#include <cstdio>
 
 size_t Gfx::DescriptorsBase::PadUniformBufferSize(size_t originalsize)
 {
@@ -24,9 +27,18 @@ VkDescriptorSetLayoutBinding DescriptorLayoutBinding(VkDescriptorType type, VkSh
 	return setbind;
 }
 
-
-uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame, bool force_update)
+void Gfx::DescriptorsBase::ClearTextures()
 {
+    for (int i = 0; i < MAX_FRAMES; i++) {
+        TextureBindings[i].clear();
+    }
+    TextureHandle = 0;
+}
+
+uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sampler, const std::string& name, uint32_t frame)
+{
+    bool force_update = Gfx::Renderer::GetInstance()->GetUpdateSamplers();
+    uint32_t bind;
     auto it = std::find_if(TextureBindings[frame].begin(), TextureBindings[frame].end(), [&, name](const auto& n) { return n.first == name; });
 	if (!force_update && it != TextureBindings[frame].end()) {
         return it->second;
@@ -43,10 +55,23 @@ uint32_t Gfx::DescriptorsBase::UpdateTexture(VkImageView imageview, VkSampler sa
 	write.dstBinding = TextureBinding;
 	write.dstSet = BindlessDescriptor[frame];
 	write.descriptorCount = 1;
-	write.dstArrayElement = TextureHandle;
 	write.pImageInfo = &imageinfo;
+    
+    bind = TextureHandle;
+    if (force_update && it != TextureBindings[frame].end()) {
+        bind = it->second;
+	    write.dstArrayElement = bind;
+    }
+    else {
+	    write.dstArrayElement = bind;
+    }
 
 	vkUpdateDescriptorSets(Gfx::Device::GetInstance()->GetDevice(), 1, &write, 0, nullptr);
+
+    if (force_update) {
+        TextureBindings[frame][name] = bind; 
+        return bind;
+    }
 	TextureHandle++;
     
     TextureBindings[frame][name] = TextureHandle - 1;
@@ -146,6 +171,8 @@ void Gfx::DescriptorsBase::CleanAll()
 {
 	TextureHandle = 0;
     BufferHandle = 0;
+    
+    ClearTextures();
 
     for (int i = 0; i < MAX_FRAMES; i++) {
 	    vkDestroyDescriptorPool(Gfx::Device::GetInstance()->GetDevice(), Pool[i], nullptr);

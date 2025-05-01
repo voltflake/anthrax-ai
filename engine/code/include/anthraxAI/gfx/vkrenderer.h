@@ -32,6 +32,7 @@ namespace Gfx
             void CopyImage(Gfx::RenderTargetsList src_id, Gfx::RenderTargetsList dst_id);
 
             void CreateTextures();
+            void BindTextures();
             bool CreateTextureFromInfo(const std::string& texturename);
             RenderTarget CreateTexture(const std::string& path);
             void CreateSampler(RenderTarget& rt);

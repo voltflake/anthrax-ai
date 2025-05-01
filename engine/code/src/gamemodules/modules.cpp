@@ -9,6 +9,7 @@
 #include "anthraxAI/gfx/vkpipeline.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <vector>
 
@@ -92,24 +93,23 @@ void Modules::Base::RestartAnimator()
 
 }
 
-void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& obj, bool force_update)
+void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& obj)
 {
     switch (module.GetBindlessType()) {
         case Gfx::BINDLESS_DATA_CAM_STORAGE_SAMPLER: {
             for (int i = 0; i < MAX_FRAMES; i++) {
             if (!obj.Textures.empty()) {
                 std::vector<Gfx::RenderTarget*>::iterator it = obj.Textures.begin();
-                uint32_t tmpbind = obj.TextureBind[i];
-                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i, force_update);
+                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i);
                 it++;
                 for (; it != obj.Textures.end(); ++it) {
                     ASSERT(!(*it), "Modules::Base::UpdateResource() invalid render target pointer!");
-                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i, force_update);
+                    Gfx::DescriptorsBase::GetInstance()->UpdateTexture((*it)->GetImageView(), *((*it)->GetSampler()), (*it)->GetName(), i);
                 }
             }
             else {
                 ASSERT(!obj.Texture, "Modules::Base::UpdateResource() invalid render target pointer!");
-                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName(), i, force_update);
+                obj.TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(obj.Texture->GetImageView(), *(obj.Texture->GetSampler()), obj.Texture->GetName(), i);
             }
     	    obj.BufferBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetCameraBuffer(i), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, i);
             obj.StorageBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateBuffer(Gfx::DescriptorsBase::GetInstance()->GetStorageBuffer(i), VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, i);
@@ -135,11 +135,11 @@ void Modules::Base::UpdateResource(Modules::Module& module, Gfx::RenderObject& o
 
 }
 
-void Modules::Base::UpdateResources(bool force_update)
+void Modules::Base::UpdateResources()
 {
     for (auto& it : SceneModules) {
         for (Gfx::RenderObject& obj : it.second.GetRenderQueue()) {
-            UpdateResource(it.second, obj, force_update);
+            UpdateResource(it.second, obj);
         }
     }
 }
@@ -226,7 +226,7 @@ void Modules::Base::UpdateTexture(const std::string& str, Core::ImGuiHelper::Tex
                 it->Texture = Gfx::Renderer::GetInstance()->GetTexture(upd.NewTextureName);
                 it->TextureName = upd.NewTextureName;
                 ASSERT(!it->Texture, "Modules::Base::UpdateResource() invalid render target pointer!");
-                it->TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()), it->Texture->GetName(), i, true);
+                it->TextureBind[i] = Gfx::DescriptorsBase::GetInstance()->UpdateTexture(it->Texture->GetImageView(), *(it->Texture->GetSampler()), it->Texture->GetName(), i);
             }
         }
     }
@@ -258,7 +258,7 @@ void Modules::Base::UpdateSamplers()
             );
 
             for (Gfx::RenderObject& obj : SceneModules["outline"].GetRenderQueue()) {
-                UpdateResource(SceneModules["outline"], obj, true);
+                UpdateResource(SceneModules["outline"], obj);
             }
         }
         if (SceneModules.find("lighting") != SceneModules.end())
@@ -271,7 +271,7 @@ void Modules::Base::UpdateSamplers()
             );
 
             for (Gfx::RenderObject& obj : SceneModules["lighting"].GetRenderQueue()) {
-                UpdateResource(SceneModules["lighting"], obj, true);
+                UpdateResource(SceneModules["lighting"], obj);
             }
         }
         Gfx::Renderer::GetInstance()->SetUpdateSamplers(false);
@@ -284,7 +284,7 @@ void Modules::Base::Update(uint32_t update_type, bool force_update)
     switch (update_type)
     {
         case Modules::Update::RESOURCES:
-            UpdateResources(force_update);
+            UpdateResources();
             break;
         case Modules::Update::MATERIALS:
             UpdateMaterials();

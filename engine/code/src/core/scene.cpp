@@ -225,7 +225,7 @@ void Core::Scene::RenderScene(bool playmode)
         }
 
         Thread::EndTime(Thread::Task::Name::RENDER, (double)Engine::GetInstance()->GetTime());
-        Thread::PrintTime(Thread::Task::Name::RENDER);
+       // Thread::PrintTime(Thread::Task::Name::RENDER);
         Gfx::Renderer::GetInstance()->EndFrame();
     }
 #ifdef TRACY
@@ -267,7 +267,7 @@ void Core::Scene::Loop()
         GameModules->Update(Modules::Update::RQ);
 
         Thread::EndTime(Thread::Task::Name::UPDATE, (double)Engine::GetInstance()->GetTime());
-        Thread::PrintTime(Thread::Task::Name::UPDATE);
+      //  Thread::PrintTime(Thread::Task::Name::UPDATE);
 
         RenderScene(true);
     }

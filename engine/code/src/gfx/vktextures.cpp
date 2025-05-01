@@ -1,6 +1,7 @@
 #include "anthraxAI/core/imguihelper.h"
 #include "anthraxAI/gameobjects/gameobjects.h"
 #include "anthraxAI/gameobjects/objects/sprite.h"
+#include "anthraxAI/gfx/vkdefines.h"
 #include "anthraxAI/gfx/vkrenderer.h"
 #include "anthraxAI/gfx/vkdevice.h"
 #include "anthraxAI/gfx/vkrendertarget.h"
@@ -71,6 +72,15 @@ void Gfx::Renderer::CreateTextures()
         if (!CreateTextureFromInfo(s)) {
             continue;
         }
+    }
+}
+void Gfx::Renderer::BindTextures()
+{
+    for (auto& it : Textures) {
+        for (int i = 0 ; i < MAX_FRAMES; i++) {
+            RenderTarget* rt = &(it.second);
+            Gfx::DescriptorsBase::GetInstance()->UpdateTexture(rt->GetImageView(), *(rt->GetSampler()), rt->GetName(), i);
+        } 
     }
 }
 

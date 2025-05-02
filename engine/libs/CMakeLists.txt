@@ -60,7 +60,7 @@ make_library(imgui)
 # imgui requires the Vulkan ans X11 libraries, so we need to link them here
 target_link_libraries(imgui PRIVATE ${_libraries})
 if (WIN32)
-target_link_libraries(imgui dwmapi)
+target_link_libraries(imgui PRIVATE dwmapi)
 endif()
 list(APPEND _libraries lib::imgui)
 
@@ -113,14 +113,13 @@ list(APPEND _libraries assimp::assimp)
 
 if (WIN32)
 set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "" FORCE)
-add_definitions(-DAL_LIBTYPE_STATIC)
+set(LIBTYPE STATIC)
 
 add_subdirectory(${_path}/openal-soft/openal-soft)
 
 list(APPEND _includes ${_path}/openal-soft/openal-soft/include)
 
-set(OPENAL_LIBRARY ${CMAKE_BINARY_DIR}/engine/libs/openal-soft/openal-soft/OpenAL32.lib)
-list(APPEND _libraries ${OPENAL_LIBRARY})
+list(APPEND _libraries OpenAL::OpenAL)
 elseif(UNIX)
 
 list(APPEND _includes ${_path}/openal-soft/openal-soft/include)

@@ -19,7 +19,9 @@ static inline xcb_intern_atom_reply_t* intern_atom_helper(xcb_connection_t *conn
 #endif
 
 #if defined(AAI_WINDOWS)
+#define NOMINMAX
 #include <windows.h>
+#undef GetObject
 #include <vulkan/vulkan_win32.h>
 #include <backends/imgui_impl_win32.h>
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

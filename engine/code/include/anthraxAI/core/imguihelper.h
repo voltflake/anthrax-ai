@@ -39,16 +39,16 @@ namespace UI
             : Type(type), Label(label), IsDynamic(isdyn) { if (type == UI::TAB) { ID = IDCounter; IDCounter++;} }
 
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string)> func, bool addempty = false)
+            Element(ElementType type, const std::string& label, bool isdyn, T t, std::function<void (std::string)> func, bool addempty = false, Args... args)
             : Type(type), Label(label), IsDynamic(isdyn), Definition(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (std::string, const UI::Element& elem)> func, bool addempty = false)
+            Element(ElementType type, const std::string& label, bool isdyn, T t, std::function<void (std::string, const UI::Element& elem)> func, bool addempty = false, Args... args)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionWithElem(func), AddEmpty(addempty) { EvaluateArgs(t, args...); }
 
 
             template<typename T, typename... Args>
-            Element(ElementType type, const std::string& label, bool isdyn, T t, Args... args, std::function<void (bool)> func)
+            Element(ElementType type, const std::string& label, bool isdyn, T t, std::function<void (bool)> func, Args... args)
             : Type(type), Label(label), IsDynamic(isdyn), DefinitionBool(func) { EvaluateArgs(t, args...); }
 
             Element(ElementType type, const std::string& label, bool isdyn, std::function<float (float)> func)

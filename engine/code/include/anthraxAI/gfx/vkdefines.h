@@ -5,6 +5,7 @@
 
 #include <vulkan/vulkan.h>
 #ifdef AAI_WINDOWS
+#define NOMINMAX
 #include <windows.h>
 #include <backends/imgui_impl_win32.h>
 #include <vulkan/vulkan_win32.h>
@@ -24,5 +25,3 @@ const std::vector<const char*> INSTANCE_EXT =
 
 const std::vector<const char*> VALIDATION_LAYER = { "VK_LAYER_KHRONOS_validation" };
 const std::vector<const char*> DEVICE_EXT = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
-
-

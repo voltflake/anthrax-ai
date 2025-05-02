@@ -8,7 +8,6 @@
 #include "anthraxAI/core/imguihelper.h"
 
 #include "anthraxAI/gfx/vkbase.h"
-#include <sys/time.h>
 #include <chrono>
 
 enum EngineState {

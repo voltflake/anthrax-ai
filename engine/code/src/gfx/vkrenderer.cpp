@@ -466,7 +466,7 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     Modules::ScenesMap map =  Core::Scene::GetInstance()->GetScenes();
     Modules::Module& modulegizmo = map["gizmo"];
     Modules::Module& module = map[Core::Scene::GetInstance()->GetCurrentScene()];
-    u_int32_t obj_size = module.GetRenderQueue().size();
+    uint32_t obj_size = module.GetRenderQueue().size();
     uint32_t inst_ind = 0;//Gfx::Renderer::GetInstance()->GetInstanceInd();
     //
     std::vector<uint32_t> num_obj_per_thread(Thread::MAX_THREAD_NUM, (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM );
@@ -481,8 +481,8 @@ void Gfx::Renderer::PrepareInstanceBuffer()
     /*    printf("NUM OBJ PER thread === %d\n", o);*/
     /*}*/
     /*    printf("\n------------== size %d\n ------------\n", obj_size);*/
-    u_int32_t first_obj_size = 0;
-    u_int32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
+    uint32_t first_obj_size = 0;
+    uint32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
 
     uint32_t fin_inst_ind = 0;
     uint32_t fin_inst_ind2 = 0;

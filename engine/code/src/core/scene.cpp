@@ -31,7 +31,7 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
     VkFormat formats3[3] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_B8G8R8A8_UNORM };
     VkFormat depthformat = VK_FORMAT_D32_SFLOAT;
 
-    u_int32_t obj_size = module.GetRenderQueue().size();
+    uint32_t obj_size = module.GetRenderQueue().size();
     uint32_t inst_ind = 0;//Gfx::Renderer::GetInstance()->GetInstanceInd();
     std::vector<uint32_t> num_obj_per_thread(Thread::MAX_THREAD_NUM, (uint32_t)module.GetRenderQueue().size() / Thread::MAX_THREAD_NUM );
 
@@ -40,8 +40,8 @@ void Core::Scene::RenderThreaded(Modules::Module& module)
     if (!iseven) {
         num_obj_per_thread[num_obj_per_thread.size() - 1] += (module.GetRenderQueue().size() % Thread::MAX_THREAD_NUM);
     }
-    u_int32_t first_obj_size = 0;
-    u_int32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
+    uint32_t first_obj_size = 0;
+    uint32_t sec_obj_size = 0;// module.GetRenderQueue().size() / 2;
 
     uint32_t fin_inst_ind = 0;
     uint32_t fin_inst_ind2 = 0;

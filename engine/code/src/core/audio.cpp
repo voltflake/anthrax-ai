@@ -181,7 +181,7 @@ void Core::Audio::Play()
         if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
             Engine::GetInstance()->CheckState();
         }
-        if(!alcGetCurrentContext()) {
+        if(alcGetCurrentContext()) {
             Release();
         }
     }

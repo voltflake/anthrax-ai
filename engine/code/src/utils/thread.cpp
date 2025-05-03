@@ -99,12 +99,21 @@ void Thread::Pool::Reload()
     WorkCondition.notify_all();
 
     for (std::thread& thread : Threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
+
+    // Temporary queue to reset all pending tasks of a thread pool
+    std::queue<Task> q;
+    Queue.swap(q);
+
     int i = 0;
     for (std::thread& thread : RenderThreads) {
         RenderCondition[i].notify_all();
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
         i++;
     }
 

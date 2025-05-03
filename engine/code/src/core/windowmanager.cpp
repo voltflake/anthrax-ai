@@ -270,7 +270,7 @@ void Core::WindowManager::RunWindows()
 	MSG msg = {};
 
 	long long start, end = 0;
-	float delta;
+	float delta = 0;
 	while (running) {
 		start = clock();
 

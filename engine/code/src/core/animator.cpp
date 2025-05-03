@@ -131,13 +131,13 @@ void Core::AnimatorBase::ReadNodeHierarchy(Gfx::ModelInfo* model, int animid, co
    glm::mat4 nodetransf = node.Transform;
 
     if (!nodeanim.NodeName.empty()) {
-        glm::vec3 scaling;
+        glm::vec3 scaling(1.0f);
         glm::mat4 scm = InterpolateScale(scaling, timetick, nodeanim);
 
-        glm::quat rot;
+        glm::quat rot(1.0f, 0.0f, 0.0f, 0.0f);
         glm::mat4 rotm = InterpolateRot(rot, timetick, nodeanim);
 
-        glm::vec3 Translation;
+        glm::vec3 Translation(1.0f);
         glm::mat4 transl = InterpolatePos(Translation, timetick, nodeanim);
 
         nodetransf = transl * rotm * scm;

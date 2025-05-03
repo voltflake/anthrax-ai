@@ -470,7 +470,7 @@ void Core::Scene::LoadScene(const std::string& filename)
 
     std::string scenename = Parse.GetRootElement();
 
-    float xpos, ypos, zpos = 0.0f;
+    float xpos = 0.0f, ypos = 0.0f, zpos = 0.0f;
     std::string matname, textname, modname, frag, vert, id;
 
     Utils::NodeIt node = Parse.GetChild(Parse.GetRootNode(), Utils::LEVEL_ELEMENT_OBJECT);

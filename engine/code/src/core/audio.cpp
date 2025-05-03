@@ -112,8 +112,7 @@ void Core::Audio::Load(const std::string& name)
 
     alGetError();
     alGenBuffers(1, &Buffer);
-    ALenum err = alGetError();
-    ASSERT(err == AL_NO_ERROR, "Core::Audio::Init(): Buffers error!");
+    ASSERT(alGetError() != AL_NO_ERROR, "Core::Audio::Init(): Buffers error!");
 
     ALenum format;
     if(channels == 1 && bits_per_sample == 8) {
@@ -182,6 +181,8 @@ void Core::Audio::Play()
         if (Utils::IsBitSet(Engine::GetInstance()->GetState(), ENGINE_STATE_INTRO)) {
             Engine::GetInstance()->CheckState();
         }
-        Release();
+        if(!alcGetCurrentContext()) {
+            Release();
+        }
     }
 }
